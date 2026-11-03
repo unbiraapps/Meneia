@@ -1,0 +1,39 @@
+{
+  "name": "mi-ciclo-lila",
+  "version": "1.0.0",
+  "description": "Registro de períodos, ovulación estimada y avisos de cambios en el ciclo",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:artifact": "vite build --mode artifact && node scripts/artifact.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "icons": "node scripts/icons.mjs",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
+    "dexie": "^4.4.7"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "fake-indexeddb": "^6.2.7",
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0",
+    "vite-plugin-singlefile": "^2.3.4",
+    "vitest": "^5.1.0"
+  },
+  "private": true,
+  "type": "module"
+}

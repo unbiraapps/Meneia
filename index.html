@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi Ciclo Lila</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Registro de períodos, ovulación estimada y avisos de cambios en el ciclo.">
+<meta name="theme-color" content="#816BB4">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Registro personal</div>
+      <h1>Mi ciclo</h1>
+    </div>
+    <div class="today num" id="today"></div>
+  </header>
+
+  <div class="alerts" id="alerts"></div>
+
+  <section class="hero" aria-live="polite">
+    <div>
+      <div class="eyebrow">Próximo período probable</div>
+      <div class="big num" id="nextDate">—</div>
+      <div class="sub" id="nextIn"></div>
+    </div>
+    <div class="hero-grid">
+      <div><span>Ovulación estimada</span><b id="ovu">—</b></div>
+      <div><span>Días fértiles</span><b id="fert">—</b></div>
+      <div><span>Ciclo promedio</span><b id="avg">—</b></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Calendario</h2>
+      <div class="cal-nav">
+        <button class="icon-btn" id="prevM" aria-label="Mes anterior">‹</button>
+        <h3 id="monthLbl"></h3>
+        <button class="icon-btn" id="nextM" aria-label="Mes siguiente">›</button>
+      </div>
+    </div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">
+      <span><i style="background:var(--period)"></i>Período</span>
+      <span><i style="border:2px dashed var(--period)"></i>Probable</span>
+      <span><i style="background:var(--fertile)"></i>Fértil</span>
+      <span><i style="background:var(--ovu)"></i>Ovulación</span>
+      <span><i style="background:var(--plum);border-radius:50%;width:9px;height:9px"></i>Cambio de pastillas</span>
+    </div>
+  </section>
+
+  <section class="block" id="formBlock">
+    <div class="block-head">
+      <h2 id="formTitle">Anotar período</h2>
+      <span class="editing-tag" id="editingTag" hidden>Editando</span>
+    </div>
+    <form id="form" novalidate>
+      <div class="row">
+        <label for="fStart">Primer día<input type="date" id="fStart"></label>
+        <label for="fEnd">Último día<input type="date" id="fEnd"></label>
+      </div>
+      <div class="field">
+        <span class="eyebrow">Cantidad de flujo</span>
+        <div class="chips">
+          <label class="chip-in"><input type="radio" name="flow" id="flLeve" value="Leve"><span>Leve</span></label>
+          <label class="chip-in"><input type="radio" name="flow" id="flNormal" value="Normal" checked><span>Normal</span></label>
+          <label class="chip-in"><input type="radio" name="flow" id="flAbund" value="Abundante"><span>Abundante</span></label>
+        </div>
+      </div>
+      <div class="field" id="pillField">
+        <span class="eyebrow">Pastillas anticonceptivas</span>
+        <div class="chips">
+          <label class="chip-in"><input type="radio" name="pill" id="plNone" value="" checked><span>Sin cambios</span></label>
+          <label class="chip-in"><input type="radio" name="pill" id="plStop" value="stop"><span>Las dejé</span></label>
+          <label class="chip-in"><input type="radio" name="pill" id="plStart" value="start"><span>Empecé</span></label>
+        </div>
+        <label for="fPillDate" id="pillDateWrap" hidden>Fecha en que las dejaste o empezaste<input type="date" id="fPillDate"></label>
+      </div>
+      <label for="fNote">Notas (dolor, coágulos, síntomas)<textarea id="fNote" rows="2" maxlength="500" placeholder="Ej: cólicos fuertes el 1er día"></textarea></label>
+      <p class="err" id="fErr" hidden></p>
+      <div class="actions">
+        <button class="btn" type="submit" id="fSubmit">Guardar período</button>
+        <button class="ghost" type="button" id="fCancel" hidden>Cancelar</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <h2>Historial</h2>
+      <span class="muted num" id="count"></span>
+    </div>
+    <div class="fum"><span>FUM · fecha de última menstruación</span><b id="fumDate">—</b></div>
+    <div class="pill-status" id="pillStatus" hidden><span class="pill-ico"></span><div id="pillText"></div></div>
+    <ul class="hist" id="hist"></ul>
+  </section>
+
+  <section class="block">
+    <div>
+      <h2>Avisos</h2>
+      <p class="muted" style="font-size:13.5px">Qué te avisa la app y con cuánta anticipación.</p>
+    </div>
+    <div class="note-box" id="notifNote"></div>
+    <div>
+      <div class="setting">
+        <div class="txt"><b>Antes del período</b><span>Aviso de que se acerca la fecha probable</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="mini-select" id="sDays" aria-label="Días de anticipación">
+            <option value="1">1 día antes</option><option value="2">2 días antes</option><option value="3">3 días antes</option><option value="5">5 días antes</option>
+          </select>
+          <label class="switch" aria-label="Aviso antes del período"><input type="checkbox" id="sPeriod"><span></span></label>
+        </div>
+      </div>
+      <div class="setting">
+        <div class="txt"><b>Ventana fértil</b><span>El día que empiezan los días fértiles</span></div>
+        <label class="switch" aria-label="Aviso de ventana fértil"><input type="checkbox" id="sFertile"><span></span></label>
+      </div>
+      <div class="setting">
+        <div class="txt"><b>Ovulación</b><span>El día de la ovulación estimada</span></div>
+        <label class="switch" aria-label="Aviso de ovulación"><input type="checkbox" id="sOvu"><span></span></label>
+      </div>
+      <div class="setting">
+        <div class="txt"><b>Atraso</b><span>A los 2, 5 y 10 días de atraso</span></div>
+        <label class="switch" aria-label="Aviso de atraso"><input type="checkbox" id="sLate"><span></span></label>
+      </div>
+      <div class="setting">
+        <div class="txt"><b>Hora de los avisos</b><span>Todos llegan a esta hora</span></div>
+        <select class="mini-select" id="sHour" aria-label="Hora de los avisos"></select>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div>
+      <h2>Copia de seguridad</h2>
+      <p class="muted" style="font-size:13.5px">Tus datos se guardan solo en este celular. Guardá una copia para no perderlos si cambiás de teléfono.</p>
+    </div>
+    <div class="actions">
+      <button class="ghost" type="button" id="bCopy">Copiar mis datos</button>
+      <button class="ghost" type="button" id="bDownload">Descargar archivo</button>
+      <button class="ghost" type="button" id="bRestoreOpen">Restaurar una copia</button>
+    </div>
+    <div id="restoreBox" hidden style="display:grid;gap:10px">
+      <label for="rText">Pegá el texto de la copia o elegí el archivo<textarea id="rText" rows="4" placeholder='{"app":"mi-ciclo-lila", ...}'></textarea></label>
+      <input type="file" id="rFile" accept=".json,application/json,text/plain" aria-label="Archivo de copia">
+      <p class="err" id="rErr" hidden></p>
+      <div class="alert warn" id="rConfirm" hidden><span class="dot"></span><div id="rConfirmTxt"></div></div>
+      <div class="actions">
+        <button class="btn" type="button" id="bRestore">Revisar copia</button>
+        <button class="ghost" type="button" id="bRestoreCancel">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Las fechas de ovulación y del próximo período son estimaciones según tus ciclos anteriores (ovulación ≈ 14 días antes del próximo período). No sirven como método anticonceptivo.</p>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
