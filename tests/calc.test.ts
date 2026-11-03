@@ -87,6 +87,27 @@ describe('analyze', () => {
   });
 });
 
+describe('búsqueda de embarazo', () => {
+  it('cuenta ciclos y desde cuándo viene seguida', () => {
+    const ps = [P('2026-07-01'), { ...P('2026-07-29'), trying: true }, P('2026-08-26'), { ...P('2026-09-23'), trying: true }, { ...P('2026-10-21'), trying: true }];
+    const A = analyze(ps, [], '2026-11-03');
+    expect(A.tryingCycles).toBe(3);
+    expect(A.tryingSince).toBe('2026-09-23');
+    const k = dayKinds(A, []);
+    expect(k.get('2026-11-04')?.has('try')).toBe(true);  // ventana del ciclo actual (ovulación 4/11)
+    expect(k.get('2026-07-11')?.has('try')).toBeFalsy(); // ciclo de julio no estaba marcado
+  });
+  it('sin ciclo actual marcado no hay búsqueda en curso', () => {
+    const A = analyze([{ ...P('2026-09-01'), trying: true }, P('2026-09-29')], [], '2026-10-05');
+    expect(A.tryingCycles).toBe(1);
+    expect(A.tryingSince).toBeNull();
+  });
+  it('la copia guarda la marca', () => {
+    const r = parseBackup(JSON.stringify({ periods: [{ start: '2026-10-21', trying: true }, { start: '2026-09-23', trying: 'si' }] }));
+    expect(r.ok && r.data.periods.map(p => !!p.trying)).toEqual([true, false]);
+  });
+});
+
 describe('pillActiveOn', () => {
   const ev: PillEvent[] = [{ date: '2026-03-01', type: 'start' }, { date: '2026-08-20', type: 'stop' }];
   it('sabe si tomaba pastillas en una fecha', () => {

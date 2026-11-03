@@ -33,7 +33,7 @@
     </div>
     <div class="hero-grid">
       <div><span>Ovulación estimada</span><b id="ovu">—</b></div>
-      <div><span>Días fértiles</span><b id="fert">—</b></div>
+      <div><span id="fertLbl">Días fértiles</span><b id="fert">—</b></div>
       <div><span>Ciclo promedio</span><b id="avg">—</b></div>
     </div>
   </section>
@@ -54,6 +54,7 @@
       <span><i style="background:var(--fertile)"></i>Fértil</span>
       <span><i style="background:var(--ovu)"></i>Ovulación</span>
       <span><i style="background:var(--plum);border-radius:50%;width:9px;height:9px"></i>Cambio de pastillas</span>
+      <span><b style="color:var(--try);font-size:12px;margin-right:4px">♥</b>Buscando embarazo</span>
     </div>
   </section>
 
@@ -84,6 +85,10 @@
         </div>
         <label for="fPillDate" id="pillDateWrap" hidden>Fecha en que las dejaste o empezaste<input type="date" id="fPillDate"></label>
       </div>
+      <div class="try-row">
+        <div class="txt"><b>Buscando embarazo en este ciclo</b><span>Para llevar la cuenta de cuántos ciclos lo intentaste</span></div>
+        <label class="switch" aria-label="Buscando embarazo en este ciclo"><input type="checkbox" id="fTrying"><span></span></label>
+      </div>
       <label for="fNote">Notas (dolor, coágulos, síntomas)<textarea id="fNote" rows="2" maxlength="500" placeholder="Ej: cólicos fuertes el 1er día"></textarea></label>
       <p class="err" id="fErr" hidden></p>
       <div class="actions">
@@ -99,6 +104,7 @@
       <span class="muted num" id="count"></span>
     </div>
     <div class="fum"><span>FUM · fecha de última menstruación</span><b id="fumDate">—</b></div>
+    <div class="try-status" id="tryStatus" hidden><span class="try-ico" aria-hidden="true">♥</span><div id="tryText"></div></div>
     <div class="pill-status" id="pillStatus" hidden><span class="pill-ico"></span><div id="pillText"></div></div>
     <ul class="hist" id="hist"></ul>
   </section>

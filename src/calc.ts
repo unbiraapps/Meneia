@@ -4,7 +4,7 @@
 export type Flow = 'Leve' | 'Normal' | 'Abundante';
 export type PillType = 'stop' | 'start';
 
-export interface Period { id?: number; start: string; end: string; flow: Flow; note: string }
+export interface Period { id?: number; start: string; end: string; flow: Flow; note: string; trying?: boolean }
 export interface PillEvent { id?: number; date: string; type: PillType }
 
 export interface Flag { level: 'warn' | 'alert'; text: string }
@@ -23,6 +23,8 @@ export interface Analysis {
   fertile: [string, string] | null;
   late: number;           // días de atraso (0 si no hay)
   onPill: boolean;        // toma pastillas actualmente
+  tryingCycles: number;   // ciclos marcados buscando embarazo
+  tryingSince: string | null; // primer día del primer ciclo de la búsqueda actual (seguida)
   lastPill: PillEvent | null;
 }
 
@@ -93,7 +95,13 @@ export function analyze(periods: Period[], events: PillEvent[], today: string): 
     }
   }
 
+  // Búsqueda de embarazo: ciclos marcados, y desde cuándo viene seguida la búsqueda actual
+  const tryingCycles = rows.filter(r => r.trying).length;
+  let tryingSince: string | null = null;
+  for (let i = rows.length - 1; i >= 0 && rows[i].trying; i--) tryingSince = rows[i].start;
+
   return {
+    tryingCycles, tryingSince,
     rows, cycles, avgCycle, avgDur,
     minC: cycles.length ? Math.min(...cycles) : null,
     maxC: cycles.length ? Math.max(...cycles) : null,
@@ -101,7 +109,7 @@ export function analyze(periods: Period[], events: PillEvent[], today: string): 
   };
 }
 
-export type DayKind = 'period' | 'pred' | 'fertile' | 'ovu' | 'pill';
+export type DayKind = 'period' | 'pred' | 'fertile' | 'ovu' | 'pill' | 'try';
 
 /** Tipo de cada día para pintar el calendario. */
 export function dayKinds(A: Analysis, events: PillEvent[], predictCycles = 3): Map<string, Set<DayKind>> {
@@ -111,14 +119,19 @@ export function dayKinds(A: Analysis, events: PillEvent[], predictCycles = 3): M
 
   A.rows.forEach(r => { const len = r.dur ?? A.avgDur; for (let i = 0; i < len; i++) mark(addDays(r.start, i), 'period'); });
   // ovulación aproximada de ciclos ya terminados (solo si no estaba con pastillas)
+  const markTry = (o: string) => { for (let i = -5; i <= 1; i++) mark(addDays(o, i), 'try'); };
   A.rows.forEach(r => {
-    if (r.cycle && !pillActiveOn(events, r.start)) markOvu(addDays(r.start, r.cycle - LUTEAL));
+    if (r.cycle && !pillActiveOn(events, r.start)) {
+      const o = addDays(r.start, r.cycle - LUTEAL);
+      markOvu(o);
+      if (r.trying) markTry(o);
+    }
   });
   if (A.next) {
     for (let c = 0; c < predictCycles; c++) {
       const n = addDays(A.next, c * A.avgCycle);
       for (let i = 0; i < A.avgDur; i++) mark(addDays(n, i), 'pred');
-      if (!A.onPill) markOvu(addDays(n, -LUTEAL));
+      if (!A.onPill) { markOvu(addDays(n, -LUTEAL)); if (c === 0 && A.last?.trying) markTry(addDays(n, -LUTEAL)); }
     }
   }
   events.forEach(e => mark(e.date, 'pill'));

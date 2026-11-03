@@ -5,7 +5,7 @@
   --plum:#816BB4; --peri:#9A91D2; --violet:#A77CE5; --lav:#9A8DD9; --orchid:#C67CCB; --iris:#9B8DE7;
   --period:#C67CCB; --period-ink:#FFFFFF; --fertile:#E6DEFA; --fertile-ink:#5B4A93;
   --ovu:#A77CE5; --warn-bg:#FBEAF7; --warn-ink:#8E3A8F; --alert-bg:#F7E3E9; --alert-ink:#9A2F55;
-  --ok-bg:#E6F4EC; --ok-ink:#2F6B4A; --on-plum:#FFFFFF;
+  --ok-bg:#E6F4EC; --ok-ink:#2F6B4A; --on-plum:#FFFFFF; --try:#B4469B; --try-bg:#F9E6F4;
   --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --r:18px;
@@ -15,13 +15,13 @@
   --fg:#EFEAFA; --muted:#AEA4CA; --plum:#B5A4E6;
   --period:#C67CCB; --period-ink:#1A1424; --fertile:#3A3060; --fertile-ink:#D9D0FA;
   --ovu:#B48BEE; --warn-bg:#3A2440; --warn-ink:#EBB3EE; --alert-bg:#3E2130; --alert-ink:#F2A9C2;
-  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; color-scheme:dark }}
+  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; --try:#F0A6DC; --try-bg:#3D2238; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#17131F; --surface:#221C30; --soft:#2C2540; --line:#3A3152;
   --fg:#EFEAFA; --muted:#AEA4CA; --plum:#B5A4E6;
   --period:#C67CCB; --period-ink:#1A1424; --fertile:#3A3060; --fertile-ink:#D9D0FA;
   --ovu:#B48BEE; --warn-bg:#3A2440; --warn-ink:#EBB3EE; --alert-bg:#3E2130; --alert-ink:#F2A9C2;
-  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; color-scheme:dark }
+  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; --try:#F0A6DC; --try-bg:#3D2238; color-scheme:dark }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -152,3 +152,17 @@ button:disabled{opacity:.5;cursor:default}
 .foot{font-size:12.5px;color:var(--muted);text-align:center;max-width:46ch;margin:0 auto}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.toast{animation:up .25s ease}@keyframes up{from{transform:translate(-50%,10px);opacity:0}}}
+
+/* Búsqueda de embarazo */
+.try-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--try-bg)}
+.try-row .txt{display:grid;min-width:0}
+.try-row .txt b{font-size:14.5px;color:var(--try)}
+.try-row .txt span{font-size:12.5px;color:var(--muted)}
+.try-row .switch input:checked + span{background:var(--try)}
+.try-status{display:flex;align-items:center;gap:10px;font-size:14px;padding:10px 14px;border-radius:14px;background:var(--try-bg)}
+.try-status b{color:var(--try)}
+.try-ico{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--try);color:var(--surface);font-size:14px}
+.flag.try{background:var(--try-bg);color:var(--try)}
+.hist li.trying .bar{background:linear-gradient(var(--period),var(--try))}
+.day.try::after{content:"♥";position:absolute;bottom:1px;left:50%;transform:translateX(-50%);font-size:9px;line-height:1;color:var(--try)}
+.day.ovu.try::after{color:#fff}

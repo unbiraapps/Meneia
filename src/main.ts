@@ -15,8 +15,8 @@ const SAMPLE_PERIODS: Period[] = [
   { start: '2026-07-01', end: '2026-07-05', flow: 'Normal', note: '' },
   { start: '2026-07-30', end: '2026-08-03', flow: 'Abundante', note: 'Cólicos fuertes el 1er día' },
   { start: '2026-08-27', end: '2026-08-31', flow: 'Normal', note: '' },
-  { start: '2026-10-01', end: '2026-10-07', flow: 'Abundante', note: 'Más largo de lo normal' },
-  { start: '2026-10-29', end: '2026-11-02', flow: 'Normal', note: '' },
+  { start: '2026-10-01', end: '2026-10-07', flow: 'Abundante', note: 'Más largo de lo normal', trying: true },
+  { start: '2026-10-29', end: '2026-11-02', flow: 'Normal', note: '', trying: true },
 ];
 const SAMPLE_EVENTS: PillEvent[] = [{ date: '2026-08-20', type: 'stop' }];
 
@@ -49,6 +49,7 @@ async function refresh(): Promise<void> {
   TODAY = localToday();
   await load();
   render();
+  if (editingId == null && !$<HTMLInputElement>('fStart').value) $<HTMLInputElement>('fTrying').checked = !S.example && !!A.last?.trying;
   if (!S.example) {
     syncReminders(upcomingReminders(A, S.reminders, new Date())).catch(() => {});
   }
@@ -100,6 +101,7 @@ function renderHero(): void {
       : d === 0 ? 'Podría llegar hoy' : `Debía llegar hace ${plural(-d, 'día', 'días')}`;
     $('ovu').textContent = A.ovu ? fmtShort(A.ovu) : 'No aplica';
     $('fert').textContent = A.fertile ? `${fmtShort(A.fertile[0])}–${fmtShort(A.fertile[1])}` : 'Con pastillas';
+    $('fertLbl').textContent = A.last?.trying && A.fertile ? '♥ Mejores días para buscar' : 'Días fértiles';
     $('avg').textContent = `${A.avgCycle} días`;
   } else {
     $('nextDate').textContent = 'Sin datos';
@@ -114,7 +116,7 @@ function renderCal(): void {
   const first = new Date(Date.UTC(viewY, viewM, 1));
   const offset = (first.getUTCDay() + 6) % 7;
   const start = iso(new Date(first.getTime() - offset * 864e5));
-  const names: Record<string, string> = { period: 'período', pred: 'período probable', fertile: 'fértil', ovu: 'ovulación', pill: 'cambio de pastillas' };
+  const names: Record<string, string> = { period: 'período', pred: 'período probable', fertile: 'fértil', ovu: 'ovulación', pill: 'cambio de pastillas', try: 'buscando embarazo' };
   let h = ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => `<div class="dow" aria-hidden="true">${d}</div>`).join('');
   for (let i = 0; i < 42; i++) {
     const s = addDays(start, i), d = toDate(s);
@@ -127,6 +129,7 @@ function renderCal(): void {
     else if (k.has('pred')) c += ' pred';
     else if (k.has('fertile')) c += ' fertile';
     if (k.has('pill')) c += ' pill';
+    if (k.has('try') && (k.has('fertile') || k.has('ovu'))) c += ' try';
     if (s === TODAY) c += ' today';
     const lab = [...k].map(x => names[x]).join(', ');
     h += `<div class="${c}" title="${fmtLong(s)}${lab ? ' · ' + lab : ''}" aria-label="${fmtLong(s)}${lab ? ', ' + lab : ''}">${d.getUTCDate()}</div>`;
@@ -136,6 +139,14 @@ function renderCal(): void {
 
 function renderHist(): void {
   $('fumDate').textContent = A.last ? fmtLong(A.last.start) : 'Sin datos';
+  $('tryStatus').hidden = !A.tryingCycles;
+  if (A.tryingCycles) {
+    const seguidos = A.tryingSince ? A.rows.filter(r => r.start >= A.tryingSince!).length : 0;
+    const meses = A.tryingSince ? Math.floor(daysBetween(A.tryingSince, TODAY) / 30.4) : 0;
+    $('tryText').innerHTML = A.tryingSince
+      ? `<b>Buscando embarazo desde el ${fmtLong(A.tryingSince)}</b><br><span class="muted">${seguidos === 1 ? 'Primer ciclo' : `${seguidos} ciclos seguidos`}${meses >= 1 ? ` · ${plural(meses, 'mes', 'meses')}` : ''}${A.tryingCycles > seguidos ? ` · ${A.tryingCycles} ciclos en total` : ''}</span>`
+      : `<b>${plural(A.tryingCycles, 'ciclo', 'ciclos')} buscando embarazo</b><br><span class="muted">En este momento no está marcado</span>`;
+  }
   const ev = A.lastPill;
   $('pillStatus').hidden = !ev;
   if (ev) {
@@ -162,13 +173,13 @@ function renderHist(): void {
       </div>
       <div class="ops">${delBtn('e:' + e.date)}</div>
     </li>` : `
-    <li>
+    <li${r!.trying ? ' class="trying"' : ''}>
       <span class="bar"></span>
       <div style="min-width:0">
         <div class="when num">${fmtShort(r!.start)}${r!.end ? ' – ' + fmtShort(r!.end) : isOngoing(r!) ? ' · en curso' : ''}</div>
         <div class="meta num">${r!.dur ? plural(r!.dur, 'día', 'días') + ' de sangrado' : isOngoing(r!) ? 'Todavía sin último día' : 'Falta anotar el último día'} · ${r!.flow}${r!.cycle ? ` · ciclo de ${r!.cycle} días` : ' · ciclo actual'}</div>
         ${r!.note ? `<div class="note">${esc(r!.note)}</div>` : ''}
-        ${r!.flags.length ? `<div class="flags">${r!.flags.map(f => `<span class="flag ${f.level}">${f.text}</span>`).join('')}</div>` : ''}
+        ${r!.flags.length || r!.trying ? `<div class="flags">${r!.trying ? '<span class="flag try">♥ Buscando embarazo</span>' : ''}${r!.flags.map(f => `<span class="flag ${f.level}">${f.text}</span>`).join('')}</div>` : ''}
       </div>
       <div class="ops">${S.example ? '' : `<button class="op" data-edit="${r!.id}">Editar</button>`}${delBtn('p:' + r!.start)}</div>
     </li>`).join('');
@@ -205,6 +216,7 @@ function resetForm(): void {
   $<HTMLInputElement>('plNone').checked = true;
   $('pillDateWrap').hidden = true;
   $('fErr').hidden = true;
+  $<HTMLInputElement>('fTrying').checked = !!(A && !S?.example && A.last?.trying);
   [$<HTMLInputElement>('fStart'), $<HTMLInputElement>('fEnd'), $<HTMLInputElement>('fPillDate')].forEach(i => (i.max = TODAY));
 }
 
@@ -217,6 +229,7 @@ async function startEdit(id: number): Promise<void> {
   $<HTMLInputElement>('fEnd').value = p.end;
   (document.querySelector<HTMLInputElement>(`input[name=flow][value="${p.flow}"]`) ?? $<HTMLInputElement>('flNormal')).checked = true;
   $<HTMLTextAreaElement>('fNote').value = p.note;
+  $<HTMLInputElement>('fTrying').checked = !!p.trying;
   $('formTitle').textContent = 'Editar período';
   $('editingTag').hidden = false;
   $('fSubmit').textContent = 'Guardar cambios';
@@ -255,7 +268,7 @@ $<HTMLFormElement>('form').addEventListener('submit', async e => {
   const flagsBefore = new Set(A.rows.flatMap(r => r.flags.map(f => r.start + f.text)));
   let msg = editingId != null ? 'Cambios guardados' : start ? 'Período guardado' : 'Cambio de pastillas guardado';
   try {
-    if (start) await savePeriod({ ...(editingId != null ? { id: editingId } : {}), start, end, flow: (checkedVal('flow') || 'Normal') as Flow, note: $<HTMLTextAreaElement>('fNote').value.trim() });
+    if (start) await savePeriod({ ...(editingId != null ? { id: editingId } : {}), start, end, flow: (checkedVal('flow') || 'Normal') as Flow, note: $<HTMLTextAreaElement>('fNote').value.trim(), trying: $<HTMLInputElement>('fTrying').checked });
     if (pill) { await savePillEvent({ date: pillDate, type: pill }); if (start) msg += ' y el cambio de pastillas'; }
   } catch {
     return fail('No se pudo guardar. Probá de nuevo.');

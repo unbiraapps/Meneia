@@ -35,7 +35,7 @@ export async function savePeriod(p: Period): Promise<void> {
     const same = await db.periods.where('start').equals(p.start).first();
     if (same && same.id !== p.id) await db.periods.delete(same.id!);
     if (p.id != null) await db.periods.put(p);
-    else await db.periods.add({ start: p.start, end: p.end, flow: p.flow, note: p.note });
+    else await db.periods.add({ start: p.start, end: p.end, flow: p.flow, note: p.note, trying: !!p.trying });
   });
 }
 
@@ -55,7 +55,7 @@ export async function exportBackup(): Promise<Backup> {
   const [periods, events, reminders] = await Promise.all([db.periods.toArray(), db.events.toArray(), getSetting('reminders', {})]);
   return {
     app: 'mi-ciclo-lila', version: 1, exportedAt: new Date().toISOString(),
-    periods: periods.map(({ start, end, flow, note }) => ({ start, end, flow, note })),
+    periods: periods.map(({ start, end, flow, note, trying }) => ({ start, end, flow, note, ...(trying ? { trying: true } : {}) })),
     events: events.map(({ date, type }) => ({ date, type })),
     reminders: reminders as Partial<ReminderSettings>,
   };
@@ -75,7 +75,7 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
   for (const p of r.periods as Record<string, unknown>[]) {
     if (!p || typeof p.start !== 'string' || !DATE_RE.test(p.start)) return { ok: false, error: 'Hay un período con una fecha inválida.' };
     const end = typeof p.end === 'string' && DATE_RE.test(p.end) && p.end >= p.start ? p.end : '';
-    periods.push({ start: p.start, end, flow: FLOWS.includes(p.flow as Flow) ? (p.flow as Flow) : 'Normal', note: typeof p.note === 'string' ? p.note.slice(0, 500) : '' });
+    periods.push({ start: p.start, end, flow: FLOWS.includes(p.flow as Flow) ? (p.flow as Flow) : 'Normal', note: typeof p.note === 'string' ? p.note.slice(0, 500) : '', ...(p.trying === true ? { trying: true } : {}) });
   }
   const events: PillEvent[] = [];
   for (const e of (Array.isArray(r.events) ? r.events : []) as Record<string, unknown>[]) {
