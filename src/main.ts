@@ -395,6 +395,9 @@ function toast(m: string): void {
 // Al volver a la app (por ejemplo al día siguiente) se recalcula todo
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && localToday() !== TODAY) refresh(); });
 
+// En la vista previa de Claude no se pueden descargar archivos: queda solo "Copiar"
+if (import.meta.env.MODE === 'artifact') $('bDownload').hidden = true;
+
 resetForm();
 refresh().catch(err => {
   console.error(err);
