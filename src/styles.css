@@ -1,27 +1,17 @@
 /* Layout: una columna tipo app de bolsillo; predicción arriba, calendario, carga, historial, avisos y copia */
 :root{
-  --bg:#F5F2FB; --surface:#FFFFFF; --soft:#ECE7F8; --line:#DDD5F0;
-  --fg:#2A2240; --muted:#6C6386;
-  --plum:#816BB4; --peri:#9A91D2; --violet:#A77CE5; --lav:#9A8DD9; --orchid:#C67CCB; --iris:#9B8DE7;
-  --period:#C67CCB; --period-ink:#FFFFFF; --fertile:#E6DEFA; --fertile-ink:#5B4A93;
-  --ovu:#A77CE5; --warn-bg:#FBEAF7; --warn-ink:#8E3A8F; --alert-bg:#F7E3E9; --alert-ink:#9A2F55;
-  --ok-bg:#E6F4EC; --ok-ink:#2F6B4A; --on-plum:#FFFFFF; --try:#B4469B; --try-bg:#F9E6F4;
+  /* Siempre oscuro: es el look que eligió */
+  --bg:#17131F; --surface:#221C30; --soft:#2C2540; --line:#3A3152;
+  --fg:#EFEAFA; --muted:#AEA4CA;
+  --plum:#B5A4E6; --peri:#9A91D2; --violet:#A77CE5; --lav:#9A8DD9; --orchid:#C67CCB; --iris:#9B8DE7;
+  --period:#C67CCB; --period-ink:#1A1424; --fertile:#3A3060; --fertile-ink:#D9D0FA;
+  --ovu:#B48BEE; --warn-bg:#3A2440; --warn-ink:#EBB3EE; --alert-bg:#3E2130; --alert-ink:#F2A9C2;
+  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; --try:#F0A6DC; --try-bg:#3D2238;
   --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --r:18px;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#17131F; --surface:#221C30; --soft:#2C2540; --line:#3A3152;
-  --fg:#EFEAFA; --muted:#AEA4CA; --plum:#B5A4E6;
-  --period:#C67CCB; --period-ink:#1A1424; --fertile:#3A3060; --fertile-ink:#D9D0FA;
-  --ovu:#B48BEE; --warn-bg:#3A2440; --warn-ink:#EBB3EE; --alert-bg:#3E2130; --alert-ink:#F2A9C2;
-  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; --try:#F0A6DC; --try-bg:#3D2238; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --bg:#17131F; --surface:#221C30; --soft:#2C2540; --line:#3A3152;
-  --fg:#EFEAFA; --muted:#AEA4CA; --plum:#B5A4E6;
-  --period:#C67CCB; --period-ink:#1A1424; --fertile:#3A3060; --fertile-ink:#D9D0FA;
-  --ovu:#B48BEE; --warn-bg:#3A2440; --warn-ink:#EBB3EE; --alert-bg:#3E2130; --alert-ink:#F2A9C2;
-  --ok-bg:#1F3529; --ok-ink:#9FD8B7; --on-plum:#17131F; --try:#F0A6DC; --try-bg:#3D2238; color-scheme:dark }
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}

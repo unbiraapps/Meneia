@@ -50,7 +50,7 @@ for (const dir of readdirSync(RES).filter(d => d.startsWith('drawable'))) {
   const { width, height } = await sharp(f).metadata();
   const s = Math.round(Math.min(width, height) * 0.28);
   const icon = await sharp(legacy).resize(s, s).png().toBuffer();
-  await sharp({ create: { width, height, channels: 4, background: '#F5F2FB' } }).composite([{ input: icon, gravity: 'center' }]).png().toFile(f + '.tmp');
+  await sharp({ create: { width, height, channels: 4, background: '#17131F' } }).composite([{ input: icon, gravity: 'center' }]).png().toFile(f + '.tmp');
   rmSync(f); await sharp(f + '.tmp').toFile(f); rmSync(f + '.tmp');
 }
 console.log('ok');

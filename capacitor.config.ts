@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'ar.miciclo.lila',
   appName: 'Mi Ciclo',
   webDir: 'dist',
-  android: { backgroundColor: '#F5F2FB' },
+  android: { backgroundColor: '#17131F' },
   plugins: {
     LocalNotifications: { smallIcon: 'ic_stat_ciclo', iconColor: '#816BB4' },
   },
