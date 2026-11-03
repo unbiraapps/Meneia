@@ -321,7 +321,7 @@ async function renderSettings(): Promise<void> {
     $('askPerm').onclick = async () => {
       const res = await requestPermission();
       if (res === 'granted') { await refresh(); toast('Notificaciones activadas'); }
-      else toast('Activalas desde Ajustes del teléfono > Apps > Mi Ciclo');
+      else toast('Activalas desde Ajustes del teléfono > Apps > Meneia');
     };
   }
 }
@@ -359,7 +359,7 @@ $('bCopy').onclick = async () => {
 $('bDownload').onclick = async () => {
   if (S.example) return toast('Todavía no cargaste datos propios');
   const t = await backupText();
-  const name = `mi-ciclo-copia-${TODAY}.json`;
+  const name = `meneia-copia-${TODAY}.json`;
   if (isNative()) {
     // En Android usamos compartir para guardarlo en Drive, WhatsApp, etc.
     try {

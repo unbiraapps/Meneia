@@ -1,4 +1,4 @@
-package ar.miciclo.lila;
+package app.meneia;
 
 import com.getcapacitor.BridgeActivity;
 

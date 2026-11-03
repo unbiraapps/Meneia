@@ -14,8 +14,8 @@ export default defineConfig(({ mode }) => mode === 'artifact'
         injectRegister: 'auto',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
-          name: 'Mi Ciclo Lila',
-          short_name: 'Mi Ciclo',
+          name: 'Meneia',
+          short_name: 'Meneia',
           description: 'Registro de períodos, ovulación estimada y avisos de cambios en el ciclo.',
           lang: 'es-AR',
           start_url: './',

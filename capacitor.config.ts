@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'ar.miciclo.lila',
-  appName: 'Mi Ciclo',
+  appId: 'app.meneia',
+  appName: 'Meneia',
   webDir: 'dist',
   android: { backgroundColor: '#17131F' },
   plugins: {

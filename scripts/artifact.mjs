@@ -7,5 +7,5 @@ const head = s.match(/<head>([\s\S]*?)<\/head>/)[1]
 const body = s.match(/<body>([\s\S]*?)<\/body>/)[1];
 // el <title> primero
 const title = head.match(/<title>[\s\S]*?<\/title>/)[0];
-writeFileSync('dist-artifact/mi-ciclo.html', title + '\n' + head.replace(title, '') + '\n' + body);
+writeFileSync('dist-artifact/meneia.html', title + '\n' + head.replace(title, '') + '\n' + body);
 console.log('ok', (title + head + body).length);

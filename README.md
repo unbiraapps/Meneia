@@ -1,4 +1,7 @@
-# Mi Ciclo Lila
+# Meneia
+
+Del griego *mēnē* (μήνη), la Luna y la medida del mes.
+
 
 Registro de períodos con ovulación estimada, próximo período probable, avisos cuando cambia la duración del ciclo y registro de cuándo se dejaron o empezaron las pastillas anticonceptivas.
 
@@ -45,7 +48,7 @@ npm run android:apk     # APK (necesita Android Studio o el SDK de Android)
 
 1. Subir esta carpeta a un repositorio de GitHub (rama `main`).
 2. **App web:** en el repositorio, Settings > Pages > Source: "GitHub Actions". Cada cambio se publica en `https://TU-USUARIO.github.io/NOMBRE-DEL-REPO/`. Desde Brave o Chrome en el celular: menú > "Agregar a pantalla de inicio".
-3. **App de Android:** pestaña Actions > "App de Android". Al terminar, bajar `mi-ciclo-apk`, descomprimirlo y abrir `app-debug.apk` en el celular. Android pide permitir "instalar apps de esta fuente" una vez.
+3. **App de Android:** pestaña Actions > "App de Android". Al terminar, bajar `meneia-apk`, descomprimirlo y abrir `meneia.apk` en el celular. Android pide permitir "instalar apps de esta fuente" una vez.
 
 La primera vez que se abre la app de Android pide permiso para notificaciones (sección Avisos > Permitir notificaciones).
 
