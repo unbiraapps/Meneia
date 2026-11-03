@@ -56,6 +56,9 @@ async function refresh(): Promise<void> {
 
 // ---------- Render ----------
 
+/** Solo el período más reciente puede estar en curso, y solo si empezó hace 10 días o menos. */
+const isOngoing = (r: Period) => !r.end && A.last?.start === r.start && daysBetween(r.start, TODAY) <= 10;
+
 function render(): void {
   $('today').textContent = 'Hoy: ' + fmtLong(TODAY);
   renderAlerts();
@@ -78,7 +81,9 @@ function renderAlerts(): void {
     last.flags.filter(f => f.text.startsWith('Sangrado')).forEach(f => al.push(`<div class="alert ${f.level === 'alert' ? 'alert-r' : 'warn'}"><span class="dot"></span><div><b>Último período:</b> ${f.text}.</div></div>`));
     if (A.late > 0 && A.next) al.push(`<div class="alert alert-r"><span class="dot"></span><div><b>Atraso de ${plural(A.late, 'día', 'días')}</b> respecto de la fecha estimada (${fmtShort(A.next)}).</div></div>`);
     if (last.end === '' && daysBetween(last.start, TODAY) >= 1 && !S.example) {
-      al.push(`<div class="alert info"><span class="dot"></span><div>Tu período del ${fmtShort(last.start)} sigue en curso. Cuando termine, anotá el último día.</div><button class="ghost" data-edit="${last.id}">Anotar fin</button></div>`);
+      al.push(isOngoing(last)
+        ? `<div class="alert info"><span class="dot"></span><div>Tu período del ${fmtShort(last.start)} sigue en curso. Cuando termine, anotá el último día.</div><button class="ghost" data-edit="${last.id}">Anotar fin</button></div>`
+        : `<div class="alert info"><span class="dot"></span><div>Al período del ${fmtShort(last.start)} le falta el último día.</div><button class="ghost" data-edit="${last.id}">Anotar fin</button></div>`);
     }
   }
   $('alerts').innerHTML = al.join('');
@@ -160,8 +165,8 @@ function renderHist(): void {
     <li>
       <span class="bar"></span>
       <div style="min-width:0">
-        <div class="when num">${fmtShort(r!.start)}${r!.end ? ' – ' + fmtShort(r!.end) : ' · en curso'}</div>
-        <div class="meta num">${r!.dur ? plural(r!.dur, 'día', 'días') + ' de sangrado' : 'Sin fecha de fin'} · ${r!.flow}${r!.cycle ? ` · ciclo de ${r!.cycle} días` : ' · ciclo actual'}</div>
+        <div class="when num">${fmtShort(r!.start)}${r!.end ? ' – ' + fmtShort(r!.end) : isOngoing(r!) ? ' · en curso' : ''}</div>
+        <div class="meta num">${r!.dur ? plural(r!.dur, 'día', 'días') + ' de sangrado' : isOngoing(r!) ? 'Todavía sin último día' : 'Falta anotar el último día'} · ${r!.flow}${r!.cycle ? ` · ciclo de ${r!.cycle} días` : ' · ciclo actual'}</div>
         ${r!.note ? `<div class="note">${esc(r!.note)}</div>` : ''}
         ${r!.flags.length ? `<div class="flags">${r!.flags.map(f => `<span class="flag ${f.level}">${f.text}</span>`).join('')}</div>` : ''}
       </div>
