@@ -57,6 +57,7 @@ Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de c
 ## Anuncios y Google Play (etapa 4: el código ya está)
 
 El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueba de Google hasta que estén los reales.
+- [ ] **App en Play Console:** la cuenta de desarrollador ya existe. Crear la app "Meneia", paquete `app.meneia`, gratuita, categoría Salud y bienestar, idioma español (Argentina). Activar la firma de apps de Google Play con la clave de subida que está en los secretos (alias `meneia`).
 - [ ] **AdMob:** crear la app Android `app.meneia` y tres bloques: banner adaptable, intersticial y bonificado. Cargar en los secretos del repo: `ADMOB_APP_ID` (formato `ca-app-pub-…~…`), `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` (formato `ca-app-pub-…/…`). En AdMob › Bloquear contenido: bloquear las categorías sensibles (sexualidad, citas, embarazo/bebés si aparece, apuestas). La app pide siempre anuncios no personalizados.
 - [ ] **app-ads.txt:** AdMob pide publicarlo en el dominio de la ficha de Play. Si el sitio del desarrollador es `unbiraapps.com`, poner `https://unbiraapps.com/app-ads.txt` con la línea que da AdMob. Si fuera `meneia.unbiraapps.com`, avisar en `docs/PARA-CLAUDE.md` y lo agrego en `public/app-ads.txt`.
 - [ ] **Mensaje de consentimiento (UMP):** en AdMob › Privacidad y mensajería, crear el mensaje de GDPR para Europa. La app ya lo muestra solo donde Google lo pide.
@@ -66,8 +67,4 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 
 ## Más adelante
 
-- [ ] Cuenta de Google Play Console y app "Meneia" (paquete `app.meneia`).
-- [ ] AdMob: app y bloques de anuncios (banner, pantalla completa, con premio). Pasar los IDs a los secretos `ADMOB_APP_ID`, `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID`. Bloquear las categorías sensibles.
-- [ ] Producto de pago "sin_anuncios" en Play Console. El precio lo define la dueña.
-- [ ] Formulario de apps de salud (Seguimiento del período), sección de seguridad de datos y política de privacidad en `https://meneia.unbiraapps.com/privacidad`.
-- [ ] Prueba cerrada con el servicio de testers contratado.
+- [ ] Prueba cerrada con el servicio de testers contratado (12 personas, 14 días seguidos). Lo coordina la dueña.
