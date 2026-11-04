@@ -34,13 +34,25 @@ Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de c
 
 ## Drive para probar la app
 
-- [ ] **Subida automática del APK al Drive de unbira.** El workflow `App de Android` ya tiene el paso "Subir al Drive de unbira": corre solo si existe el secreto `RCLONE_CONF`.
+- [x] **Subida automática del APK al Drive de unbira.** El workflow `App de Android` ya tiene el paso "Subir al Drive de unbira": corre solo si existe el secreto `RCLONE_CONF`.
   1. Crear en el Drive de la cuenta de unbira la carpeta `Meneia/APK`.
   2. Con rclone en la compu de la dueña: `rclone config` › nuevo remoto llamado exactamente `unbira`, tipo `drive`, scope `drive` (acceso completo) o `drive.file`, y autorizar con la cuenta de unbira en el navegador.
   3. Copiar el contenido completo de `rclone.conf` (`rclone config file` muestra dónde está) al secreto de GitHub `RCLONE_CONF` del repo `unbiraapps/Meneia`. Ese archivo tiene un token: no subirlo al repo ni pegarlo en chats.
   4. Si la carpeta tiene otro nombre, crear la variable de Actions `DRIVE_FOLDER` con la ruta (por ejemplo `Apps/Meneia`).
   5. Correr el workflow a mano (Actions › App de Android › Run workflow) y verificar que aparezcan `Meneia/APK/meneia.apk` y una copia con fecha en `Meneia/APK/anteriores/`.
   Mientras no esté, subir a mano el APK de https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.apk a esa carpeta.
+
+### Resultado de Drive (2026-11-04)
+
+- Cuenta autorizada por la dueña: `unbiraapps@gmail.com`. Remoto `unbira`, alcance `drive.file` (archivos usados con rclone).
+- Carpeta `Meneia/APK`: https://drive.google.com/drive/u/0/folders/14aGADyhyMKo-HMdwPD2v_XeoSLACCJOr
+- Subida manual completada mediante rclone fuera del workflow: `meneia.apk`, 5.980.932 bytes, correspondiente al armado exitoso `41897777856` (commit `5f479e7`). SHA-256 verificado contra el archivo descargado: `6d5bb59294c6bf710f00a93dae39b25c2fb63e047771abdc734f2c2728772f6e`.
+- Secreto `RCLONE_CONF` cargado cifrado en GitHub Actions; no hay tokens ni configuración de acceso en el repo. Copia local protegida fuera del repo, en `C:\Users\lenovo\Documents\Meneia-firma\Drive`.
+- Se conserva la ruta por defecto `Meneia/APK`; no hizo falta definir `DRIVE_FOLDER`.
+- Workflow manual de prueba: https://github.com/unbiraapps/Meneia/actions/runs/41899977280. Finalizó en `success`, incluido el paso "Subir al Drive de unbira".
+- Se verificaron `Meneia/APK/meneia.apk` y `Meneia/APK/anteriores/meneia_2026-11-04_1649.apk`, ambos de 5.980.932 bytes. SHA-256 de ambos y del APK publicado por ese workflow en GitHub: `ea3f0fcb4fa063a36eed9a3ca27546fc1d0bcbfebaa5fb7ebbffa28e28d5ccb5`. La copia actual reemplazó correctamente la subida manual.
+- Verificaciones locales previas al commit: `npm test` (40 pruebas) y `npm run build`, sin errores.
+- Mantenimiento: rclone v1.75.2 advirtió que su cliente OAuth compartido será retirado durante 2026. Migrar a un cliente OAuth propio de unbira y reautorizar/actualizar `RCLONE_CONF` para evitar una interrupción futura.
 
 ## Más adelante (etapa 4)
 
