@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_DRIVE: ${{ secrets.RCLONE_CONF != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,3 +70,16 @@ jobs:
             --title "Meneia (última versión)" \
             --notes "Abrí este link desde el celular para instalar Meneia: https://github.com/${{ github.repository }}/releases/download/ultima-version/meneia.apk" \
             --target ${{ github.sha }} --latest
+      - name: Subir al Drive de unbira
+        if: env.HAS_DRIVE == 'true'
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+          DRIVE_FOLDER: ${{ vars.DRIVE_FOLDER || 'Meneia/APK' }}
+        run: |
+          curl -fsSL https://rclone.org/install.sh | sudo bash > /dev/null
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          STAMP=$(TZ=America/Argentina/Buenos_Aires date +%Y-%m-%d_%H%M)
+          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/meneia.apk"
+          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/anteriores/meneia_$STAMP.apk"
+          echo "Subida a Drive: $DRIVE_FOLDER/meneia.apk"
