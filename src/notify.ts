@@ -1,8 +1,8 @@
 // Notificaciones. En la app de Android se programan en el celular (llegan con la app cerrada).
-// En la versión web los avisos se muestran dentro de la app al abrirla.
+// En la web los avisos se muestran dentro de la app al abrirla.
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import type { Reminder } from './calc';
+import type { Reminder, PrivacySettings } from './calc';
 
 export const isNative = () => Capacitor.isNativePlatform();
 
@@ -20,35 +20,47 @@ export async function requestPermission(): Promise<PermState> {
   return p.display === 'granted' ? 'granted' : 'denied';
 }
 
-let channelReady = false;
-async function ensureChannel() {
-  if (channelReady) return;
-  try {
-    await LocalNotifications.createChannel({ id: 'ciclo', name: 'Avisos del ciclo', description: 'Período, ventana fértil y atrasos', importance: 4, visibility: 0, lightColor: '#A77CE5' });
-  } catch { /* canal ya existe o no aplica */ }
-  channelReady = true;
+// Dos canales silenciosos (importancia baja: sin sonido ni cartel encima de otras apps).
+// Android no deja cambiar un canal después de creado, por eso hay uno por visibilidad.
+const CH_HIDDEN = 'meneia-oculto';   // no se ve en la pantalla de bloqueo
+const CH_PRIVATE = 'meneia-privado'; // se ve que hay un aviso, sin contenido
+let channelsReady = false;
+async function ensureChannels() {
+  if (channelsReady) return;
+  for (const [id, visibility] of [[CH_HIDDEN, -1], [CH_PRIVATE, 0]] as const) {
+    try {
+      await LocalNotifications.createChannel({ id, name: id === CH_HIDDEN ? 'Recordatorios (ocultos)' : 'Recordatorios', description: 'Recordatorios de Meneia', importance: 2, visibility, vibration: false, lights: false });
+    } catch { /* ya existe */ }
+  }
+  channelsReady = true;
 }
 
+const at = (date: string, hour: number) => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d, hour, 0, 0); };
+
 /** Reemplaza todos los avisos programados por la lista nueva. */
-export async function syncReminders(list: Reminder[]): Promise<number> {
+export async function syncReminders(list: Reminder[], pr: PrivacySettings): Promise<number> {
   if (!isNative()) return 0;
   if ((await permissionState()) !== 'granted') return 0;
-  await ensureChannel();
+  await ensureChannels();
   const pending = await LocalNotifications.getPending();
   if (pending.notifications.length) await LocalNotifications.cancel({ notifications: pending.notifications.map(n => ({ id: n.id })) });
   if (!list.length) return 0;
+  const channelId = pr.hideOnLock ? CH_HIDDEN : CH_PRIVATE;
   await LocalNotifications.schedule({
-    notifications: list.map(r => {
-      const [y, m, d] = r.date.split('-').map(Number);
-      return { id: r.id, title: r.title, body: r.body, channelId: 'ciclo', smallIcon: 'ic_stat_ciclo', iconColor: '#816BB4', schedule: { at: new Date(y, m - 1, d, r.hour, 0, 0), allowWhileIdle: true } };
-    }),
+    notifications: list.map(r => ({ id: r.id, title: r.title, body: r.body, channelId, smallIcon: 'ic_stat_ciclo', iconColor: pr.dotColor, schedule: { at: at(r.date, r.hour), allowWhileIdle: true } })),
   });
   return list.length;
 }
 
-/** Aviso inmediato (por ejemplo, cuando cambia la duración del ciclo). */
-export async function notifyNow(title: string, body: string): Promise<void> {
+/** Aviso inmediato (por ejemplo, cuando cambia la duración del ciclo). Respeta el modo discreto. */
+export async function notifyNow(title: string, body: string, pr: PrivacySettings): Promise<void> {
   if (!isNative() || (await permissionState()) !== 'granted') return;
-  await ensureChannel();
-  await LocalNotifications.schedule({ notifications: [{ id: 9000 + Math.floor(Math.random() * 900), title, body, channelId: 'ciclo', smallIcon: 'ic_stat_ciclo', iconColor: '#816BB4', schedule: { at: new Date(Date.now() + 1500) } }] });
+  await ensureChannels();
+  await LocalNotifications.schedule({ notifications: [{
+    id: 9000 + Math.floor(Math.random() * 900),
+    title: pr.discreet ? 'Meneia' : title,
+    body: pr.discreet ? 'Tenés un recordatorio' : body,
+    channelId: pr.hideOnLock ? CH_HIDDEN : CH_PRIVATE, smallIcon: 'ic_stat_ciclo', iconColor: pr.dotColor,
+    schedule: { at: new Date(Date.now() + 1500) },
+  }] });
 }

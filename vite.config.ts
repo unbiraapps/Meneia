@@ -4,10 +4,13 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // `vite build`                -> app instalable (PWA) y base de la app de Android, en dist/
 // `vite build --mode artifact` -> un solo archivo HTML para vista previa, en dist-artifact/
+const oxc = { jsx: { runtime: 'automatic' as const } };
+
 export default defineConfig(({ mode }) => mode === 'artifact'
-  ? { base: './', plugins: [viteSingleFile()], build: { outDir: 'dist-artifact', emptyOutDir: true } }
+  ? { base: './', oxc, plugins: [viteSingleFile()], build: { outDir: 'dist-artifact', emptyOutDir: true } }
   : {
       base: './',
+      oxc,
       build: { outDir: 'dist', emptyOutDir: true },
       plugins: [VitePWA({
         registerType: 'autoUpdate',

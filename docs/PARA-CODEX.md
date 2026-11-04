@@ -10,6 +10,7 @@ Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de c
   - `ANDROID_KEY_ALIAS` (`meneia`)
   - `ANDROID_KEY_PASSWORD`
   Importante: si se pierde este keystore, no se puede actualizar la app en Google Play.
+  Aviso para la dueña: la primera versión firmada con esta clave no se instala encima de la versión de prueba anterior. Antes hay que guardar una copia (Copia de seguridad), desinstalar la versión vieja, instalar la nueva y restaurar la copia.
 - [x] **Web en Cloudflare Pages.** Proyecto conectado al repo `unbiraapps/Meneia`, rama `main`, comando `npm run build`, carpeta `dist`, Node 22. Dominio propio `meneia.unbiraapps.com`.
 
 ### Resultado de firma (2026-11-04)

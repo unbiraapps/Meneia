@@ -14,6 +14,9 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 - Supabase se usa solo más adelante y es opcional: para que una hija comparta con la mamá, con los datos cifrados.
 - La web y la política de privacidad van en `meneia.unbiraapps.com` (Cloudflare Pages).
 - La prueba de Google Play (12 testers durante 14 días) la resuelve la dueña con un servicio contratado, al final.
+- Las versiones de prueba se firman con una clave fija que está en el repositorio (`android/app/meneia-debug.keystore`, no es secreta), así cada APK se instala encima del anterior sin perder datos.
+- Los períodos anteriores cargados con "Buscar embarazo" activo solo se marcan como "buscando" si empezaron en los últimos 45 días.
+- La pestaña Salud ya tiene la última consulta, el aviso de control y las preguntas. Las consultas anteriores quedan para la etapa 3.
 
 ## Quién hace qué
 
@@ -29,18 +32,18 @@ Las tareas que necesitan cuentas o paneles web se anotan en `docs/PARA-CODEX.md`
 
 ## Etapa 1: nueva estructura, familia y privacidad
 
-- [ ] Migrar la interfaz a React + TypeScript. `src/calc.ts`, `src/db.ts` y `src/notify.ts` se reusan.
-- [ ] Barra inferior con Hoy, Calendario, Historial, Salud y Perfil, y botón "Me vino" en Hoy.
-- [ ] Perfiles en Dexie (`profiles`) con nombre, color, fecha de nacimiento y modos. Los períodos, eventos y ajustes pasan a llevar `profileId`, y lo actual se migra al perfil "Yo" sin perder datos.
-- [ ] Pantalla de inicio "¿Qué querés seguir?": Mi ciclo, Buscar embarazo (+18) y Ciclos de mis hijas.
-- [ ] Familia: perfiles de hijas, modo "todavía no le vino", un solo aviso antes del período (apagado, 1, 2 o 3 días) y lista de compras editable.
-- [ ] Privacidad:
+- [x] Migrar la interfaz a React + TypeScript. `src/calc.ts`, `src/db.ts` y `src/notify.ts` se reusan.
+- [x] Barra inferior con Hoy, Calendario, Historial, Salud y Perfil, y botón "Me vino" en Hoy.
+- [x] Perfiles en Dexie (`profiles`) con nombre, color, fecha de nacimiento y modos. Los períodos, eventos y ajustes pasan a llevar `profileId`, y lo actual se migra al perfil "Yo" sin perder datos.
+- [x] Pantalla de inicio "¿Qué querés seguir?": Mi ciclo, Buscar embarazo (+18) y Ciclos de mis hijas.
+- [x] Familia: perfiles de hijas, modo "todavía no le vino", un solo aviso antes del período (apagado, 1, 2 o 3 días) y lista de compras editable.
+- [x] Privacidad:
   - Bloqueo con huella o PIN al abrir y al volver a la app.
   - Tapar con un toque.
   - FLAG_SECURE (no aparece en recientes ni en capturas).
-- [ ] Avisos discretos: texto "Tenés un recordatorio", punto de color elegible, canal silencioso, oculto en la pantalla de bloqueo, horario sin avisos. Los avisos de familia dicen "Lista de compras para esta semana".
-- [ ] Versión firmada (release) en el workflow. Usa los secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD`, y si no están, compila la versión de prueba.
-- [ ] Pruebas de todo lo nuevo (perfiles, migración, avisos de familia, regla de +18).
+- [x] Avisos discretos: texto "Tenés un recordatorio", punto de color elegible, canal silencioso, oculto en la pantalla de bloqueo, horario sin avisos. Los avisos de familia dicen "Lista de compras para esta semana".
+- [x] Versión firmada (release) en el workflow. Usa los secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD`, y si no están, compila la versión de prueba.
+- [x] Pruebas de todo lo nuevo (perfiles, migración, avisos de familia, regla de +18).
 
 ## Etapa 2: predicciones, pastillas y síntomas
 

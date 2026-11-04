@@ -4,8 +4,37 @@
 export type Flow = 'Leve' | 'Normal' | 'Abundante';
 export type PillType = 'stop' | 'start';
 
-export interface Period { id?: number; start: string; end: string; flow: Flow; note: string; trying?: boolean }
-export interface PillEvent { id?: number; date: string; type: PillType }
+export interface Period { id?: number; profileId?: number; start: string; end: string; flow: Flow; note: string; trying?: boolean }
+export interface PillEvent { id?: number; profileId?: number; date: string; type: PillType }
+
+export type ProfileKind = 'self' | 'child';
+export interface Profile {
+  id?: number;
+  name: string;
+  kind: ProfileKind;
+  color: string;
+  birthDate: string;   // 'YYYY-MM-DD' o '' si no se cargó
+  trying: boolean;     // modo buscar embarazo (solo 'self' y 18+)
+  notYet: boolean;     // hija a la que todavía no le vino
+  alertDays: number;   // hijas: días antes del período para avisar (0 = apagado)
+}
+
+export interface PrivacySettings {
+  lock: boolean;          // pedir huella o PIN al abrir y al volver
+  pinHash: string;        // SHA-256 del PIN ('' si no hay)
+  secureScreen: boolean;  // no aparece en recientes ni en capturas (Android)
+  discreet: boolean;      // avisos con texto neutro
+  hideOnLock: boolean;    // avisos ocultos en la pantalla de bloqueo
+  quietFrom: number;      // horario sin avisos (hora 0-23); igual a quietTo = apagado
+  quietTo: number;
+  dotColor: string;       // color del punto de los avisos
+}
+
+export const DEFAULT_PRIVACY: PrivacySettings = {
+  lock: false, pinHash: '', secureScreen: true, discreet: true, hideOnLock: true, quietFrom: 22, quietTo: 8, dotColor: '#A77CE5',
+};
+
+export const DEFAULT_SHOPPING = ['Toallitas', 'Protectores diarios', 'Algo rico', 'Algo para el dolor'];
 
 export interface Flag { level: 'warn' | 'alert'; text: string }
 export interface Row extends Period { dur: number | null; cycle: number | null; flags: Flag[] }
@@ -204,3 +233,57 @@ export const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
 export const fmtShort = (s: string) => { const d = toDate(s); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
 export const fmtLong = (s: string) => { const d = toDate(s); return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} de ${MONTHS_LONG[d.getUTCMonth()]}`; };
+
+// ---------- Perfiles ----------
+
+/** Edad cumplida en una fecha. null si no hay fecha de nacimiento. */
+export function ageOn(birthDate: string, today: string): number | null {
+  if (!birthDate) return null;
+  const [by, bm, bd] = birthDate.split('-').map(Number);
+  const [ty, tm, td] = today.split('-').map(Number);
+  let age = ty - by;
+  if (tm < bm || (tm === bm && td < bd)) age--;
+  return age;
+}
+
+/** El modo buscar embarazo solo existe para el perfil propio y con 18 años o más. */
+export function canTry(p: Profile, today: string): boolean {
+  if (p.kind !== 'self') return false;
+  const a = ageOn(p.birthDate, today);
+  return a != null && a >= 18;
+}
+
+/** ¿Se muestran ovulación y días fértiles para este perfil? Nunca en perfiles de hijas. */
+export const showsFertility = (p: Profile) => p.kind === 'self';
+
+// ---------- Avisos de familia y armado final ----------
+
+/** Un solo aviso por hija: X días antes de su próximo período (y de los dos siguientes). Texto siempre neutro. */
+export function childReminders(p: Profile, A: Analysis, hour: number, now: Date, horizon = 120): Reminder[] {
+  if (p.kind !== 'child' || p.notYet || !p.alertDays || !A.next || p.id == null) return [];
+  const today = localToday(now);
+  const out: Reminder[] = [];
+  for (let c = 0; c < 3; c++) {
+    const date = addDays(addDays(A.next, c * A.avgCycle), -p.alertDays);
+    const d = daysBetween(today, date);
+    if (d < 0 || d > horizon || (d === 0 && now.getHours() >= hour)) continue;
+    out.push({ id: 6000 + p.id * 10 + c, date, hour, title: 'Meneia', body: 'Lista de compras para esta semana' });
+  }
+  return out;
+}
+
+/** ¿La hora cae dentro del horario sin avisos? Soporta rangos que cruzan la medianoche (22 a 8). */
+export function inQuiet(hour: number, from: number, to: number): boolean {
+  if (from === to) return false;
+  return from < to ? hour >= from && hour < to : hour >= from || hour < to;
+}
+
+/** Aplica la privacidad a los avisos: texto neutro y corrimiento fuera del horario sin avisos. */
+export function finalizeReminders(list: Reminder[], pr: PrivacySettings): Reminder[] {
+  return list.map(r => ({
+    ...r,
+    hour: inQuiet(r.hour, pr.quietFrom, pr.quietTo) ? pr.quietTo : r.hour,
+    title: pr.discreet ? 'Meneia' : r.title,
+    body: pr.discreet ? (r.id >= 6000 ? 'Lista de compras para esta semana' : 'Tenés un recordatorio') : r.body,
+  }));
+}

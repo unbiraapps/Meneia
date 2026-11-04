@@ -1,0 +1,81 @@
+import { useState } from 'react';
+import { ageOn, canTry, fmtLong } from '../calc';
+import { saveProfile, savePillEvent, SELF_ID } from '../db';
+import { useStore } from './store';
+import { Avatar, Icon, Switch, useToast } from './ui';
+import { Familia } from './Familia';
+import { Privacidad } from './Privacidad';
+import { Avisos } from './Avisos';
+import { Copia } from './Copia';
+
+type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia';
+
+export function Perfil() {
+  const { self, profiles, today, refresh, privacy } = useStore();
+  const toast = useToast();
+  const [sub, setSub] = useState<Sub>(null);
+  if (!self) return null;
+  if (sub === 'familia') return <Familia onBack={() => setSub(null)} />;
+  if (sub === 'privacidad') return <Privacidad onBack={() => setSub(null)} />;
+  if (sub === 'avisos') return <Avisos onBack={() => setSub(null)} />;
+  if (sub === 'copia') return <Copia onBack={() => setSub(null)} />;
+
+  const me = self.profile;
+  const age = ageOn(me.birthDate, today);
+  const tryOk = canTry(me, today);
+  const kids = profiles.filter(p => p.kind === 'child');
+  const ev = self.A.lastPill;
+
+  async function setTrying(v: boolean) { await saveProfile({ ...me, trying: v }); await refresh(); toast(v ? 'Buscar embarazo activado' : 'Buscar embarazo apagado'); }
+  async function pill(type: 'stop' | 'start') { await savePillEvent({ profileId: SELF_ID, date: today, type }); await refresh(); toast(type === 'stop' ? 'Anotado: dejaste las pastillas hoy' : 'Anotado: empezaste las pastillas hoy'); }
+
+  return (
+    <div className="screen">
+      <div className="row"><Avatar name="Yo" color={me.color} lg /><div className="stack"><h1 style={{ fontSize: 22 }}>Mi perfil</h1><span className="muted" style={{ fontSize: 13 }}>Tus datos quedan solo en este celular</span></div></div>
+
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Qué seguís</span>
+        <div className="list">
+          <div className="setting"><label className="field grow" style={{ gap: 4 }}>Fecha de nacimiento
+            <input type="date" value={me.birthDate} max={today} onChange={async e => { const b = e.target.value; const p = { ...me, birthDate: b }; if (!canTry(p, today)) p.trying = false; await saveProfile(p); await refresh(); }} /></label></div>
+          <div className="setting" style={me.trying ? { background: 'var(--try-bg)' } : undefined}>
+            <div className="stack grow"><b style={{ color: me.trying ? 'var(--try)' : undefined }}>Buscar embarazo</b>
+              <small>{!me.birthDate ? 'Cargá tu fecha de nacimiento para activarlo' : !tryOk ? 'Disponible desde los 18 años' : me.trying ? 'Activo: ves los mejores días para buscar' : 'Apagado: no se muestra nada sobre embarazo'}</small></div>
+            {tryOk && <Switch on={me.trying} label="Buscar embarazo" variant="try" onChange={setTrying} />}
+          </div>
+        </div>
+        {age != null && age < 18 && <p className="muted" style={{ fontSize: 12.5 }}>Tenés {age} años según la fecha cargada.</p>}
+      </div>
+
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Familia</span>
+        <button type="button" className="list" style={{ padding: 0, background: 'var(--fam-bg)', borderColor: 'transparent' }} onClick={() => setSub('familia')}>
+          <span className="list-item"><span style={{ color: 'var(--fam)' }}><Icon.family /></span>
+            <span className="grow"><b style={{ color: 'var(--fam)' }}>{kids.length ? kids.map(k => k.name).join(' y ') : 'Ciclos de mis hijas'}</b><small>{kids.length ? 'Aviso antes de su período y lista de compras' : 'Agregá a tus hijas para saber cuándo les toca'}</small></span><Icon.chev /></span>
+        </button>
+      </div>
+
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Pastillas anticonceptivas</span>
+        <div className="card" style={{ gap: 10 }}>
+          <p style={{ fontSize: 14 }}>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Las tomás desde el ${fmtLong(ev.date)}`) : 'No anotaste cambios de pastillas.'}</p>
+          <div className="btns">
+            <button type="button" className="btn ghost small" onClick={() => pill('start')}>Empecé hoy</button>
+            <button type="button" className="btn ghost small" onClick={() => pill('stop')}>Las dejé hoy</button>
+          </div>
+          <p className="muted" style={{ fontSize: 12.5 }}>Para otra fecha, usá "Anotar algo" en Hoy.</p>
+        </div>
+      </div>
+
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Ajustes</span>
+        <div className="list">
+          <button type="button" className="list-item" onClick={() => setSub('privacidad')}><span style={{ color: 'var(--plum)' }}><Icon.lock /></span><span className="grow"><b>Privacidad</b><small>{privacy.lock ? 'Bloqueo activado' : 'Sin bloqueo'} · {privacy.secureScreen ? 'oculta en recientes' : 'visible en recientes'}</small></span><Icon.chev /></button>
+          <button type="button" className="list-item" onClick={() => setSub('avisos')}><span style={{ color: 'var(--plum)' }}><Icon.bell /></span><span className="grow"><b>Avisos</b><small>{privacy.discreet ? 'Discretos' : 'Con detalle'}{privacy.quietFrom !== privacy.quietTo ? ` · sin avisos de ${privacy.quietFrom} a ${privacy.quietTo}` : ''}</small></span><Icon.chev /></button>
+          <button type="button" className="list-item" onClick={() => setSub('copia')}><span style={{ color: 'var(--plum)' }}><Icon.save /></span><span className="grow"><b>Copia de seguridad</b><small>Para no perder nada si cambiás de celular</small></span><Icon.chev /></button>
+        </div>
+      </div>
+      <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
+    </div>
+  );
+}

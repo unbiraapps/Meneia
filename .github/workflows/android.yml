@@ -1,5 +1,6 @@
-# Compila la app de Android (APK) en GitHub, sin instalar nada en tu compu.
-# Se corre sola en cada cambio, o a mano desde la pestaña "Actions" > "App de Android" > "Run workflow".
+# Compila la app de Android en GitHub, sin instalar nada en tu compu.
+# Si están los secretos de firma, arma la versión release firmada; si no, la versión de prueba.
+# Se corre sola en cada cambio, o a mano desde Actions > "App de Android" > "Run workflow".
 name: App de Android
 on:
   push:
@@ -10,6 +11,8 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,19 +27,40 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: Preparar la firma
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/meneia.jks"
+          echo "MENEIA_KEYSTORE=$RUNNER_TEMP/meneia.jks" >> "$GITHUB_ENV"
       - name: Compilar APK
         working-directory: android
-        run: chmod +x gradlew && ./gradlew assembleDebug && mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/meneia.apk
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          MENEIA_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          if [ "$HAS_KEYSTORE" = "true" ]; then
+            ./gradlew assembleRelease bundleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/meneia.apk"
+            cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/meneia.aab"
+          else
+            ./gradlew assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/meneia.apk"
+          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: meneia-apk
-          path: android/app/build/outputs/apk/debug/meneia.apk
+          name: meneia
+          path: ${{ runner.temp }}/meneia.*
       - name: Publicar para descargar desde el celular
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete ultima-version --yes --cleanup-tag || true
-          gh release create ultima-version android/app/build/outputs/apk/debug/meneia.apk \
+          FILES="$RUNNER_TEMP/meneia.apk"
+          [ -f "$RUNNER_TEMP/meneia.aab" ] && FILES="$FILES $RUNNER_TEMP/meneia.aab"
+          gh release create ultima-version $FILES \
             --title "Meneia (última versión)" \
             --notes "Abrí este link desde el celular para instalar Meneia: https://github.com/${{ github.repository }}/releases/download/ultima-version/meneia.apk" \
             --target ${{ github.sha }} --latest

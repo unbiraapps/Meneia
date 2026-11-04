@@ -13,3 +13,4 @@ android/capacitor-cordova-android-plugins/
 *.keystore
 .env*
 .claude/settings.local.json
+!android/app/meneia-debug.keystore

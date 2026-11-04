@@ -1,0 +1,76 @@
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { App as CapApp } from '@capacitor/app';
+import { setSecureScreen } from '../privacy';
+import { isNative } from '../notify';
+import { StoreProvider, useStore } from './store';
+import { Icon, ToastProvider } from './ui';
+import { Hoy } from './Hoy';
+import { Calendario } from './Calendario';
+import { Historial } from './Historial';
+import { Salud } from './Salud';
+import { Perfil } from './Perfil';
+import { Inicio } from './Inicio';
+import { Lock } from './Lock';
+import { Familia } from './Familia';
+
+type Tab = 'hoy' | 'calendario' | 'historial' | 'salud' | 'perfil';
+const TABS: [Tab, string, () => React.JSX.Element][] = [
+  ['hoy', 'Hoy', Icon.today], ['calendario', 'Calendario', Icon.cal], ['historial', 'Historial', Icon.list], ['salud', 'Salud', Icon.heart], ['perfil', 'Perfil', Icon.user],
+];
+
+function Shell() {
+  const { ready, privacy, onboarded } = useStore();
+  const [tab, setTab] = useState<Tab>('hoy');
+  const [famFirst, setFamFirst] = useState(false);
+  const [covered, setCovered] = useState(false);
+  const [locked, setLocked] = useState(true);
+  const lockOn = useRef(false);
+  lockOn.current = !!(privacy.lock && privacy.pinHash);
+
+  // Al cargar: aplicar pantalla segura y decidir si arranca bloqueada.
+  const started = useRef(false);
+  useEffect(() => {
+    if (!ready || started.current) return;
+    started.current = true;
+    setSecureScreen(privacy.secureScreen);
+    setLocked(lockOn.current);
+  }, [ready, privacy.secureScreen]);
+
+  // Al salir de la app, se bloquea (si el bloqueo está activo).
+  useEffect(() => {
+    const onHide = () => { if (document.visibilityState === 'hidden' && lockOn.current) setLocked(true); };
+    document.addEventListener('visibilitychange', onHide);
+    let off: (() => void) | undefined;
+    if (isNative()) CapApp.addListener('pause', () => { if (lockOn.current) setLocked(true); }).then(h => { off = () => h.remove(); });
+    return () => { document.removeEventListener('visibilitychange', onHide); off?.(); };
+  }, []);
+
+  const unlock = useCallback(() => { setLocked(false); setCovered(false); }, []);
+
+  if (!ready) return <div className="screen" aria-busy="true" />;
+  if (lockOn.current && locked) return <Lock pinHash={privacy.pinHash} onUnlock={unlock} />;
+  if (covered) return <button type="button" className="cover" aria-label="Pantalla tapada. Tocá para seguir" onClick={() => { if (lockOn.current) setLocked(true); setCovered(false); }}><span className="dot" /><span style={{ fontSize: 12.5 }}>Tocá para seguir</span></button>;
+  if (!onboarded) return <Inicio onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
+
+  return (
+    <div className="app">
+      {tab === 'hoy' && <Hoy onCover={() => setCovered(true)} goTo={t => setTab(t)} />}
+      {tab === 'calendario' && <Calendario />}
+      {tab === 'historial' && <Historial />}
+      {tab === 'salud' && <Salud />}
+      {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} /> : <Perfil />)}
+      <nav className="nav" aria-label="Secciones">
+        <div className="nav-in">
+          {TABS.map(([id, label, Ico]) => (
+            <button key={id} type="button" className={'tab' + (tab === id ? ' on' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id); setFamFirst(false); window.scrollTo(0, 0); }}><Ico />{label}</button>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+export function App() {
+  return <StoreProvider><ToastProvider><Shell /></ToastProvider></StoreProvider>;
+}

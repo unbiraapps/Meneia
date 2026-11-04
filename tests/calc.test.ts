@@ -175,8 +175,8 @@ describe('copia de seguridad', () => {
     const r = parseBackup(JSON.stringify({ periods: [{ start: '2026-10-29', end: '2026-10-01', flow: 'Mucho', note: 'hola' }], events: [{ date: '2026-08-20', type: 'stop' }, { date: 'x', type: 'stop' }] }));
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.data.periods[0]).toEqual({ start: '2026-10-29', end: '', flow: 'Normal', note: 'hola' });
-      expect(r.data.events).toEqual([{ date: '2026-08-20', type: 'stop' }]);
+      expect(r.data.periods[0]).toEqual({ profileId: 1, start: '2026-10-29', end: '', flow: 'Normal', note: 'hola' });
+      expect(r.data.events).toEqual([{ profileId: 1, date: '2026-08-20', type: 'stop' }]);
     }
   });
   it('rechaza texto que no es copia', () => {
