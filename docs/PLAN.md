@@ -1,0 +1,75 @@
+# Meneia: plan de trabajo
+
+Proyecto completo con diseño y fundamentos: página "Proyecto Meneia Android" en Claude.
+Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
+
+## Decisiones tomadas
+
+- La app se llama **Meneia**. Es siempre oscura, con la paleta lila de `src/styles.css`, y el texto va en español rioplatense (vos).
+- Los datos de salud **nunca salen del celular**: nada de servidores y sin cuenta obligatoria.
+- **No se guardan estudios**: ni PDF ni fotos ni archivos médicos.
+- **Buscar embarazo** solo se muestra si el perfil tiene 18 años o más.
+- Los perfiles de hijas nunca muestran fertilidad, ovulación ni embarazo.
+- **Gratis con pocos anuncios, y versión paga sin anuncios.** Las dos versiones tienen todas las funciones.
+- Supabase se usa solo más adelante y es opcional: para que una hija comparta con la mamá, con los datos cifrados.
+- La web y la política de privacidad van en `meneia.unbiraapps.com` (Cloudflare Pages).
+- La prueba de Google Play (12 testers durante 14 días) la resuelve la dueña con un servicio contratado, al final.
+
+## Quién hace qué
+
+| Claude Code (desarrollo) | Codex (cuentas, publicación y links) |
+|---|---|
+| Código, pantallas, cálculos, pruebas | Cloudflare Pages y DNS de `meneia.unbiraapps.com` |
+| Workflows de GitHub Actions | Secretos de GitHub (keystore, AdMob IDs) |
+| Política de privacidad (texto) | Cuenta de Google Play Console, ficha, formularios |
+| Integración AdMob y Billing en el código | Alta en AdMob y productos de pago en Play Console |
+| | Supabase (cuando toque) |
+
+Las tareas que necesitan cuentas o paneles web se anotan en `docs/PARA-CODEX.md`, y Codex las va marcando ahí.
+
+## Etapa 1: nueva estructura, familia y privacidad
+
+- [ ] Migrar la interfaz a React + TypeScript. `src/calc.ts`, `src/db.ts` y `src/notify.ts` se reusan.
+- [ ] Barra inferior con Hoy, Calendario, Historial, Salud y Perfil, y botón "Me vino" en Hoy.
+- [ ] Perfiles en Dexie (`profiles`) con nombre, color, fecha de nacimiento y modos. Los períodos, eventos y ajustes pasan a llevar `profileId`, y lo actual se migra al perfil "Yo" sin perder datos.
+- [ ] Pantalla de inicio "¿Qué querés seguir?": Mi ciclo, Buscar embarazo (+18) y Ciclos de mis hijas.
+- [ ] Familia: perfiles de hijas, modo "todavía no le vino", un solo aviso antes del período (apagado, 1, 2 o 3 días) y lista de compras editable.
+- [ ] Privacidad:
+  - Bloqueo con huella o PIN al abrir y al volver a la app.
+  - Tapar con un toque.
+  - FLAG_SECURE (no aparece en recientes ni en capturas).
+- [ ] Avisos discretos: texto "Tenés un recordatorio", punto de color elegible, canal silencioso, oculto en la pantalla de bloqueo, horario sin avisos. Los avisos de familia dicen "Lista de compras para esta semana".
+- [ ] Versión firmada (release) en el workflow. Usa los secretos `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` y `ANDROID_KEY_PASSWORD`, y si no están, compila la versión de prueba.
+- [ ] Pruebas de todo lo nuevo (perfiles, migración, avisos de familia, regla de +18).
+
+## Etapa 2: predicciones, pastillas y síntomas
+
+- [ ] Rango a medida según la variación de los ciclos, y mediana en vez de promedio.
+- [ ] Etiqueta de confianza: pocos datos (menos de 3 ciclos), media (3 a 5) y firme (6 o más con poca variación).
+- [ ] Ciclos raros marcables y ciclos de adaptación (los 3 después de dejar las pastillas) que no cuentan.
+- [ ] Ciclos irregulares: "posibles días" con margen ajustable (±2 a ±7) y aviso al empezar.
+- [ ] Atraso contado desde el final del rango.
+- [ ] "Cuánto acertó" al anotar "Me vino".
+- [ ] Rangos de FIGO para adultas: ciclo de 24 a 38 días, variación de 7 a 9 días y sangrado de hasta 8 días. Para menores, margen amplio y sin alertas alarmantes.
+- [ ] Pastillas: toma diaria con "La tomé", blíster de 21+7, recordatorio a la hora elegida, blísters en casa y aviso para comprar.
+- [ ] Síntomas: dolor (nada, leve, medio, fuerte), cuerpo, ánimo, nota y síntomas propios. "Lo que se repite" con 3 ciclos o más. Los perfiles de hijas registran solo dolor y ánimo.
+
+## Etapa 3: salud y copia
+
+- [ ] Consultas: última consulta, consultas anteriores (fecha, motivo, nota), aviso del próximo control y preguntas para la próxima visita.
+- [ ] Copia de seguridad v2 con perfiles, síntomas, pastillas y consultas, y que siga leyendo la v1.
+
+## Etapa 4: anuncios, pago y Google Play
+
+- [ ] AdMob, solo anuncios no personalizados. Banner al pie de Calendario e Historial, y como mucho 1 anuncio de pantalla completa por día, solo después de guardar algo. Nunca al abrir, en el bloqueo, en avisos ni en perfiles de hijas, ni durante los primeros 7 días.
+- [ ] Anuncio con premio opcional: una semana sin anuncios.
+- [ ] Facturación de Google Play: un producto que quita los anuncios. El precio lo define la dueña.
+- [ ] Política de privacidad en `meneia.unbiraapps.com/privacidad`.
+- [ ] Ficha de Play, formulario de apps de salud y sección de seguridad de datos (le toca a Codex).
+
+## Reglas para trabajar
+
+- Antes de cada commit: `npm test` y `npm run build`, sin errores.
+- Commits chicos con mensaje en español. Push a `main`: el workflow arma el APK en `releases/download/ultima-version/meneia.apk`.
+- No agregar librerías de analítica ni de rastreo. AdMob es la única excepción, y solo en la etapa 4.
+- Nada de pop-ups para pagar, artículos, horóscopo, chats ni rachas.
