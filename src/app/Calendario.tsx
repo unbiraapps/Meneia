@@ -5,8 +5,9 @@ import { useStore } from './store';
 import { useToast } from './ui';
 import { ProfileChips } from './Hoy';
 import { PeriodSheet } from './PeriodSheet';
+import { SymptomSheet } from './SymptomSheet';
 
-const NAMES: Record<DayKind, string> = { period: 'período', pred: 'período probable', fertile: 'fértil', ovu: 'ovulación', pill: 'cambio de pastillas', try: 'buscando embarazo' };
+const NAMES: Record<DayKind, string> = { period: 'período', pred: 'período probable', maybe: 'posible período', fertile: 'fértil', ovu: 'ovulación', pill: 'cambio de pastillas', try: 'buscando embarazo', sym: 'síntomas anotados' };
 
 export function Calendario() {
   const { active, today, refresh } = useStore();
@@ -15,11 +16,12 @@ export function Calendario() {
   const [y, setY] = useState(now.getFullYear());
   const [m, setM] = useState(now.getMonth());
   const [sel, setSel] = useState(today);
-  const [sheet, setSheet] = useState(false);
+  const [sheet, setSheet] = useState<false | 'edit' | 'sym'>(false);
   if (!active) return null;
   const { profile, A, events } = active;
   const fert = showsFertility(profile);
   const kinds = dayKinds(A, events);
+  const symDays = new Set(active.symptoms.map(s => s.date));
 
   const first = new Date(Date.UTC(y, m, 1));
   const start = iso(new Date(first.getTime() - ((first.getUTCDay() + 6) % 7) * 864e5));
@@ -61,8 +63,10 @@ export function Calendario() {
           if (k.has('period')) c += ' period';
           else if (fert && k.has('ovu')) c += ' ovu';
           else if (k.has('pred')) c += ' pred';
+          else if (k.has('maybe')) c += ' maybe';
           else if (fert && k.has('fertile')) c += ' fertile';
           if (k.has('pill')) c += ' pill';
+          if (symDays.has(s)) c += ' sym';
           if (fert && k.has('try') && (k.has('fertile') || k.has('ovu'))) c += ' try';
           if (s === today) c += ' today';
           if (s === sel) c += ' sel';
@@ -72,7 +76,8 @@ export function Calendario() {
       </div>
       <div className="legend">
         <span><i style={{ background: 'var(--period)' }} />Período</span>
-        <span><i style={{ border: '2px dashed var(--period)', width: 10, height: 10 }} />Probable</span>
+        <span><i style={{ border: '2px dashed var(--period)', width: 10, height: 10 }} />Más probable</span>
+        <span><i style={{ border: '2px dotted var(--line)', width: 10, height: 10 }} />Posible</span>
         {fert && <><span><i style={{ background: 'var(--fertile)' }} />Fértil</span><span><i style={{ background: 'var(--ovu)' }} />Ovulación</span></>}
         {profile.kind === 'self' && <span><i style={{ background: 'var(--plum)', borderRadius: '50%', width: 9, height: 9 }} />Pastillas</span>}
       </div>
@@ -85,11 +90,13 @@ export function Calendario() {
           <div className="btns">
             {!inPeriod && <button type="button" className="btn period small" onClick={startHere}>Empezó este día</button>}
             {prevStart && !prevStart.end && daysBetween(prevStart.start, sel) <= 20 && <button type="button" className="btn ghost small" onClick={endHere}>Terminó este día</button>}
-            {inPeriod && <button type="button" className="btn ghost small" onClick={() => setSheet(true)}>Editar período</button>}
+            {inPeriod && <button type="button" className="btn ghost small" onClick={() => setSheet('edit')}>Editar período</button>}
+            <button type="button" className="btn ghost small" onClick={() => setSheet('sym')}>{symDays.has(sel) ? 'Ver síntomas' : 'Cómo estaba'}</button>
           </div>
         )}
       </div>
-      {sheet && inPeriod && <PeriodSheet editing={inPeriod} onClose={() => setSheet(false)} />}
+      {sheet === 'edit' && inPeriod && <PeriodSheet editing={inPeriod} onClose={() => setSheet(false)} />}
+      {sheet === 'sym' && <SymptomSheet date={sel} onClose={() => setSheet(false)} />}
     </div>
   );
 }

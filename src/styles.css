@@ -130,12 +130,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum)}
 .day.out{opacity:.3}
 .day.period{background:var(--period);color:var(--period-ink);font-weight:700}
 .day.pred{border:2px dashed var(--period)}
+.day.maybe{border:2px dotted var(--line)}
 .day.fertile{background:var(--fertile);color:var(--fertile-ink)}
 .day.ovu{background:var(--ovu);color:#17131F;font-weight:700}
 .day.today{outline:2px solid var(--plum);outline-offset:1px}
 .day.sel{border-color:var(--fg)}
 .day.pill::before{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--plum);box-shadow:0 0 0 1.5px var(--bg)}
 .day.try::after{content:"♥";position:absolute;bottom:1px;left:50%;transform:translateX(-50%);font-size:9px;line-height:1;color:var(--try)}
+.day.sym{box-shadow:inset 0 -3px 0 -1px var(--fam)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { daysBetween, fmtLong, fmtShort, plural, type Period, type PillEvent, type Row } from '../calc';
+import { cycleSymptoms, daysBetween, fmtLong, fmtShort, patterns, plural, type Period, type PillEvent, type Row } from '../calc';
 import { db } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
@@ -28,6 +28,8 @@ export function Historial() {
   }
 
   const ev = A.lastPill;
+  const reps = patterns(active.symptoms, A.rows);
+  const nextStart = (r: Row) => { const i = A.rows.findIndex(x => x.start === r.start); return A.rows[i + 1]?.start ?? null; };
   let seguidos = 0, meses = 0;
   if (A.tryingSince) { seguidos = A.rows.filter(r => r.start >= A.tryingSince!).length; meses = Math.floor(daysBetween(A.tryingSince, today) / 30.4); }
 
@@ -49,6 +51,12 @@ export function Historial() {
             <span className="muted" style={{ fontSize: 12.5 }}>{plural(A.rows.filter(r => r.start > ev.date).length, 'período', 'períodos')} desde entonces</span></div></div>
       )}
 
+      {reps.length > 0 && (
+        <div className="card soft" style={{ gap: 4 }}>
+          <span className="muted" style={{ fontSize: 12 }}>Lo que se repite</span>
+          {reps.map((x, i) => <span key={i} style={{ fontSize: 14 }}><b>{x.what}</b> {x.when}, en {x.hits} de tus últimos {x.of} ciclos.</span>)}
+        </div>
+      )}
       {!items.length ? <div className="empty">Todavía no hay nada anotado{profile.kind === 'child' ? ` para ${profile.name}` : ''}.</div> : (
         <ul className="hist">
           {items.map(({ r, e }) => e ? (
@@ -65,8 +73,9 @@ export function Historial() {
                 <div className="when num">{fmtShort(r!.start)}{r!.end ? ' – ' + fmtShort(r!.end) : ongoing(r!) ? ' · en curso' : ''}</div>
                 <div className="meta num">{r!.dur ? plural(r!.dur, 'día', 'días') : ongoing(r!) ? 'Todavía sin último día' : 'Falta el último día'} · {r!.flow}{r!.cycle ? ` · ciclo de ${r!.cycle} días` : ' · ciclo actual'}</div>
                 {r!.note && <div className="note">{r!.note}</div>}
-                {(r!.flags.length > 0 || r!.trying) && profile.kind === 'self' && (
-                  <div className="flags">{r!.trying && <span className="flag try">♥ Buscando embarazo</span>}{r!.flags.map((f, i) => <span key={i} className={'flag ' + f.level}>{f.text}</span>)}</div>
+                {(() => { const sy = cycleSymptoms(active.symptoms, r!.start, nextStart(r!)); return sy.length ? <div className="meta" style={{ marginTop: 4 }}>Síntomas: {sy.join(', ').toLowerCase()}</div> : null; })()}
+                {(r!.flags.length > 0 || r!.trying || r!.adapt || r!.atypical) && profile.kind === 'self' && (
+                  <div className="flags">{r!.trying && <span className="flag try">♥ Buscando embarazo</span>}{r!.adapt && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--plum)' }}>Ciclo de adaptación</span>}{r!.atypical && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--muted)' }}>Ciclo raro · no cuenta</span>}{r!.flags.map((f, i) => <span key={i} className={'flag ' + f.level}>{f.text}</span>)}</div>
                 )}
               </div>
               <div className="ops">

@@ -16,6 +16,9 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 - La prueba de Google Play (12 testers durante 14 días) la resuelve la dueña con un servicio contratado, al final.
 - Las versiones de prueba se firman con una clave fija que está en el repositorio (`android/app/meneia-debug.keystore`, no es secreta), así cada APK se instala encima del anterior sin perder datos.
 - Los períodos anteriores cargados con "Buscar embarazo" activo solo se marcan como "buscando" si empezaron en los últimos 45 días.
+- Ciclos irregulares: variación de más de 7 días entre el más corto y el más largo de los últimos 6 que cuentan. Margen automático: la mitad de la variación (entre ±2 y ±7), ±3 como mínimo con pocos datos y +2 en ciclos de adaptación.
+- Al cargar el blíster actual, las pastillas de días anteriores del blíster se dan por tomadas.
+- "Anotar algo" en Hoy pasó a ser "Cómo estoy" (síntomas). Los períodos se cargan con "Me vino", desde el calendario o desde Historial.
 - La pestaña Salud ya tiene la última consulta, el aviso de control y las preguntas. Las consultas anteriores quedan para la etapa 3.
 
 ## Quién hace qué
@@ -47,15 +50,15 @@ Las tareas que necesitan cuentas o paneles web se anotan en `docs/PARA-CODEX.md`
 
 ## Etapa 2: predicciones, pastillas y síntomas
 
-- [ ] Rango a medida según la variación de los ciclos, y mediana en vez de promedio.
-- [ ] Etiqueta de confianza: pocos datos (menos de 3 ciclos), media (3 a 5) y firme (6 o más con poca variación).
-- [ ] Ciclos raros marcables y ciclos de adaptación (los 3 después de dejar las pastillas) que no cuentan.
-- [ ] Ciclos irregulares: "posibles días" con margen ajustable (±2 a ±7) y aviso al empezar.
-- [ ] Atraso contado desde el final del rango.
-- [ ] "Cuánto acertó" al anotar "Me vino".
-- [ ] Rangos de FIGO para adultas: ciclo de 24 a 38 días, variación de 7 a 9 días y sangrado de hasta 8 días. Para menores, margen amplio y sin alertas alarmantes.
-- [ ] Pastillas: toma diaria con "La tomé", blíster de 21+7, recordatorio a la hora elegida, blísters en casa y aviso para comprar.
-- [ ] Síntomas: dolor (nada, leve, medio, fuerte), cuerpo, ánimo, nota y síntomas propios. "Lo que se repite" con 3 ciclos o más. Los perfiles de hijas registran solo dolor y ánimo.
+- [x] Rango a medida según la variación de los ciclos, y mediana en vez de promedio.
+- [x] Etiqueta de confianza: pocos datos (menos de 3 ciclos), media (3 a 5) y firme (6 o más con poca variación).
+- [x] Ciclos raros marcables y ciclos de adaptación (los 3 después de dejar las pastillas) que no cuentan.
+- [x] Ciclos irregulares: "posibles días" con margen ajustable (±2 a ±7) y aviso al empezar.
+- [x] Atraso contado desde el final del rango.
+- [x] "Cuánto acertó" al anotar "Me vino".
+- [x] Rangos de FIGO para adultas: ciclo de 24 a 38 días, variación de 7 a 9 días y sangrado de hasta 8 días. Para menores, margen amplio y sin alertas alarmantes.
+- [x] Pastillas: toma diaria con "La tomé", blíster de 21+7, recordatorio a la hora elegida, blísters en casa y aviso para comprar.
+- [x] Síntomas: dolor (nada, leve, medio, fuerte), cuerpo, ánimo, nota y síntomas propios. "Lo que se repite" con 3 ciclos o más. Los perfiles de hijas registran solo dolor y ánimo.
 
 ## Etapa 3: salud y copia
 

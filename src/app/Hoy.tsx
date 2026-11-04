@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { addDays, daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility } from '../calc';
+import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, CONFIDENCE_TEXT } from '../calc';
 import { savePeriod, saveProfile } from '../db';
 import { useStore } from './store';
 import { Avatar, Icon, useToast } from './ui';
-import { PeriodSheet } from './PeriodSheet';
+import { SymptomSheet } from './SymptomSheet';
+import { MarginSheet } from './MarginSheet';
+import { PillToday } from './Pastillas';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -25,7 +27,7 @@ export function ProfileChips() {
 export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' | 'perfil') => void }) {
   const { active, today, refresh, migrated, health, profiles } = useStore();
   const toast = useToast();
-  const [sheet, setSheet] = useState<false | 'new' | 'edit'>(false);
+  const [sheet, setSheet] = useState<false | 'sym' | 'margin'>(false);
   if (!active) return null;
   const { profile, A } = active;
   const fertility = showsFertility(profile) && !A.onPill;
@@ -38,9 +40,17 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       await refresh(); toast('Listo, anotado que terminó hoy');
       return;
     }
+    const prevRange = A.rangeStart && A.rangeEnd && A.next ? { from: A.rangeStart, to: A.rangeEnd, next: A.next } : null;
     await savePeriod({ profileId: profile.id, start: today, end: '', flow: 'Normal', note: '', trying: profile.trying });
     if (profile.notYet) await saveProfile({ ...profile, notYet: false });
-    await refresh(); toast(profile.kind === 'child' ? 'Anotado para ' + profile.name : 'Anotado: te vino hoy');
+    await refresh();
+    // Cuánto acertó la estimación
+    let msg = profile.kind === 'child' ? 'Anotado para ' + profile.name : 'Anotado: te vino hoy';
+    if (prevRange) {
+      const diff = daysBetween(prevRange.next, today);
+      msg += today >= prevRange.from && today <= prevRange.to ? (diff === 0 ? ' · la app acertó el día' : ` · dentro de los posibles días (${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'día' : 'días'} ${diff > 0 ? 'después' : 'antes'})`) : ` · se corrió ${plural(Math.abs(diff), 'día', 'días')}`;
+    }
+    toast(msg);
   }
 
   // Alertas del perfil
@@ -51,7 +61,9 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
     prev?.flags.filter(f => !f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Cambio en tu último ciclo: ${f.text} (${prev.cycle} días).` }));
     last.flags.filter(f => f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Último período: ${f.text}.` }));
   }
-  if (A.late > 0 && A.next) alerts.push({ kind: profile.kind === 'self' ? 'bad' : 'info', text: `${plural(A.late, 'día', 'días')} de atraso respecto de la fecha estimada (${fmtShort(A.next)}).` });
+  if (A.late > 0 && A.rangeEnd) alerts.push({ kind: profile.kind === 'self' ? 'bad' : 'info', text: `${plural(A.late, 'día', 'días')} de atraso: los posibles días terminaban el ${fmtShort(A.rangeEnd)}.` });
+  if (A.adapting && profile.kind === 'self') alerts.push({ kind: 'info', text: 'Estás en los primeros ciclos después de dejar las pastillas: es normal que varíen. El rango es más amplio y no te marco alertas de cambio.' });
+  const reps = profile.kind === 'self' ? patterns(active.symptoms, A.rows) : [];
 
   const consultOld = profile.kind === 'self' && health.lastConsult && daysBetween(health.lastConsult, today) > 330;
   const age = ageOn(profile.birthDate, today);
@@ -98,16 +110,21 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
               {last ? (
                 <>
                   <span className="eyebrow">Día {cycleDay} del ciclo</span>
-                  <span className="ring-big num">{daysLeft != null && daysLeft > 0 ? daysLeft : '·'}</span>
-                  <span className="muted" style={{ fontSize: 14 }}>{daysLeft != null && daysLeft > 0 ? 'días para el período' : daysLeft === 0 ? 'podría llegar hoy' : 'ya debería haber llegado'}</span>
+                  <span className="ring-big num">{daysLeft != null && daysLeft > 0 ? daysLeft : A.late > 0 ? A.late : (A.rangeEnd ? Math.max(0, daysBetween(today, A.rangeEnd)) : 0)}</span>
+                  <span className="muted" style={{ fontSize: 14 }}>{daysLeft != null && daysLeft > 0 ? 'días para el período' : A.late > 0 ? (A.late === 1 ? 'día de atraso' : 'días de atraso') : daysLeft === 0 ? 'hoy es el día más probable' : 'posibles días que quedan'}</span>
                 </>
               ) : <span className="muted" style={{ fontSize: 14, maxWidth: 150 }}>Anotá tu último período para empezar</span>}
             </div>
           </div>
-          {A.next && (
+          {A.next && A.rangeStart && A.rangeEnd && (
             <div className="next">
-              <b>{cap(fmtLong(A.next))}</b>
-              <span className="muted" style={{ fontSize: 13.5 }}>Entre el {fmtShort(addDays(A.next, -2))} y el {fmtShort(addDays(A.next, 2))}</span>
+              {A.irregular || A.margin >= 4 ? <><span className="eyebrow">Posibles días</span><b>Del {fmtShort(A.rangeStart)} al {fmtShort(A.rangeEnd)}</b><span className="muted" style={{ fontSize: 13.5 }}>Lo más probable: alrededor del {fmtShort(A.next)}</span></>
+                : <><b>{cap(fmtLong(A.next))}</b><span className="muted" style={{ fontSize: 13.5 }}>Entre el {fmtShort(A.rangeStart)} y el {fmtShort(A.rangeEnd)}</span></>}
+              <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                <span className="flag" style={{ background: 'var(--soft)', color: 'var(--plum)' }}>{CONFIDENCE_TEXT[A.confidence]}{A.valid.length ? ` · ${plural(A.valid.length, 'ciclo', 'ciclos')}` : ''}</span>
+                {A.irregular && <span className="flag warn">Ciclos irregulares</span>}
+                <button type="button" className="btn link" style={{ minHeight: 32, fontSize: 13 }} onClick={() => setSheet('margin')}>Ajustar{profile.margin != null ? ` (±${A.margin})` : ''}</button>
+              </div>
             </div>
           )}
           {fertility && A.ovu && A.fertile && (
@@ -119,17 +136,25 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
           {A.onPill && profile.kind === 'self' && <p className="muted" style={{ fontSize: 13, textAlign: 'center' }}>Con pastillas la ovulación estimada no aplica.</p>}
           <div className="btns">
             <button type="button" className="btn period" onClick={meVino}>{ongoing ? 'Terminó hoy' : 'Me vino'}</button>
-            <button type="button" className="btn ghost" style={{ flex: 'none' }} onClick={() => setSheet('new')}>Anotar algo</button>
+            <button type="button" className="btn ghost" style={{ flex: 'none' }} onClick={() => setSheet('sym')}>Cómo estoy</button>
           </div>
         </>
       )}
 
+      {profile.kind === 'self' && <PillToday />}
+      {reps.length > 0 && (
+        <div className="card soft" style={{ gap: 4 }}>
+          <span className="muted" style={{ fontSize: 12 }}>Lo que se repite</span>
+          {reps.slice(0, 2).map((r, i) => <span key={i} style={{ fontSize: 14 }}><b>{r.what}</b> {r.when}, en {r.hits} de tus últimos {r.of} ciclos.</span>)}
+        </div>
+      )}
       {consultOld && (
         <button type="button" className="list" onClick={() => goTo('salud')} style={{ padding: 0, textAlign: 'left' }}>
           <span className="list-item"><span className="dot" style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--plum)', flex: 'none' }} /><span className="grow"><b>Control con la ginecóloga</b><small>La última fue hace más de 11 meses</small></span><Icon.chev /></span>
         </button>
       )}
-      {sheet && <PeriodSheet onClose={() => setSheet(false)} />}
+      {sheet === 'sym' && <SymptomSheet date={today} onClose={() => setSheet(false)} />}
+      {sheet === 'margin' && <MarginSheet onClose={() => setSheet(false)} />}
     </div>
   );
 }

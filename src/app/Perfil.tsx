@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { ageOn, canTry, fmtLong } from '../calc';
-import { saveProfile, savePillEvent, SELF_ID } from '../db';
+import { saveProfile } from '../db';
 import { useStore } from './store';
 import { Avatar, Icon, Switch, useToast } from './ui';
 import { Familia } from './Familia';
 import { Privacidad } from './Privacidad';
 import { Avisos } from './Avisos';
 import { Copia } from './Copia';
+import { Pastillas } from './Pastillas';
 
-type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia';
+type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas';
 
 export function Perfil() {
   const { self, profiles, today, refresh, privacy } = useStore();
@@ -19,6 +20,7 @@ export function Perfil() {
   if (sub === 'privacidad') return <Privacidad onBack={() => setSub(null)} />;
   if (sub === 'avisos') return <Avisos onBack={() => setSub(null)} />;
   if (sub === 'copia') return <Copia onBack={() => setSub(null)} />;
+  if (sub === 'pastillas') return <Pastillas onBack={() => setSub(null)} />;
 
   const me = self.profile;
   const age = ageOn(me.birthDate, today);
@@ -27,7 +29,6 @@ export function Perfil() {
   const ev = self.A.lastPill;
 
   async function setTrying(v: boolean) { await saveProfile({ ...me, trying: v }); await refresh(); toast(v ? 'Buscar embarazo activado' : 'Buscar embarazo apagado'); }
-  async function pill(type: 'stop' | 'start') { await savePillEvent({ profileId: SELF_ID, date: today, type }); await refresh(); toast(type === 'stop' ? 'Anotado: dejaste las pastillas hoy' : 'Anotado: empezaste las pastillas hoy'); }
 
   return (
     <div className="screen">
@@ -57,14 +58,10 @@ export function Perfil() {
 
       <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Pastillas anticonceptivas</span>
-        <div className="card" style={{ gap: 10 }}>
-          <p style={{ fontSize: 14 }}>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Las tomás desde el ${fmtLong(ev.date)}`) : 'No anotaste cambios de pastillas.'}</p>
-          <div className="btns">
-            <button type="button" className="btn ghost small" onClick={() => pill('start')}>Empecé hoy</button>
-            <button type="button" className="btn ghost small" onClick={() => pill('stop')}>Las dejé hoy</button>
-          </div>
-          <p className="muted" style={{ fontSize: 12.5 }}>Para otra fecha, usá "Anotar algo" en Hoy.</p>
-        </div>
+        <button type="button" className="list" style={{ padding: 0 }} onClick={() => setSub('pastillas')}>
+          <span className="list-item"><span style={{ color: 'var(--plum)' }}><Icon.pill /></span>
+            <span className="grow"><b>{self.A.onPill ? 'Las estás tomando' : 'Pastillas'}</b><small>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Desde el ${fmtLong(ev.date)} · toma diaria y aviso para comprar`) : 'Toma diaria y aviso para comprar'}</small></span><Icon.chev /></span>
+        </button>
       </div>
 
       <div className="stack" style={{ gap: 6 }}>

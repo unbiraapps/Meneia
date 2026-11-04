@@ -1,7 +1,7 @@
 // Datos guardados en el celular (IndexedDB vía Dexie). Nada sale del dispositivo.
 import Dexie, { type Table } from 'dexie';
-import type { Period, PillEvent, ReminderSettings, Flow, PillType, Profile, PrivacySettings } from './calc';
-import { DEFAULT_REMINDERS, DEFAULT_PRIVACY, DEFAULT_SHOPPING } from './calc';
+import type { Period, PillEvent, ReminderSettings, Flow, PillType, Profile, PrivacySettings, PillSettings, SymptomLog } from './calc';
+import { DEFAULT_REMINDERS, DEFAULT_PRIVACY, DEFAULT_SHOPPING, DEFAULT_PILLS } from './calc';
 
 interface Setting { key: string; value: unknown }
 
@@ -12,6 +12,7 @@ class CicloDB extends Dexie {
   events!: Table<PillEvent, number>;
   settings!: Table<Setting, string>;
   profiles!: Table<Profile, number>;
+  symptoms!: Table<SymptomLog, number>;
   constructor() {
     super('mi-ciclo-lila');
     this.version(1).stores({
@@ -30,6 +31,8 @@ class CicloDB extends Dexie {
       await tx.table('periods').toCollection().modify((p: Period) => { if (p.profileId == null) p.profileId = SELF_ID; });
       await tx.table('events').toCollection().modify((e: PillEvent) => { if (e.profileId == null) e.profileId = SELF_ID; });
     });
+    // v3: síntomas por día y por perfil
+    this.version(3).stores({ symptoms: '++id, profileId, date, [profileId+date]' });
   }
 }
 
@@ -51,6 +54,19 @@ export const setSetting = (key: string, value: unknown) => db.settings.put({ key
 export const getReminders = async (): Promise<ReminderSettings> => ({ ...DEFAULT_REMINDERS, ...(await getSetting<Partial<ReminderSettings>>('reminders', {})) });
 export const getPrivacy = async (): Promise<PrivacySettings> => ({ ...DEFAULT_PRIVACY, ...(await getSetting<Partial<PrivacySettings>>('privacy', {})) });
 export const getShopping = async (): Promise<string[]> => getSetting<string[]>('shopping', DEFAULT_SHOPPING);
+export const getPills = async (): Promise<PillSettings> => ({ ...DEFAULT_PILLS, ...(await getSetting<Partial<PillSettings>>('pills', {})) });
+export const savePills = (p: PillSettings) => setSetting('pills', { ...p, taken: [...new Set(p.taken)].sort().slice(-90) });
+
+/** Guarda los síntomas de un día. Si queda todo vacío, borra el registro. */
+export async function saveSymptoms(l: SymptomLog): Promise<void> {
+  const profileId = l.profileId ?? SELF_ID;
+  await db.transaction('rw', db.symptoms, async () => {
+    const same = await db.symptoms.where('[profileId+date]').equals([profileId, l.date]).first();
+    if (same) await db.symptoms.delete(same.id!);
+    const empty = !l.pain && !l.body.length && !l.mood.length && !l.note.trim();
+    if (!empty) await db.symptoms.add({ profileId, date: l.date, pain: l.pain, body: l.body, mood: l.mood, note: l.note.trim().slice(0, 300) });
+  });
+}
 
 export const periodsOf = (profileId: number) => db.periods.where('profileId').equals(profileId).toArray();
 export const eventsOf = (profileId: number) => db.events.where('profileId').equals(profileId).toArray();
@@ -84,8 +100,9 @@ export async function saveProfile(p: Profile): Promise<number> {
 /** Borra un perfil de hija y todos sus registros. El perfil "Yo" no se puede borrar. */
 export async function deleteProfile(id: number): Promise<void> {
   if (id === SELF_ID) return;
-  await db.transaction('rw', db.profiles, db.periods, db.events, async () => {
+  await db.transaction('rw', [db.profiles, db.periods, db.events, db.symptoms], async () => {
     await db.periods.where('profileId').equals(id).delete();
+    await db.symptoms.where('profileId').equals(id).delete();
     await db.events.where('profileId').equals(id).delete();
     await db.profiles.delete(id);
   });
@@ -99,16 +116,20 @@ export interface Backup {
   profiles?: Profile[];
   reminders?: Partial<ReminderSettings>;
   shopping?: string[];
+  symptoms?: SymptomLog[];
+  pills?: Partial<PillSettings>;
 }
 
 export async function exportBackup(): Promise<Backup> {
-  const [periods, events, profiles, reminders, shopping] = await Promise.all([
-    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(),
+  const [periods, events, profiles, reminders, shopping, symptoms, pills] = await Promise.all([
+    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(), db.symptoms.toArray(), getPills(),
   ]);
   return {
     app: 'mi-ciclo-lila', version: 2, exportedAt: new Date().toISOString(),
     profiles: profiles.map(p => ({ ...p })),
-    periods: periods.map(({ profileId, start, end, flow, note, trying }) => ({ profileId, start, end, flow, note, ...(trying ? { trying: true } : {}) })),
+    periods: periods.map(({ profileId, start, end, flow, note, trying, atypical }) => ({ profileId, start, end, flow, note, ...(trying ? { trying: true } : {}), ...(atypical ? { atypical: true } : {}) })),
+    symptoms: symptoms.map(({ profileId, date, pain, body, mood, note }) => ({ profileId, date, pain, body, mood, note })),
+    pills,
     events: events.map(({ profileId, date, type }) => ({ profileId, date, type })),
     reminders: reminders as Partial<ReminderSettings>,
     shopping,
@@ -140,6 +161,7 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
         trying: kind === 'self' && x.trying === true,
         notYet: kind === 'child' && x.notYet === true,
         alertDays: typeof x.alertDays === 'number' && [0, 1, 2, 3].includes(x.alertDays) ? x.alertDays : 0,
+        margin: typeof x.margin === 'number' && x.margin >= 2 && x.margin <= 7 ? x.margin : null,
       });
       ids.add(x.id);
     }
@@ -150,20 +172,41 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
   for (const p of r.periods as Record<string, unknown>[]) {
     if (!p || typeof p.start !== 'string' || !DATE_RE.test(p.start)) return { ok: false, error: 'Hay un período con una fecha inválida.' };
     const end = typeof p.end === 'string' && DATE_RE.test(p.end) && p.end >= p.start ? p.end : '';
-    periods.push({ profileId: pid(p.profileId), start: p.start, end, flow: FLOWS.includes(p.flow as Flow) ? (p.flow as Flow) : 'Normal', note: typeof p.note === 'string' ? p.note.slice(0, 500) : '', ...(p.trying === true ? { trying: true } : {}) });
+    periods.push({ profileId: pid(p.profileId), start: p.start, end, flow: FLOWS.includes(p.flow as Flow) ? (p.flow as Flow) : 'Normal', note: typeof p.note === 'string' ? p.note.slice(0, 500) : '', ...(p.trying === true ? { trying: true } : {}), ...(p.atypical === true ? { atypical: true } : {}) });
   }
   const events: PillEvent[] = [];
   for (const e of (Array.isArray(r.events) ? r.events : []) as Record<string, unknown>[]) {
     if (e && typeof e.date === 'string' && DATE_RE.test(e.date) && (e.type === 'stop' || e.type === 'start')) events.push({ profileId: SELF_ID, date: e.date, type: e.type as PillType });
   }
+  const symptoms: SymptomLog[] = [];
+  for (const l of (Array.isArray(r.symptoms) ? r.symptoms : []) as Record<string, unknown>[]) {
+    if (!l || typeof l.date !== 'string' || !DATE_RE.test(l.date)) continue;
+    const strs = (v: unknown, max: number) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, max) : []);
+    symptoms.push({ profileId: pid(l.profileId), date: l.date, pain: typeof l.pain === 'number' && l.pain >= 0 && l.pain <= 3 ? l.pain : 0, body: strs(l.body, 20), mood: strs(l.mood, 10), note: typeof l.note === 'string' ? l.note.slice(0, 300) : '' });
+  }
+  const pills = r.pills && typeof r.pills === 'object' ? sanitizePills(r.pills as Record<string, unknown>) : undefined;
   const shopping = Array.isArray(r.shopping) ? (r.shopping as unknown[]).filter((s): s is string => typeof s === 'string').map(s => s.slice(0, 60)).slice(0, 30) : undefined;
-  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 2 ? 2 : 1, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping } };
+  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 2 ? 2 : 1, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping, symptoms, pills } };
+}
+
+function sanitizePills(x: Record<string, unknown>): Partial<PillSettings> {
+  const int = (v: unknown, lo: number, hi: number, d: number) => (typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi ? v : d);
+  return {
+    packStart: typeof x.packStart === 'string' && DATE_RE.test(x.packStart) ? x.packStart : '',
+    active: int(x.active, 1, 90, 21), rest: int(x.rest, 0, 14, 7), hour: int(x.hour, 0, 23, 21),
+    remind: x.remind !== false, stock: int(x.stock, 0, 24, 1),
+    stockDate: typeof x.stockDate === 'string' && DATE_RE.test(x.stockDate) ? x.stockDate : '',
+    taken: Array.isArray(x.taken) ? x.taken.filter((d): d is string => typeof d === 'string' && DATE_RE.test(d)).slice(-90) : [],
+  };
 }
 
 export async function restoreBackup(b: Backup): Promise<void> {
-  await db.transaction('rw', [db.periods, db.events, db.settings, db.profiles], async () => {
+  await db.transaction('rw', [db.periods, db.events, db.settings, db.profiles, db.symptoms], async () => {
     await db.periods.clear();
     await db.events.clear();
+    await db.symptoms.clear();
+    for (const l of b.symptoms ?? []) await db.symptoms.add({ ...l, profileId: l.profileId ?? SELF_ID });
+    if (b.pills) await db.settings.put({ key: 'pills', value: { ...DEFAULT_PILLS, ...b.pills } });
     if (b.profiles?.length) {
       await db.profiles.clear();
       for (const p of b.profiles) await db.profiles.put(p);

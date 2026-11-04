@@ -17,6 +17,7 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
   const [note, setNote] = useState(editing?.note ?? '');
   const [pill, setPill] = useState<PillType | ''>('');
   const [pillDate, setPillDate] = useState('');
+  const [atypical, setAtypical] = useState(!!editing?.atypical);
   const [err, setErr] = useState('');
 
   async function save() {
@@ -28,7 +29,7 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
     if (start && end && daysBetween(start, end) > 20) return setErr('Un período de más de 20 días parece un error. Revisá las fechas.');
     const before = new Set(active!.A.rows.flatMap(r => r.flags.map(f => r.start + f.text)));
     try {
-      if (start) await savePeriod({ ...(editing?.id != null ? { id: editing.id } : {}), profileId: profile.id, start, end, flow, note: note.trim().slice(0, 500), trying: editing ? !!editing.trying : profile.trying && daysBetween(start, today) <= 45 });
+      if (start) await savePeriod({ ...(editing?.id != null ? { id: editing.id } : {}), profileId: profile.id, start, end, flow, note: note.trim().slice(0, 500), atypical, trying: editing ? !!editing.trying : profile.trying && daysBetween(start, today) <= 45 });
       if (pill) await savePillEvent({ profileId: profile.id, date: pillDate, type: pill });
       if (start && profile.notYet) await saveProfile({ ...profile, notYet: false });
     } catch { return setErr('No se pudo guardar. Probá de nuevo.'); }
@@ -70,6 +71,10 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
         </div>
       )}
       {isSelf && profile.trying && !editing && <p className="muted" style={{ fontSize: 13 }}>Este ciclo se marca como "buscando embarazo".</p>}
+      {isSelf && editing && (
+        <div className="row"><div className="stack grow"><b style={{ fontSize: 14.5 }}>Ciclo raro</b><small className="muted" style={{ fontSize: 12.5 }}>Por estrés, enfermedad, viaje o una pérdida. No cuenta para las estimaciones.</small></div>
+          <button type="button" role="switch" aria-checked={atypical} aria-label="Ciclo raro" className="switch" onClick={() => setAtypical(!atypical)} /></div>
+      )}
       <label className="field">Notas<textarea rows={2} maxLength={500} value={note} placeholder="Ej: cólicos fuertes el 1er día" onChange={e => setNote(e.target.value)} /></label>
       {err && <p className="err" role="alert">{err}</p>}
       <button type="button" className="btn" onClick={save}>{editing ? 'Guardar cambios' : 'Guardar'}</button>

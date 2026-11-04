@@ -1,16 +1,16 @@
 // Estado de la app: lee todo de la base local y vuelve a programar los avisos después de cada cambio.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility,
-  type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder,
+  analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders,
+  type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder, type PillSettings, type SymptomLog,
 } from '../calc';
-import { db, ensureSelf, getReminders, getPrivacy, getShopping, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
+import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
 
 export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[] }
 export const DEFAULT_HEALTH: Health = { lastConsult: '', controlMonths: 12, controlOn: true, questions: [] };
 
-export interface ProfileData { profile: Profile; periods: Period[]; events: PillEvent[]; A: Analysis }
+export interface ProfileData { profile: Profile; periods: Period[]; events: PillEvent[]; symptoms: SymptomLog[]; A: Analysis }
 
 interface Store {
   ready: boolean;
@@ -24,6 +24,7 @@ interface Store {
   reminders: ReminderSettings;
   privacy: PrivacySettings;
   shopping: string[];
+  pills: PillSettings;
   health: Health;
   onboarded: boolean;
   migrated: boolean;
@@ -34,8 +35,10 @@ const Ctx = createContext<Store | null>(null);
 export const useStore = () => { const s = useContext(Ctx); if (!s) throw new Error('sin store'); return s; };
 
 /** Arma todos los avisos de la app: los propios, los de cada hija y el del control. */
-export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettings, pr: PrivacySettings, health: Health, now: Date): Reminder[] {
+export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettings, pr: PrivacySettings, health: Health, now: Date, pills?: PillSettings): Reminder[] {
   const list: Reminder[] = [];
+  const self = data.get(SELF_ID);
+  if (pills && self?.A.onPill) list.push(...pillReminders(pills, now));
   for (const d of data.values()) {
     if (d.profile.kind === 'self') {
       const own = upcomingReminders(d.A, r, now);
@@ -54,15 +57,15 @@ export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettin
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<Omit<Store, 'setActive' | 'refresh' | 'active' | 'self'>>({
     ready: false, today: localToday(), profiles: [], data: new Map(), activeId: SELF_ID,
-    reminders: {} as ReminderSettings, privacy: {} as PrivacySettings, shopping: [], health: DEFAULT_HEALTH, onboarded: true, migrated: false,
+    reminders: {} as ReminderSettings, privacy: {} as PrivacySettings, shopping: [], pills: {} as PillSettings, health: DEFAULT_HEALTH, onboarded: true, migrated: false,
   });
 
   const refresh = useCallback(async () => {
     await ensureSelf();
     const migrated = await migrateFromPrototype().catch(() => false);
     const today = localToday();
-    const [profiles, periods, events, reminders, privacy, shopping, health, onboarded, activeId] = await Promise.all([
-      db.profiles.toArray(), db.periods.toArray(), db.events.toArray(), getReminders(), getPrivacy(), getShopping(),
+    const [profiles, periods, events, symptoms, reminders, privacy, shopping, pills, health, onboarded, activeId] = await Promise.all([
+      db.profiles.toArray(), db.periods.toArray(), db.events.toArray(), db.symptoms.toArray(), getReminders(), getPrivacy(), getShopping(), getPills(),
       getSetting<Health>('health', DEFAULT_HEALTH), getSetting('onboarded', false), getSetting<number>('activeProfile', SELF_ID),
     ]);
     profiles.sort((a, b) => (a.kind === b.kind ? (a.id! - b.id!) : a.kind === 'self' ? -1 : 1));
@@ -70,15 +73,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     for (const p of profiles) {
       const ps = periods.filter(x => (x.profileId ?? SELF_ID) === p.id);
       const es = p.kind === 'self' ? events.filter(x => (x.profileId ?? SELF_ID) === p.id) : [];
-      data.set(p.id!, { profile: p, periods: ps, events: es, A: analyze(ps, es, today) });
+      const sy = symptoms.filter(x => (x.profileId ?? SELF_ID) === p.id);
+      data.set(p.id!, { profile: p, periods: ps, events: es, symptoms: sy, A: analyze(ps, es, today, optsFor(p, today)) });
     }
     const h = { ...DEFAULT_HEALTH, ...health };
     setState(s => ({
-      ...s, ready: true, today, profiles, data, reminders, privacy, shopping, health: h,
+      ...s, ready: true, today, profiles, data, reminders, privacy, shopping, pills, health: h,
       onboarded, migrated: s.migrated || migrated,
       activeId: data.has(activeId) ? activeId : SELF_ID,
     }));
-    syncReminders(buildReminders(data, reminders, privacy, h, new Date()), privacy).catch(() => {});
+    syncReminders(buildReminders(data, reminders, privacy, h, new Date(), pills), privacy).catch(() => {});
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);

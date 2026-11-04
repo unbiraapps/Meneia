@@ -21,13 +21,17 @@ describe('analyze', () => {
   const periods = [P('2026-06-03', '2026-06-07'), P('2026-07-01', '2026-07-05'), P('2026-07-30', '2026-08-03'),
     P('2026-08-27', '2026-08-31'), P('2026-10-01', '2026-10-07'), P('2026-10-29', '2026-11-02')];
 
-  it('calcula ciclos, promedio y próximo período', () => {
+  it('calcula ciclos, mediana, rango y próximo período', () => {
     const A = analyze(periods, [], '2026-11-02');
     expect(A.cycles).toEqual([28, 29, 28, 35, 28]);
-    expect(A.avgCycle).toBe(30); // 148/5 = 29.6
-    expect(A.next).toBe('2026-11-28');
-    expect(A.ovu).toBe('2026-11-14');
-    expect(A.fertile).toEqual(['2026-11-09', '2026-11-15']);
+    expect(A.avgCycle).toBe(28); // mediana: el ciclo de 35 no la mueve
+    expect(A.next).toBe('2026-11-26');
+    expect(A.margin).toBe(4);    // variación de 7 días → ±4
+    expect([A.rangeStart, A.rangeEnd]).toEqual(['2026-11-22', '2026-11-30']);
+    expect(A.confidence).toBe('media');
+    expect(A.irregular).toBe(false);
+    expect(A.ovu).toBe('2026-11-12');
+    expect(A.fertile).toEqual(['2026-11-07', '2026-11-13']);
     expect(A.late).toBe(0);
     expect(A.minC).toBe(28);
     expect(A.maxC).toBe(35);
@@ -47,15 +51,19 @@ describe('analyze', () => {
     expect(A.rows.every(r => r.flags.length === 0)).toBe(true);
   });
 
-  it('marca ciclos fuera de 21–35 días y sangrados de más de 7', () => {
+  it('marca ciclos fuera de 24–38 días y sangrados de más de 8 (FIGO)', () => {
     const A = analyze([P('2026-01-01', '2026-01-09'), P('2026-02-15', '2026-02-19')], [], '2026-02-20');
-    expect(A.rows[0].flags.map(f => f.text)).toEqual(expect.arrayContaining(['Fuera del rango típico (21–35 días)', 'Sangrado de más de 7 días']));
+    expect(A.rows[0].flags.map(f => f.text)).toEqual(expect.arrayContaining(['Fuera del rango típico (24–38 días)', 'Sangrado de más de 8 días']));
+    const ok = analyze([P('2026-01-01', '2026-01-08'), P('2026-02-07', '2026-02-11')], [], '2026-02-20');
+    expect(ok.rows[0].flags.some(f => f.level === 'alert')).toBe(false); // 37 días y 8 de sangrado están dentro
   });
 
-  it('calcula el atraso', () => {
+  it('el atraso se cuenta desde el final de los posibles días', () => {
     const A = analyze([P('2026-09-01', '2026-09-05'), P('2026-09-29', '2026-10-03')], [], '2026-11-02');
     expect(A.next).toBe('2026-10-27');
-    expect(A.late).toBe(6);
+    expect(A.rangeEnd).toBe('2026-10-30'); // pocos datos: ±3
+    expect(A.late).toBe(3);
+    expect(A.confidence).toBe('pocos');
   });
 
   it('con un solo período usa 28 días', () => {
@@ -76,13 +84,18 @@ describe('analyze', () => {
     expect(A.onPill).toBe(true);
     expect(A.ovu).toBeNull();
     expect(A.fertile).toBeNull();
-    expect(A.next).toBe('2026-11-28');
+    expect(A.next).toBe('2026-11-26');
   });
 
-  it('dejar las pastillas vuelve a estimar ovulación', () => {
+  it('dejar las pastillas: 3 ciclos de adaptación que no cuentan ni alertan', () => {
     const A = analyze(periods, [{ date: '2026-08-20', type: 'stop' }], '2026-11-02');
     expect(A.onPill).toBe(false);
-    expect(A.ovu).toBe('2026-11-14');
+    expect(A.rows.filter(r => r.adapt).map(r => r.start)).toEqual(['2026-08-27', '2026-10-01', '2026-10-29']);
+    expect(A.valid).toEqual([28, 29, 28]);
+    expect(A.adapting).toBe(true);
+    expect(A.margin).toBe(4); // ±2 por variación, +2 por adaptación
+    expect(A.rows.find(r => r.start === '2026-08-27')!.flags).toEqual([]);
+    expect(A.ovu).toBe('2026-11-12');
     expect(A.lastPill?.type).toBe('stop');
   });
 });
@@ -143,7 +156,7 @@ describe('recordatorios', () => {
     expect(first.date).toBe('2026-11-22');
     expect(first.title).toBe('Tu período podría llegar en 2 días');
     expect(list.find(r => r.id === 3000)!.date).toBe('2026-11-05'); // ovulación 10/11, ventana desde el 5
-    expect(list.find(r => r.id === 5002)!.date).toBe('2026-11-26');
+    expect(list.find(r => r.id === 5002)!.date).toBe('2026-11-29'); // 2 días después del último posible día (27/11)
     expect(list.some(r => r.id >= 4000 && r.id < 5000)).toBe(false); // ovulación apagada por defecto
     expect(list.every(r => r.date > '2026-11-02')).toBe(true);
     expect(new Set(list.map(r => r.id)).size).toBe(list.length);
