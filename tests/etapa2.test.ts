@@ -92,3 +92,17 @@ describe('síntomas', () => {
     expect(cycleSymptoms(logs, '2026-09-23', '2026-10-21')).toEqual(['Cólicos', 'Dolor medio', 'Cansancio', 'Sensible']);
   });
 });
+
+import { withLast, DEFAULT_HEALTH } from '../src/app/store';
+import { parseBackup } from '../src/db';
+
+describe('consultas', () => {
+  it('la última consulta sale de la lista', () => {
+    const h = withLast({ ...DEFAULT_HEALTH, consults: [{ date: '2026-03-14', reason: 'Control anual', note: '' }, { date: '2025-03-01', reason: '', note: '' }] });
+    expect(h.lastConsult).toBe('2026-03-14');
+  });
+  it('la copia guarda las consultas y limpia datos raros', () => {
+    const r = parseBackup(JSON.stringify({ periods: [], health: { consults: [{ date: '2026-03-14', reason: 'Control anual', note: 'ok' }, { date: 'mal' }], controlMonths: 99 } }));
+    expect(r.ok && r.data.health).toMatchObject({ consults: [{ date: '2026-03-14', reason: 'Control anual', note: 'ok' }], controlMonths: 12 });
+  });
+});

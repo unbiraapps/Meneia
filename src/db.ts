@@ -118,11 +118,12 @@ export interface Backup {
   shopping?: string[];
   symptoms?: SymptomLog[];
   pills?: Partial<PillSettings>;
+  health?: unknown;
 }
 
 export async function exportBackup(): Promise<Backup> {
-  const [periods, events, profiles, reminders, shopping, symptoms, pills] = await Promise.all([
-    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(), db.symptoms.toArray(), getPills(),
+  const [periods, events, profiles, reminders, shopping, symptoms, pills, health] = await Promise.all([
+    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(), db.symptoms.toArray(), getPills(), getSetting('health', null),
   ]);
   return {
     app: 'mi-ciclo-lila', version: 2, exportedAt: new Date().toISOString(),
@@ -130,6 +131,7 @@ export async function exportBackup(): Promise<Backup> {
     periods: periods.map(({ profileId, start, end, flow, note, trying, atypical }) => ({ profileId, start, end, flow, note, ...(trying ? { trying: true } : {}), ...(atypical ? { atypical: true } : {}) })),
     symptoms: symptoms.map(({ profileId, date, pain, body, mood, note }) => ({ profileId, date, pain, body, mood, note })),
     pills,
+    ...(health ? { health } : {}),
     events: events.map(({ profileId, date, type }) => ({ profileId, date, type })),
     reminders: reminders as Partial<ReminderSettings>,
     shopping,
@@ -185,8 +187,20 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
     symptoms.push({ profileId: pid(l.profileId), date: l.date, pain: typeof l.pain === 'number' && l.pain >= 0 && l.pain <= 3 ? l.pain : 0, body: strs(l.body, 20), mood: strs(l.mood, 10), note: typeof l.note === 'string' ? l.note.slice(0, 300) : '' });
   }
   const pills = r.pills && typeof r.pills === 'object' ? sanitizePills(r.pills as Record<string, unknown>) : undefined;
+  const health = r.health && typeof r.health === 'object' ? sanitizeHealth(r.health as Record<string, unknown>) : undefined;
   const shopping = Array.isArray(r.shopping) ? (r.shopping as unknown[]).filter((s): s is string => typeof s === 'string').map(s => s.slice(0, 60)).slice(0, 30) : undefined;
-  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 2 ? 2 : 1, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping, symptoms, pills } };
+  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 2 ? 2 : 1, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping, symptoms, pills, health } };
+}
+
+function sanitizeHealth(x: Record<string, unknown>) {
+  const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : '');
+  return {
+    lastConsult: typeof x.lastConsult === 'string' && DATE_RE.test(x.lastConsult) ? x.lastConsult : '',
+    controlMonths: x.controlMonths === 6 ? 6 : 12,
+    controlOn: x.controlOn !== false,
+    questions: (Array.isArray(x.questions) ? x.questions : []).filter((q): q is Record<string, unknown> => !!q && typeof q === 'object').map(q => ({ text: str(q.text, 200), done: q.done === true })).filter(q => q.text).slice(0, 50),
+    consults: (Array.isArray(x.consults) ? x.consults : []).filter((c): c is Record<string, unknown> => !!c && typeof c === 'object' && typeof c.date === 'string' && DATE_RE.test(c.date)).map(c => ({ date: c.date as string, reason: str(c.reason, 40), note: str(c.note, 300) })).slice(0, 100),
+  };
 }
 
 function sanitizePills(x: Record<string, unknown>): Partial<PillSettings> {
@@ -207,6 +221,7 @@ export async function restoreBackup(b: Backup): Promise<void> {
     await db.symptoms.clear();
     for (const l of b.symptoms ?? []) await db.symptoms.add({ ...l, profileId: l.profileId ?? SELF_ID });
     if (b.pills) await db.settings.put({ key: 'pills', value: { ...DEFAULT_PILLS, ...b.pills } });
+    if (b.health) await db.settings.put({ key: 'health', value: b.health });
     if (b.profiles?.length) {
       await db.profiles.clear();
       for (const p of b.profiles) await db.profiles.put(p);

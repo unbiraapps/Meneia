@@ -7,8 +7,15 @@ import {
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
 
-export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[] }
-export const DEFAULT_HEALTH: Health = { lastConsult: '', controlMonths: 12, controlOn: true, questions: [] };
+export interface Consult { date: string; reason: string; note: string }
+export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[]; consults: Consult[] }
+export const DEFAULT_HEALTH: Health = { lastConsult: '', controlMonths: 12, controlOn: true, questions: [], consults: [] };
+
+/** La última consulta es la más reciente de la lista (o la fecha suelta de versiones anteriores). */
+export const withLast = (h: Health): Health => {
+  const dates = [h.lastConsult, ...h.consults.map(c => c.date)].filter(Boolean).sort();
+  return { ...h, lastConsult: dates[dates.length - 1] ?? '' };
+};
 
 export interface ProfileData { profile: Profile; periods: Period[]; events: PillEvent[]; symptoms: SymptomLog[]; A: Analysis }
 
@@ -76,7 +83,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const sy = symptoms.filter(x => (x.profileId ?? SELF_ID) === p.id);
       data.set(p.id!, { profile: p, periods: ps, events: es, symptoms: sy, A: analyze(ps, es, today, optsFor(p, today)) });
     }
-    const h = { ...DEFAULT_HEALTH, ...health };
+    const h = withLast({ ...DEFAULT_HEALTH, ...health, consults: Array.isArray(health.consults) ? health.consults : [] });
     setState(s => ({
       ...s, ready: true, today, profiles, data, reminders, privacy, shopping, pills, health: h,
       onboarded, migrated: s.migrated || migrated,

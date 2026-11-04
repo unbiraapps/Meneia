@@ -62,8 +62,8 @@ Las tareas que necesitan cuentas o paneles web se anotan en `docs/PARA-CODEX.md`
 
 ## Etapa 3: salud y copia
 
-- [ ] Consultas: última consulta, consultas anteriores (fecha, motivo, nota), aviso del próximo control y preguntas para la próxima visita.
-- [ ] Copia de seguridad v2 con perfiles, síntomas, pastillas y consultas, y que siga leyendo la v1.
+- [x] Consultas: última consulta, consultas anteriores (fecha, motivo, nota), aviso del próximo control y preguntas para la próxima visita.
+- [x] Copia de seguridad v2 con perfiles, síntomas, pastillas y consultas, y que siga leyendo la v1.
 
 ## Etapa 4: anuncios, pago y Google Play
 
