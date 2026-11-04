@@ -7,7 +7,7 @@ import { Sheet, useToast } from './ui';
 
 /** Anotar o editar un período del perfil activo. */
 export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Period; defaultStart?: string; onClose: () => void }) {
-  const { active, today, refresh, privacy } = useStore();
+  const { active, today, refresh, privacy, afterSave } = useStore();
   const toast = useToast();
   const profile = active!.profile;
   const isSelf = profile.kind === 'self';
@@ -44,6 +44,7 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
       if (fresh.length) { msg += ' · ojo: ' + fresh[0].toLowerCase(); notifyNow('Cambio en tu ciclo', fresh.join(' · '), privacy).catch(() => {}); }
     }
     toast(msg);
+    afterSave();
   }
 
   return (

@@ -8,6 +8,7 @@ import { Privacidad } from './Privacidad';
 import { Avisos } from './Avisos';
 import { Copia } from './Copia';
 import { Pastillas } from './Pastillas';
+import { PlanSettings } from './Plan';
 
 type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas';
 
@@ -62,6 +63,11 @@ export function Perfil() {
           <span className="list-item"><span style={{ color: 'var(--plum)' }}><Icon.pill /></span>
             <span className="grow"><b>{self.A.onPill ? 'Las estás tomando' : 'Pastillas'}</b><small>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Desde el ${fmtLong(ev.date)} · toma diaria y aviso para comprar`) : 'Toma diaria y aviso para comprar'}</small></span><Icon.chev /></span>
         </button>
+      </div>
+
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Versión</span>
+        <PlanSettings />
       </div>
 
       <div className="stack" style={{ gap: 6 }}>

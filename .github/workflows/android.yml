@@ -23,6 +23,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          VITE_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
+          VITE_ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
+          VITE_ADMOB_REWARDED_ID: ${{ secrets.ADMOB_REWARDED_ID }}
       - run: npx cap sync android
       - uses: actions/setup-java@v4
         with:
@@ -40,6 +44,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           MENEIA_VERSION_CODE: ${{ github.run_number }}
+          ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
         run: |
           chmod +x gradlew
           if [ "$HAS_KEYSTORE" = "true" ]; then

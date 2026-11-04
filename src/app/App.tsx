@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapApp } from '@capacitor/app';
 import { setSecureScreen } from '../privacy';
 import { isNative } from '../notify';
+import { bannerAllowed } from '../adrules';
+import { hideBanner, showBanner } from '../ads';
 import { StoreProvider, useStore } from './store';
 import { Icon, ToastProvider } from './ui';
 import { Hoy } from './Hoy';
@@ -20,7 +22,8 @@ const TABS: [Tab, string, () => React.JSX.Element][] = [
 ];
 
 function Shell() {
-  const { ready, privacy, onboarded } = useStore();
+  const { ready, privacy, onboarded, ads, today, active } = useStore();
+  const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
   const [famFirst, setFamFirst] = useState(false);
   const [covered, setCovered] = useState(false);
@@ -48,19 +51,26 @@ function Shell() {
 
   const unlock = useCallback(() => { setLocked(false); setCovered(false); }, []);
 
+  // Banner: solo al pie de Calendario e Historial, nunca bloqueada, tapada ni en perfiles de hijas.
+  const isLocked = (lockOn.current && locked) || covered;
+  const banner = ready && onboarded && bannerAllowed(ads, { today, childActive: active?.profile.kind === 'child', locked: isLocked }, tab);
+  useEffect(() => {
+    if (banner) showBanner(navRef.current?.offsetHeight ?? 72); else hideBanner();
+  }, [banner]);
+
   if (!ready) return <div className="screen" aria-busy="true" />;
   if (lockOn.current && locked) return <Lock pinHash={privacy.pinHash} onUnlock={unlock} />;
   if (covered) return <button type="button" className="cover" aria-label="Pantalla tapada. Tocá para seguir" onClick={() => { if (lockOn.current) setLocked(true); setCovered(false); }}><span className="dot" /><span style={{ fontSize: 12.5 }}>Tocá para seguir</span></button>;
   if (!onboarded) return <Inicio onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
 
   return (
-    <div className="app">
+    <div className={'app' + (banner ? ' with-ad' : '')}>
       {tab === 'hoy' && <Hoy onCover={() => setCovered(true)} goTo={t => setTab(t)} />}
       {tab === 'calendario' && <Calendario />}
       {tab === 'historial' && <Historial />}
       {tab === 'salud' && <Salud />}
       {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} /> : <Perfil />)}
-      <nav className="nav" aria-label="Secciones">
+      <nav className="nav" aria-label="Secciones" ref={navRef}>
         <div className="nav-in">
           {TABS.map(([id, label, Ico]) => (
             <button key={id} type="button" className={'tab' + (tab === id ? ' on' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id); setFamFirst(false); window.scrollTo(0, 0); }}><Ico />{label}</button>

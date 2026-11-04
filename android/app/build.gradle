@@ -8,7 +8,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode Integer.parseInt(System.getenv("MENEIA_VERSION_CODE") ?: "2")
-        versionName "1.1"
+        versionName "1.2"
+        // AdMob: ID real desde el secreto ADMOB_APP_ID; si no está, el ID de prueba de Google
+        manifestPlaceholders = [admobAppId: System.getenv("ADMOB_APP_ID") ?: "ca-app-pub-3940256099942544~3347511713"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

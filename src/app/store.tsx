@@ -6,6 +6,8 @@ import {
 } from '../calc';
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
+import { DEFAULT_ADS, interstitialAllowed, type AdState } from '../adrules';
+import { ownsNoAds, showInterstitial } from '../ads';
 
 export interface Consult { date: string; reason: string; note: string }
 export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[]; consults: Consult[] }
@@ -35,9 +37,14 @@ interface Store {
   health: Health;
   onboarded: boolean;
   migrated: boolean;
+  ads: AdState;
+  setAds: (a: AdState) => Promise<void>;
+  /** Después de guardar algo: como mucho un anuncio de pantalla completa por día. */
+  afterSave: () => void;
   refresh: () => Promise<void>;
 }
 
+type Base = Omit<Store, 'setActive' | 'refresh' | 'active' | 'self' | 'setAds' | 'afterSave'>;
 const Ctx = createContext<Store | null>(null);
 export const useStore = () => { const s = useContext(Ctx); if (!s) throw new Error('sin store'); return s; };
 
@@ -62,9 +69,9 @@ export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettin
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<Omit<Store, 'setActive' | 'refresh' | 'active' | 'self'>>({
+  const [state, setState] = useState<Base>({
     ready: false, today: localToday(), profiles: [], data: new Map(), activeId: SELF_ID,
-    reminders: {} as ReminderSettings, privacy: {} as PrivacySettings, shopping: [], pills: {} as PillSettings, health: DEFAULT_HEALTH, onboarded: true, migrated: false,
+    reminders: {} as ReminderSettings, privacy: {} as PrivacySettings, shopping: [], pills: {} as PillSettings, health: DEFAULT_HEALTH, onboarded: true, migrated: false, ads: DEFAULT_ADS,
   });
 
   const refresh = useCallback(async () => {
@@ -75,6 +82,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       db.profiles.toArray(), db.periods.toArray(), db.events.toArray(), db.symptoms.toArray(), getReminders(), getPrivacy(), getShopping(), getPills(),
       getSetting<Health>('health', DEFAULT_HEALTH), getSetting('onboarded', false), getSetting<number>('activeProfile', SELF_ID),
     ]);
+    let ads = { ...DEFAULT_ADS, ...(await getSetting<Partial<AdState>>('ads', {})) };
+    if (!ads.installDate) { ads = { ...ads, installDate: today }; await setSetting('ads', ads); }
     profiles.sort((a, b) => (a.kind === b.kind ? (a.id! - b.id!) : a.kind === 'self' ? -1 : 1));
     const data = new Map<number, ProfileData>();
     for (const p of profiles) {
@@ -85,7 +94,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     const h = withLast({ ...DEFAULT_HEALTH, ...health, consults: Array.isArray(health.consults) ? health.consults : [] });
     setState(s => ({
-      ...s, ready: true, today, profiles, data, reminders, privacy, shopping, pills, health: h,
+      ...s, ready: true, today, profiles, data, reminders, privacy, shopping, pills, health: h, ads,
       onboarded, migrated: s.migrated || migrated,
       activeId: data.has(activeId) ? activeId : SELF_ID,
     }));
@@ -93,6 +102,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+  // Si ya compró "Sin anuncios" con su cuenta de Google (por ejemplo en otro celular), se restaura solo.
+  useEffect(() => {
+    if (!state.ready || state.ads.plan === 'premium') return;
+    ownsNoAds().then(async owns => { if (owns) { const a = { ...state.ads, plan: 'premium' as const }; await setSetting('ads', a); setState(s => ({ ...s, ads: a })); } });
+  }, [state.ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setAds = useCallback(async (a: AdState) => { await setSetting('ads', a); setState(s => ({ ...s, ads: a })); }, []);
+  const afterSave = useCallback(() => {
+    setState(s => {
+      const child = s.data.get(s.activeId)?.profile.kind === 'child';
+      if (!interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false })) return s;
+      const a = { ...s.ads, lastInterstitial: s.today };
+      setSetting('ads', a);
+      setTimeout(() => { showInterstitial(); }, 900); // después de que se vea el "guardado"
+      return { ...s, ads: a };
+    });
+  }, []);
   useEffect(() => {
     const onVis = () => { if (document.visibilityState === 'visible' && localToday() !== state.today) refresh(); };
     document.addEventListener('visibilitychange', onVis);
@@ -102,10 +128,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setActive = useCallback((id: number) => { setSetting('activeProfile', id); setState(s => ({ ...s, activeId: id })); }, []);
 
   const value = useMemo<Store>(() => ({
-    ...state, setActive, refresh,
+    ...state, setActive, refresh, setAds, afterSave,
     active: state.data.get(state.activeId) ?? null,
     self: state.data.get(SELF_ID) ?? null,
-  }), [state, setActive, refresh]);
+  }), [state, setActive, refresh, setAds, afterSave]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

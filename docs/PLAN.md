@@ -10,7 +10,7 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 - **No se guardan estudios**: ni PDF ni fotos ni archivos médicos.
 - **Buscar embarazo** solo se muestra si el perfil tiene 18 años o más.
 - Los perfiles de hijas nunca muestran fertilidad, ovulación ni embarazo.
-- **Gratis con pocos anuncios, y versión paga sin anuncios.** Las dos versiones tienen todas las funciones.
+- **Gratis con anuncios, y versión "Sin anuncios" de pago único.** Las dos tienen todas las funciones. Al empezar se elige una de las dos y la app nunca pide tarjeta: el pago lo hace Google Play. Se puede cambiar desde Perfil.
 - Supabase se usa solo más adelante y es opcional: para que una hija comparta con la mamá, con los datos cifrados.
 - La web y la política de privacidad van en `meneia.unbiraapps.com` (Cloudflare Pages).
 - La prueba de Google Play (12 testers durante 14 días) la resuelve la dueña con un servicio contratado, al final.
@@ -67,10 +67,10 @@ Las tareas que necesitan cuentas o paneles web se anotan en `docs/PARA-CODEX.md`
 
 ## Etapa 4: anuncios, pago y Google Play
 
-- [ ] AdMob, solo anuncios no personalizados. Banner al pie de Calendario e Historial, y como mucho 1 anuncio de pantalla completa por día, solo después de guardar algo. Nunca al abrir, en el bloqueo, en avisos ni en perfiles de hijas, ni durante los primeros 7 días.
-- [ ] Anuncio con premio opcional: una semana sin anuncios.
-- [ ] Facturación de Google Play: un producto que quita los anuncios. El precio lo define la dueña.
-- [ ] Política de privacidad en `meneia.unbiraapps.com/privacidad`.
+- [x] AdMob, solo anuncios no personalizados. Banner al pie de Calendario e Historial, y como mucho 1 anuncio de pantalla completa por día, solo después de guardar algo. Nunca al abrir, en el bloqueo, en avisos ni en perfiles de hijas, ni durante los primeros 7 días.
+- [x] Anuncio con premio opcional: una semana sin anuncios.
+- [x] Facturación de Google Play: un producto que quita los anuncios. El precio lo define la dueña.
+- [x] Política de privacidad en `meneia.unbiraapps.com/privacidad`.
 - [ ] Ficha de Play, formulario de apps de salud y sección de seguridad de datos (le toca a Codex).
 
 ## Reglas para trabajar

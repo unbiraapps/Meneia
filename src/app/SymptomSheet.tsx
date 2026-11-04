@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 /** Cómo estás hoy (o el día elegido): dolor, cuerpo, ánimo y una nota. Las hijas solo registran dolor y ánimo. */
 export function SymptomSheet({ date, onClose }: { date: string; onClose: () => void }) {
-  const { active, refresh } = useStore();
+  const { active, refresh, afterSave } = useStore();
   const toast = useToast();
   const profile = active!.profile;
   const isChild = profile.kind === 'child';
@@ -28,6 +28,7 @@ export function SymptomSheet({ date, onClose }: { date: string; onClose: () => v
     onClose(); await refresh();
     const n = (pain ? 1 : 0) + log.body.length + mood.length;
     toast(n || note.trim() ? 'Guardado' : 'Sin síntomas para ese día');
+    afterSave();
   }
   async function addCustom() {
     const t = adding.trim().slice(0, 30);

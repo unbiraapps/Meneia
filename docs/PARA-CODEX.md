@@ -54,7 +54,17 @@ Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de c
 - Verificaciones locales previas al commit: `npm test` (40 pruebas) y `npm run build`, sin errores.
 - Mantenimiento: rclone v1.75.2 advirtió que su cliente OAuth compartido será retirado durante 2026. Migrar a un cliente OAuth propio de unbira y reautorizar/actualizar `RCLONE_CONF` para evitar una interrupción futura.
 
-## Más adelante (etapa 4)
+## Anuncios y Google Play (etapa 4: el código ya está)
+
+El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueba de Google hasta que estén los reales.
+- [ ] **AdMob:** crear la app Android `app.meneia` y tres bloques: banner adaptable, intersticial y bonificado. Cargar en los secretos del repo: `ADMOB_APP_ID` (formato `ca-app-pub-…~…`), `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` (formato `ca-app-pub-…/…`). En AdMob › Bloquear contenido: bloquear las categorías sensibles (sexualidad, citas, embarazo/bebés si aparece, apuestas). La app pide siempre anuncios no personalizados.
+- [ ] **app-ads.txt:** AdMob pide publicarlo en el dominio de la ficha de Play. Si el sitio del desarrollador es `unbiraapps.com`, poner `https://unbiraapps.com/app-ads.txt` con la línea que da AdMob. Si fuera `meneia.unbiraapps.com`, avisar en `docs/PARA-CLAUDE.md` y lo agrego en `public/app-ads.txt`.
+- [ ] **Mensaje de consentimiento (UMP):** en AdMob › Privacidad y mensajería, crear el mensaje de GDPR para Europa. La app ya lo muestra solo donde Google lo pide.
+- [ ] **Producto "Sin anuncios":** en Play Console › Monetizar › Productos integrados, crear un producto único con ID exacto `sin_anuncios`. El precio lo define la dueña.
+- [ ] **Ficha y formularios de Play:** público objetivo **18 años o más** (la app no está dirigida a menores: los perfiles de hijas los maneja una persona adulta); formulario de apps de salud (Seguimiento del período); Seguridad de los datos: la app **sí** muestra anuncios y comparte el ID de publicidad y datos del dispositivo con AdMob; los datos de salud **no** se recopilan ni se comparten (quedan en el celular); política de privacidad `https://meneia.unbiraapps.com/privacidad`. Declarar el permiso de ID de publicidad.
+- [ ] Subir `meneia.aab` (sale en cada release: `https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.aab`) a la prueba cerrada.
+
+## Más adelante
 
 - [ ] Cuenta de Google Play Console y app "Meneia" (paquete `app.meneia`).
 - [ ] AdMob: app y bloques de anuncios (banner, pantalla completa, con premio). Pasar los IDs a los secretos `ADMOB_APP_ID`, `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID`. Bloquear las categorías sensibles.
