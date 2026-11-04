@@ -68,3 +68,11 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 ## Más adelante
 
 - [ ] Prueba cerrada con el servicio de testers contratado (12 personas, 14 días seguidos). Lo coordina la dueña.
+
+
+### Publicación: preparación en curso (2026-11-04)
+
+- Cuenta de desarrollador existente: Unbira, ID `7592822914289724121`, sesión `bdalonso87@gmail.com`. No crear cuenta nueva en `unbiraapps@gmail.com`.
+- Alta preparada: Meneia, paquete `app.meneia` disponible, aplicación gratuita. Play ofrece `Español (Latinoamérica), es-419`; no hay variante `es-AR` en el selector. El alta aún requiere confirmación de la dueña sobre las declaraciones de políticas y exportación.
+- Precio propuesto y aprobado condicionalmente por la dueña: USD 9,99, pago único para `sin_anuncios`, siempre que sea superior a Código de Estilo. En Play, Código de Estilo figura gratuita y sin productos únicos. Si la comparación es con una venta externa, falta confirmar ese importe. Producto aún no creado ni activado.
+- Materiales faltantes de ficha pedidos a Claude en `docs/PARA-CLAUDE.md`: gráfico destacado, capturas y textos.
