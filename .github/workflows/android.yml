@@ -52,7 +52,8 @@ jobs:
       - name: Verificar la firma
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$APKSIGNER" verify --print-certs "$RUNNER_TEMP/meneia.apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+          OUT=$("$APKSIGNER" verify --print-certs "$RUNNER_TEMP/meneia.apk")
+          echo "$OUT" | grep -E "certificate (DN|SHA-256 digest)" | head -2
       - uses: actions/upload-artifact@v4
         with:
           name: meneia
