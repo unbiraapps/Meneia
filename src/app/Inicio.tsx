@@ -19,6 +19,7 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
   async function finish(premium = false) {
     if (!premium) await setAds({ ...ads, plan: 'free' });
     await saveProfile({ ...self!.profile, birthDate: birth, trying: adult && tryOn });
+    await setSetting('familyMode', fam);
     await setSetting('onboarded', true);
     await refresh();
     onDone(fam);

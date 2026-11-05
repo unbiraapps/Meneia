@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ageOn, daysBetween, fmtShort, plural, addDays, type Profile } from '../calc';
-import { deleteProfile, saveProfile, setSetting } from '../db';
+import { deleteProfile, savePeriod, saveProfile, setSetting } from '../db';
 import { useStore } from './store';
 import { Avatar, COLORS, Icon, Sheet, SubHeader, useToast } from './ui';
 import { PeriodSheet } from './PeriodSheet';
@@ -83,7 +83,7 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
   );
 }
 
-function KidSheet({ kid, onClose }: { kid: Profile | null; onClose: () => void }) {
+export function KidSheet({ kid, onClose }: { kid: Profile | null; onClose: () => void }) {
   const { today, refresh, profiles, setActive, activeId } = useStore();
   const toast = useToast();
   const used = profiles.map(p => p.color);
@@ -91,13 +91,17 @@ function KidSheet({ kid, onClose }: { kid: Profile | null; onClose: () => void }
   const [birth, setBirth] = useState(kid?.birthDate ?? '');
   const [color, setColor] = useState(kid?.color ?? COLORS.find(c => !used.includes(c)) ?? COLORS[0]);
   const [notYet, setNotYet] = useState(kid?.notYet ?? false);
+  const [last, setLast] = useState('');
   const [sure, setSure] = useState(false);
   const [err, setErr] = useState('');
 
   async function save() {
     if (!name.trim()) return setErr('Escribí un nombre o apodo.');
-    await saveProfile({ ...(kid ?? { kind: 'child', trying: false, alertDays: 2 }), id: kid?.id, name: name.trim().slice(0, 30), birthDate: birth, color, notYet } as Profile);
-    onClose(); await refresh(); toast(kid ? 'Cambios guardados' : name.trim() + ' agregada');
+    if (last && last > today) return setErr('La fecha no puede ser futura.');
+    const id = await saveProfile({ ...(kid ?? { kind: 'child', trying: false, alertDays: 2 }), id: kid?.id, name: name.trim().slice(0, 30), birthDate: birth, color, notYet: notYet && !last } as Profile);
+    if (!kid && !notYet && last) await savePeriod({ profileId: id, start: last, end: '', flow: 'Normal', note: '', atypical: false, trying: false });
+    onClose(); await refresh(); await setSetting('familyMode', true);
+    toast(kid ? 'Cambios guardados' : name.trim() + (last ? ' agregada con su último período' : ' agregada'));
   }
   async function remove() {
     if (!sure) { setSure(true); return; }
@@ -113,6 +117,19 @@ function KidSheet({ kid, onClose }: { kid: Profile | null; onClose: () => void }
         <div className="chips">{COLORS.map(c => <button key={c} type="button" aria-label={'Color ' + c} aria-pressed={c === color} onClick={() => setColor(c)} style={{ width: 40, height: 40, borderRadius: '50%', background: c, border: c === color ? '3px solid var(--fg)' : '3px solid transparent', cursor: 'pointer' }} />)}</div></div>
       <div className="row"><div className="stack grow"><b style={{ fontSize: 14.5 }}>Todavía no le vino</b><small className="muted" style={{ fontSize: 12.5 }}>No muestra fechas hasta que le venga</small></div>
         <button type="button" role="switch" aria-checked={notYet} aria-label="Todavía no le vino" className="switch" onClick={() => setNotYet(!notYet)} /></div>
+      {!kid && !notYet && (
+        <div className="stack" style={{ gap: 8 }}>
+          <span className="eyebrow">¿Cuándo empezó la última vez que le vino?</span>
+          <div className="chips" role="radiogroup" aria-label="Último período">
+            {([[0, 'Hoy'], [1, 'Ayer'], [2, 'Anteayer']] as [number, string][]).map(([n, l]) => {
+              const d = addDays(today, -n);
+              return <button key={l} type="button" role="radio" aria-checked={last === d} className={'chip' + (last === d ? ' on fam' : '')} onClick={() => setLast(last === d ? '' : d)}>{l}</button>;
+            })}
+          </div>
+          <label className="field">Otra fecha<input type="date" value={last} max={today} onChange={e => { setLast(e.target.value); setErr(''); }} /></label>
+          <small className="muted" style={{ fontSize: 12.5 }}>Si no te acordás, dejalo vacío y lo anotás después.</small>
+        </div>
+      )}
       {err && <p className="err" role="alert">{err}</p>}
       <button type="button" className="btn fam" onClick={save}>{kid ? 'Guardar' : 'Agregar'}</button>
       {kid && <button type="button" className={'btn ' + (sure ? 'danger' : 'ghost')} onClick={remove}>{sure ? '¿Borrar perfil y sus registros?' : 'Borrar perfil'}</button>}

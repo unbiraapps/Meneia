@@ -66,7 +66,7 @@ function Shell() {
   if (!ready) return <div className="screen" aria-busy="true" />;
   if (lockOn.current && locked) return <Lock pinHash={privacy.pinHash} onUnlock={unlock} />;
   if (covered) return <button type="button" className="cover" aria-label="Pantalla tapada. Tocá para seguir" onClick={() => { if (lockOn.current) setLocked(true); setCovered(false); }}><span className="dot" /><span style={{ fontSize: 12.5 }}>Tocá para seguir</span></button>;
-  if (!onboarded) return <Inicio onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
+  if (!onboarded) return <Inicio onDone={() => setTab('hoy')} />;
 
   return (
     <div className={'app' + (banner ? ' with-ad' : '')}>

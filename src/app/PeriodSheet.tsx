@@ -5,9 +5,10 @@ import { notifyNow } from '../notify';
 import { useStore } from './store';
 import { Sheet, useToast } from './ui';
 
-/** Anotar o editar un período del perfil activo. */
-export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Period; defaultStart?: string; onClose: () => void }) {
-  const { active, today, refresh, privacy, afterSave } = useStore();
+/** Anotar o editar un período del perfil activo (o de otro perfil, con profileId: por ejemplo una hija desde Hoy). */
+export function PeriodSheet({ editing, defaultStart, profileId, onClose }: { editing?: Period; defaultStart?: string; profileId?: number; onClose: () => void }) {
+  const { active: current, data, today, refresh, privacy, afterSave } = useStore();
+  const active = profileId != null ? data.get(profileId) ?? current : current;
   const toast = useToast();
   const profile = active!.profile;
   const isSelf = profile.kind === 'self';
