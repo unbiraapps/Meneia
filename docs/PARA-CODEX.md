@@ -61,7 +61,7 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [x] **AdMob:** crear la app Android `app.meneia` y tres bloques: banner adaptable, intersticial y bonificado. Cargar en los secretos del repo: `ADMOB_APP_ID` (formato `ca-app-pub-…~…`), `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` (formato `ca-app-pub-…/…`). En AdMob › Bloquear contenido: bloquear las categorías sensibles (sexualidad, citas, embarazo/bebés si aparece, apuestas). La app pide siempre anuncios no personalizados.
 - [x] **app-ads.txt:** AdMob pide publicarlo en el dominio de la ficha de Play. Si el sitio del desarrollador es `unbiraapps.com`, poner `https://unbiraapps.com/app-ads.txt` con la línea que da AdMob. Si fuera `meneia.unbiraapps.com`, avisar en `docs/PARA-CLAUDE.md` y lo agrego en `public/app-ads.txt`.
 - [x] **Mensaje de consentimiento (UMP):** en AdMob › Privacidad y mensajería, crear el mensaje de GDPR para Europa. La app ya lo muestra solo donde Google lo pide.
-- [ ] **Producto "Sin anuncios":** en Play Console › Monetizar › Productos integrados, crear un producto único con ID exacto `sin_anuncios`. El precio lo define la dueña.
+- [x] **Suscripción "Sin anuncios" en Play (cambio de la dueña, 2026-11-05):** USD 9,99 por mes, renovación mensual; plan gratuito completo con anuncios sin tarjeta ni trial de pago. Sustituye el pedido anterior de producto único `sin_anuncios`, que permanece en borrador. Producto mensual `sin_anuncios_mensual`, plan básico `mensual`; ver resultado y coordinación con Claude más abajo.
 - [ ] **Ficha y formularios de Play:** público objetivo **18 años o más** (la app no está dirigida a menores: los perfiles de hijas los maneja una persona adulta); formulario de apps de salud (Seguimiento del período); Seguridad de los datos: la app **sí** muestra anuncios y comparte el ID de publicidad y datos del dispositivo con AdMob; los datos de salud **no** se recopilan ni se comparten (quedan en el celular); política de privacidad `https://meneia.unbiraapps.com/privacidad`. Declarar el permiso de ID de publicidad.
 - [x] Subir `meneia.aab` (sale en cada release: `https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.aab`) a la prueba cerrada.
 
@@ -166,3 +166,22 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - Pendientes para continuar: materiales de ficha solicitados a Claude (textos, gráfico destacado y capturas), lista de testers de la dueña, y aclaración del precio de Código de Estilo para activar `sin_anuncios` respetando la condición aprobada de USD 9,99. Play también muestra un aviso de declaración de estado de comerciante de la cuenta; revisar ese requisito antes de enviar a revisión, sin inventar declaraciones legales de la titular.
 - Pedido adicional a Claude: mostrar responsable y correo de contacto en la política de privacidad. No se cambió código de la app.
 - Verificación local antes del commit de coordinación: `npm test` (60 pruebas) y `npm run build` correctos.
+
+
+### Decisión vigente: mensual y gratis sin tarjeta (2026-11-05)
+
+- La dueña corrigió expresamente la modalidad: **USD 9,99 al mes para quitar anuncios**, en lugar de pago único. Confirmó «exacto» al resumen de suscripción mensual y modalidad gratuita que no solicita tarjeta ni prueba de pago.
+- La decisión de pago único anterior queda reemplazada. No se activa el producto único `sin_anuncios`; no se borra para conservar el registro. No hay compras ni usuarios pagadores del producto antiguo.
+- Se creó la suscripción **`sin_anuncios_mensual`**, nombre «Meneia sin anuncios». Panel: https://play.google.com/console/u/1/developers/7592822914289724121/app/4975223863463427352/subscriptions/s/sin_anuncios_mensual
+- La app actual todavía usa el producto único y textos de pago único. Pedido detallado a Claude en `docs/PARA-CLAUDE.md`: Billing de suscripción, estado vigente/cancelación/vencimiento, precio mensual claro, actualización de plan/política y acceso gratis sin abrir el cobro. No se cambió código de la app.
+
+
+### Resultado de la suscripción mensual en Play (2026-11-05)
+
+- [x] **Configuración en consola:** suscripción `sin_anuncios_mensual`, plan básico `mensual`, **Mensual, renovación automática**, estado **Activo** verificado en la tabla de Play. No se creó ninguna oferta ni trial de suscripción. Es una configuración de catálogo; no publica la app ni realizó cobros.
+- Precio base ingresado **USD 9,99**, convertido por Play para las regiones habilitadas; verificado Estados Unidos USD 9,99/mes y Argentina ARS 15.500/mes. La app debe mostrar siempre el importe y período de facturación que informa Play, no un precio fijo inventado. Disponibilidad: 175 países/regiones.
+- Se conservaron valores predeterminados de recuperación de pagos: gracia de 7 días y suspensión automática de 53 días. Esto solo corresponde a cobros de una suscripción ya contratada, no a una prueba gratuita ni a un requisito para el plan gratis. No confundirlo con la cortesía local de los primeros 7 días sin anuncios.
+- Panel del plan: https://play.google.com/console/u/1/developers/7592822914289724121/app/4975223863463427352/subscriptions/s/sin_anuncios_mensual/base-plans/b/mensual
+- Producto único anterior `sin_anuncios` continúa en borrador, sin activar. La consulta anterior sobre comparar el precio único con Código de Estilo queda superada por la confirmación posterior de la dueña de USD 9,99 mensuales.
+- [ ] **Implementación y validación en app (Claude):** cambiar Billing y textos a la suscripción indicada, verificar vencimiento/restauración y entrada gratuita sin tarjeta. Pedido detallado en PARA-CLAUDE. No se publica ni se presenta la APK actual como adaptación mensual terminada.
+- Verificaciones previas al commit de coordinación: `npm test` (60 pruebas) y `npm run build`, correctos. Solo se modificaron documentos de coordinación.
