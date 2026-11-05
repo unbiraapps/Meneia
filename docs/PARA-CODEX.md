@@ -58,9 +58,9 @@ Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de c
 
 El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueba de Google hasta que estén los reales.
 - [x] **App en Play Console:** la cuenta de desarrollador ya existe. Crear la app "Meneia", paquete `app.meneia`, gratuita, categoría Salud y bienestar, idioma español (Argentina). Activar la firma de apps de Google Play con la clave de subida que está en los secretos (alias `meneia`).
-- [ ] **AdMob:** crear la app Android `app.meneia` y tres bloques: banner adaptable, intersticial y bonificado. Cargar en los secretos del repo: `ADMOB_APP_ID` (formato `ca-app-pub-…~…`), `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` (formato `ca-app-pub-…/…`). En AdMob › Bloquear contenido: bloquear las categorías sensibles (sexualidad, citas, embarazo/bebés si aparece, apuestas). La app pide siempre anuncios no personalizados.
-- [ ] **app-ads.txt:** AdMob pide publicarlo en el dominio de la ficha de Play. Si el sitio del desarrollador es `unbiraapps.com`, poner `https://unbiraapps.com/app-ads.txt` con la línea que da AdMob. Si fuera `meneia.unbiraapps.com`, avisar en `docs/PARA-CLAUDE.md` y lo agrego en `public/app-ads.txt`.
-- [ ] **Mensaje de consentimiento (UMP):** en AdMob › Privacidad y mensajería, crear el mensaje de GDPR para Europa. La app ya lo muestra solo donde Google lo pide.
+- [x] **AdMob:** crear la app Android `app.meneia` y tres bloques: banner adaptable, intersticial y bonificado. Cargar en los secretos del repo: `ADMOB_APP_ID` (formato `ca-app-pub-…~…`), `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` (formato `ca-app-pub-…/…`). En AdMob › Bloquear contenido: bloquear las categorías sensibles (sexualidad, citas, embarazo/bebés si aparece, apuestas). La app pide siempre anuncios no personalizados.
+- [x] **app-ads.txt:** AdMob pide publicarlo en el dominio de la ficha de Play. Si el sitio del desarrollador es `unbiraapps.com`, poner `https://unbiraapps.com/app-ads.txt` con la línea que da AdMob. Si fuera `meneia.unbiraapps.com`, avisar en `docs/PARA-CLAUDE.md` y lo agrego en `public/app-ads.txt`.
+- [x] **Mensaje de consentimiento (UMP):** en AdMob › Privacidad y mensajería, crear el mensaje de GDPR para Europa. La app ya lo muestra solo donde Google lo pide.
 - [ ] **Producto "Sin anuncios":** en Play Console › Monetizar › Productos integrados, crear un producto único con ID exacto `sin_anuncios`. El precio lo define la dueña.
 - [ ] **Ficha y formularios de Play:** público objetivo **18 años o más** (la app no está dirigida a menores: los perfiles de hijas los maneja una persona adulta); formulario de apps de salud (Seguimiento del período); Seguridad de los datos: la app **sí** muestra anuncios y comparte el ID de publicidad y datos del dispositivo con AdMob; los datos de salud **no** se recopilan ni se comparten (quedan en el celular); política de privacidad `https://meneia.unbiraapps.com/privacidad`. Declarar el permiso de ID de publicidad.
 - [x] Subir `meneia.aab` (sale en cada release: `https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.aab`) a la prueba cerrada.
@@ -114,3 +114,55 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - AdMob sigue en verificación de teléfono del alta autorizada; no hay todavía app ni bloques reales. Por eso aún no se cargaron secretos ADMOB, no se publicó app-ads.txt, no se configuró UMP y no se corrió el workflow con IDs reales. La dueña debe completar teléfono y SMS directamente en Google.
 - IARC pendiente de autorización específica de la dueña para aceptar sus términos y compartir `contacto@unbiraapps.com` con las autoridades clasificadoras. No se aceptaron ni se envió el cuestionario sin autorización.
 - [x] **Correo de soporte del dominio:** reutilizado `contacto@unbiraapps.com`, ya existente en Zoho; guardado como contacto público de Meneia en Play. No se creó un buzón ni un alias adicional. La sesión de Zoho quedó en el aviso de MFA; no se modificó la seguridad de la cuenta ni se enviaron mensajes de prueba.
+
+
+### Corrección de cuenta AdMob (2026-11-05)
+
+- La dueña pidió usar la misma cuenta de AdMob que Código de Estilo. Se verificó en el panel existente: `bdalonso87@gmail.com`, editor `pub-9080053541566091`, con Código de Estilo (`ca-app-pub-9080053541566091~8919382510`, dos bloques) y Saldapp (`ca-app-pub-9080053541566091~5700596386`, dos bloques). Perfil de pagos ya completado en esa cuenta.
+- Las notas antiguas locales que indicaban anuncios solo de demostración eran insuficientes para identificar la cuenta actual. Se corrigió con la comprobación del panel en vivo.
+- La cuenta recién creada con `unbiraapps@gmail.com`, editor `pub-6061137724315991`, no se usará para Meneia. Allí se creó una app y un banner antes de la corrección; no se cargó ningún ID de esa cuenta en GitHub. No se cerró ni borró la cuenta ni se modificaron sus pagos.
+- Continuar la configuración de Meneia únicamente bajo `pub-9080053541566091`. No reutilizar bloques de Código de Estilo ni Saldapp: crear los propios de Meneia en esa misma cuenta.
+
+
+### AdMob correcto y APK de prueba (2026-11-05)
+
+- App Meneia creada en la misma cuenta que Código de Estilo: `bdalonso87@gmail.com`, editor `pub-9080053541566091`. App ID `ca-app-pub-9080053541566091~3271936607`.
+- Bloques propios de Meneia: banner adaptable `ca-app-pub-9080053541566091/8316379720`; intersticial `ca-app-pub-9080053541566091/1668220053`; bonificado `ca-app-pub-9080053541566091/9782513797` (recompensa: 7 días sin anuncios).
+- Los cuatro secretos `ADMOB_APP_ID`, `ADMOB_BANNER_ID`, `ADMOB_INTERSTITIAL_ID` y `ADMOB_REWARDED_ID` se cargaron cifrados en GitHub Actions. Nunca se usaron IDs de la cuenta nueva descartada.
+- Bloqueos guardados exclusivamente para Meneia: Citas, Referencias al sexo, Salud sexual y reproductiva, Juegos de casino sociales y Apuestas mayores de 18 años. Alcohol ya estaba bloqueado. En categorías generales se bloqueó Bebés (las cuatro subcategorías, incluida Alimentación de bebés); la búsqueda de embarazo no devolvió resultados.
+- Vinculación a la ficha pública de Play pendiente hasta que esté publicada/indexada; Meneia se registró como Android aún no publicada. No se modificaron Código de Estilo ni Saldapp.
+- Workflow ejecutado manualmente con los IDs reales: https://github.com/unbiraapps/Meneia/actions/runs/42014114800, versión de compilación 18, commit `6554c30`. Resultado `success`, incluidos Compilar APK y Subir al Drive de unbira.
+- APK disponible: https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.apk. Tamaño 10.458.101 bytes. Copia actual en Drive `Meneia/APK/meneia.apk` (archivo `1OPEa3cjsacexfv4HADy2wcgwnW-x5Xjz`) y copia fechada `anteriores/meneia_2026-11-05_0755.apk`, ambas verificadas. SHA-256 idéntico entre descarga de GitHub y Drive: `9dd41d66158ffc89ae3dd09ba48e03c1ad082449aeeac000933abbe8f06ec0b1`.
+- Carpeta para instalar desde el celular: https://drive.google.com/drive/u/0/folders/14aGADyhyMKo-HMdwPD2v_XeoSLACCJOr. Esto es instalación por APK; la prueba cerrada de Play todavía no se lanzó.
+
+
+### Consentimiento europeo publicado (2026-11-05)
+
+- Mensaje `Meneia - Consentimiento europeo` publicado en AdMob, editor `pub-9080053541566091`, exclusivamente para Meneia. Español predeterminado e inglés adicional; consentimiento, administrar opciones y no consentir disponibles. Opción No consentir habilitada en todas las regiones; segmentación del mensaje limitada a EEE, Reino Unido y Suiza.
+- Política asociada: https://meneia.unbiraapps.com/privacidad. Implementación mediante el SDK UMP que ya tiene la app; no se habilitó la implementación alternativa en unidades de anuncios.
+- Panel muestra estado Publicado: https://admob.google.com/v2/privacymessaging/gdpr?authuser=1. Google advierte hasta una hora para que aparezca; no se verificó la visualización en un teléfono ubicado en Europa. No se modificaron mensajes de otras apps.
+
+
+### Clasificación de contenido completada (2026-11-05)
+
+- La dueña autorizó aceptar las condiciones IARC y usar `contacto@unbiraapps.com`. Cuestionario completado y guardado; listo para enviar junto con la publicación, aún sin enviarla a revisión.
+- Categoría: resto de los tipos de app; sin contenido descargado de sexo/violencia/lenguaje, sin interacción social ni catálogo de contenido remoto, sin promoción de productos restringidos, sin ubicación precisa compartida. Compras digitales: sí; artículos aleatorios, recompensas monetarias/cripto/NFT: no. No es navegador ni producto principalmente educativo o de noticias.
+- Resultado de autoridades: Brasil 14+, ESRB Todos, PEGI 3, USK todas las edades, IARC resto del mundo 3+ (también Rusia y Corea del Sur 3+). Estas clasificaciones de contenido son distintas del público objetivo, que se mantiene **18+**.
+- Play confirmó: «Se guardó el cambio. Envíalo a revisión en Descripción general de la publicación».
+
+
+### app-ads.txt publicado (2026-11-05)
+
+- Línea obtenida del panel AdMob de la cuenta correcta y publicada por HTTPS en https://unbiraapps.com/app-ads.txt: `google.com, pub-9080053541566091, DIRECT, f08c47fec0942fa0`.
+- Cloudflare Worker externo al repo `unbira-app-ads`, versión activa `2a999900`, dominio personalizado de producción `unbiraapps.com`. Panel: https://dash.cloudflare.com/b1afff1f0d25617022fb22196fc4899c/workers/services/view/unbira-app-ads/production/domains
+- Dominio raíz incluye un texto breve de contacto y enlaces a Meneia/privacidad. No se cambió código de la app, el correo ni los subdominios existentes.
+- Archivo abierto en navegador y contenido verificado. AdMob pide al menos 24 horas para rastrearlo; la validación de Meneia también requiere que su ficha esté pública y vinculada. No se declara todavía rastreo verificado por AdMob.
+
+
+### Borrador Alpha actualizado (2026-11-05)
+
+- AAB de la compilación manual con IDs AdMob reales, versión **18 (1.2)**, subido y aceptado. Se quitó la versión 16 solamente de este borrador (sigue recuperable en la biblioteca). Guardado como borrador con nombre `18 (1.2)` y sin iniciar distribución.
+- SHA-256 del AAB v18: `f8f3f3e70192b4a9ade5c75cfca17d54b5f8554f56f7deae451083eeceb8231a`. SDK objetivo 36 y Android 24+.
+- Pendientes para continuar: materiales de ficha solicitados a Claude (textos, gráfico destacado y capturas), lista de testers de la dueña, y aclaración del precio de Código de Estilo para activar `sin_anuncios` respetando la condición aprobada de USD 9,99. Play también muestra un aviso de declaración de estado de comerciante de la cuenta; revisar ese requisito antes de enviar a revisión, sin inventar declaraciones legales de la titular.
+- Pedido adicional a Claude: mostrar responsable y correo de contacto en la política de privacidad. No se cambió código de la app.
+- Verificación local antes del commit de coordinación: `npm test` (60 pruebas) y `npm run build` correctos.

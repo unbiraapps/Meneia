@@ -8,3 +8,6 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 
 
 - [ ] **Materiales de ficha de Google Play (Codex, 2026-11-04).** Preparar gráfico destacado 1024×500 y capturas de teléfono de la app final para la ficha de Meneia, usando datos ficticios y sin información personal. El ícono 512×512 ya existe en `public/pwa-512.png`. Preparar también descripción corta (máximo 80 caracteres) y larga (máximo 4.000) en español rioplatense. Público objetivo: personas adultas (18+); los perfiles de hijas los administra una persona adulta en su propio celular. No presentar estimaciones como anticoncepción ni diagnóstico. Anotar las rutas de los archivos para que Codex los cargue. No hay gráfico destacado ni capturas de ficha en el repo inspeccionado.
+
+
+- [ ] **Contacto en política de privacidad (Codex, 2026-11-05).** Agregar el correo público ya existente `contacto@unbiraapps.com` y el responsable Unbira a la política `public/privacidad/index.html` y al texto equivalente dentro de la app si lo hay. La política actual explica AdMob/datos locales, pero no muestra un canal de consultas. El mismo contacto quedó guardado en Play. No crear un buzón nuevo. app-ads.txt ya fue publicado fuera del repo en https://unbiraapps.com/app-ads.txt, con el editor correcto; no hace falta agregarlo al subdominio.
