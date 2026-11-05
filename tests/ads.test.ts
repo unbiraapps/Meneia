@@ -20,9 +20,16 @@ describe('reglas de anuncios', () => {
     expect(bannerAllowed(base, ctx, 'hoy')).toBe(false);
     expect(bannerAllowed(base, ctx, 'perfil')).toBe(false);
   });
-  it('pantalla completa como mucho una vez por día', () => {
-    expect(interstitialAllowed(base, ctx)).toBe(true);
-    expect(interstitialAllowed({ ...base, lastInterstitial: '2026-11-10' }, ctx)).toBe(false);
+  it('pantalla completa con al menos 30 minutos entre uno y otro', () => {
+    const now = Date.parse('2026-11-10T15:00:00Z');
+    expect(interstitialAllowed(base, ctx, now)).toBe(true);
+    expect(interstitialAllowed({ ...base, lastInterstitial: '2026-11-10T14:40:00Z' }, ctx, now)).toBe(false);
+    expect(interstitialAllowed({ ...base, lastInterstitial: '2026-11-10T14:30:00Z' }, ctx, now)).toBe(true);
+    // valor viejo (solo fecha) no traba
+    expect(interstitialAllowed({ ...base, lastInterstitial: '2026-11-09' }, ctx, now)).toBe(true);
+    // versión de prueba: cada 2 minutos
+    expect(interstitialAllowed({ ...base, lastInterstitial: '2026-11-10T14:57:00Z' }, { ...ctx, testing: true }, now)).toBe(true);
+    expect(interstitialAllowed(base, { ...ctx, childActive: true }, now)).toBe(false);
   });
   it('el video da una semana sin anuncios', () => {
     const until = rewardUntil('2026-11-10');

@@ -9,7 +9,7 @@ const hh = (h: number) => String(h).padStart(2, '0') + ':00';
 
 /** Toma diaria, blíster y aviso para comprar. */
 export function PillToday() {
-  const { pills, today, refresh, self } = useStore();
+  const { pills, today, refresh, self, afterSave } = useStore();
   const toast = useToast();
   if (!self?.A.onPill || !pills.packStart) return null;
   const pd = pillDay(pills, today);
@@ -25,7 +25,7 @@ export function PillToday() {
         </div>
         {!pd.isRest && <button type="button" className={'btn small' + (taken ? ' ghost' : '')} aria-pressed={taken} onClick={async () => {
           await savePills({ ...pills, taken: taken ? pills.taken.filter(d => d !== today) : [...pills.taken, today] });
-          await refresh(); if (!taken) toast('Anotado');
+          await refresh(); if (!taken) { toast('Anotado'); afterSave(); }
         }}>{taken ? 'Deshacer' : 'La tomé'}</button>}
       </div>
     </div>

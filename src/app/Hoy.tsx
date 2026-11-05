@@ -29,7 +29,7 @@ export function ProfileChips() {
 }
 
 export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' | 'perfil') => void }) {
-  const { active, today, refresh, migrated, health, profiles } = useStore();
+  const { active, today, refresh, migrated, health, profiles, afterSave } = useStore();
   const toast = useToast();
   const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin' | 'period'>(false);
   const { privacy, setActive } = useStore();
@@ -58,6 +58,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       msg += today >= prevRange.from && today <= prevRange.to ? (diff === 0 ? ' · la app acertó el día' : ` · dentro de los posibles días (${Math.abs(diff)} ${Math.abs(diff) === 1 ? 'día' : 'días'} ${diff > 0 ? 'después' : 'antes'})`) : ` · se corrió ${plural(Math.abs(diff), 'día', 'días')}`;
     }
     toast(msg);
+    afterSave();
   }
 
   // Alertas del perfil

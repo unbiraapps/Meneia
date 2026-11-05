@@ -23,7 +23,7 @@ const TABS: [Tab, string, () => React.JSX.Element][] = [
 ];
 
 function Shell() {
-  const { ready, privacy, onboarded, ads, today, active } = useStore();
+  const { ready, privacy, onboarded, ads, today, active, afterNav } = useStore();
   const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
   const [famFirst, setFamFirst] = useState(false);
@@ -78,7 +78,7 @@ function Shell() {
       <nav className="nav" aria-label="Secciones" ref={navRef}>
         <div className="nav-in">
           {TABS.map(([id, label, Ico]) => (
-            <button key={id} type="button" className={'tab' + (tab === id ? ' on' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id); setFamFirst(false); window.scrollTo(0, 0); }}><Ico />{label}</button>
+            <button key={id} type="button" className={'tab' + (tab === id ? ' on' : '')} aria-current={tab === id ? 'page' : undefined} onClick={() => { if (id !== tab) afterNav(); setTab(id); setFamFirst(false); window.scrollTo(0, 0); }}><Ico />{label}</button>
           ))}
         </div>
       </nav>

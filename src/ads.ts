@@ -48,15 +48,26 @@ export async function hideBanner(): Promise<void> {
   try { await AdMob.removeBanner(); } catch { /* ya no estaba */ }
 }
 
+let interReady: Promise<boolean> | null = null;
+/** Deja cargado el próximo anuncio de pantalla completa, para que aparezca al instante cuando toque. */
+export function preloadInterstitial(): Promise<boolean> {
+  if (!native()) return Promise.resolve(false);
+  if (!interReady) interReady = initAds()
+    .then(() => AdMob.prepareInterstitial({ adId: IDS.interstitial, npa: true, isTesting: TEST }))
+    .then(() => true, () => { interReady = null; return false; });
+  return interReady;
+}
+
 /** Muestra un anuncio de pantalla completa. true si se mostró. */
 export async function showInterstitial(): Promise<boolean> {
   if (!native()) return false;
-  await initAds();
   try {
-    await AdMob.prepareInterstitial({ adId: IDS.interstitial, npa: true, isTesting: TEST });
+    if (!(await preloadInterstitial())) return false;
+    interReady = null;
     await AdMob.showInterstitial();
     return true;
-  } catch { return false; }
+  } catch { interReady = null; return false; }
+  finally { setTimeout(() => { preloadInterstitial(); }, 3000); }
 }
 
 /** Video con premio. true si lo miró completo. */

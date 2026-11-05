@@ -1,13 +1,13 @@
 // Estado de la app: lee todo de la base local y vuelve a programar los avisos después de cada cambio.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders,
   type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder, type PillSettings, type SymptomLog,
 } from '../calc';
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
-import { DEFAULT_ADS, interstitialAllowed, type AdState } from '../adrules';
-import { ADS_TESTING, showInterstitial, subscriptionStatus } from '../ads';
+import { DEFAULT_ADS, NAV_EVERY, interstitialAllowed, type AdState } from '../adrules';
+import { ADS_TESTING, preloadInterstitial, showInterstitial, subscriptionStatus } from '../ads';
 
 export interface Consult { date: string; reason: string; note: string }
 export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[]; consults: Consult[] }
@@ -39,12 +39,14 @@ interface Store {
   migrated: boolean;
   ads: AdState;
   setAds: (a: AdState) => Promise<void>;
-  /** Después de guardar algo: como mucho un anuncio de pantalla completa por día. */
+  /** Después de guardar algo: puede tocar un anuncio de pantalla completa (al menos 30 minutos entre uno y otro). */
   afterSave: () => void;
+  /** Cambio de pestaña: cada tanto puede tocar un anuncio de pantalla completa. */
+  afterNav: () => void;
   refresh: () => Promise<void>;
 }
 
-type Base = Omit<Store, 'setActive' | 'refresh' | 'active' | 'self' | 'setAds' | 'afterSave'>;
+type Base = Omit<Store, 'setActive' | 'refresh' | 'active' | 'self' | 'setAds' | 'afterSave' | 'afterNav'>;
 const Ctx = createContext<Store | null>(null);
 export const useStore = () => { const s = useContext(Ctx); if (!s) throw new Error('sin store'); return s; };
 
@@ -122,16 +124,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [checkSub]);
 
   const setAds = useCallback(async (a: AdState) => { await setSetting('ads', a); setState(s => ({ ...s, ads: a })); }, []);
-  const afterSave = useCallback(() => {
-    setState(s => {
-      const child = s.data.get(s.activeId)?.profile.kind === 'child';
-      if (!interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false, testing: ADS_TESTING })) return s;
-      const a = { ...s.ads, lastInterstitial: s.today };
-      setSetting('ads', a);
-      setTimeout(() => { showInterstitial(); }, 900); // después de que se vea el "guardado"
-      return { ...s, ads: a };
-    });
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const showing = useRef(false);
+  const navs = useRef(0);
+  const maybeInterstitial = useCallback((delay: number) => {
+    const s = stateRef.current;
+    const child = s.data.get(s.activeId)?.profile.kind === 'child';
+    if (showing.current || !interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false, testing: ADS_TESTING }, Date.now())) return;
+    showing.current = true;
+    setTimeout(async () => {
+      const shown = await showInterstitial();
+      showing.current = false;
+      if (!shown) return; // si no cargó, se vuelve a intentar en el próximo momento
+      navs.current = 0;
+      const a = { ...stateRef.current.ads, lastInterstitial: new Date().toISOString() };
+      await setSetting('ads', a);
+      setState(st => ({ ...st, ads: a }));
+    }, delay);
   }, []);
+  const afterSave = useCallback(() => maybeInterstitial(900), [maybeInterstitial]); // después de que se vea el "guardado"
+  const afterNav = useCallback(() => { navs.current += 1; if (navs.current >= NAV_EVERY) maybeInterstitial(300); }, [maybeInterstitial]);
+  useEffect(() => { if (state.ready && state.ads.plan !== 'premium') preloadInterstitial(); }, [state.ready, state.ads.plan]);
   useEffect(() => {
     const onVis = () => { if (document.visibilityState === 'visible' && localToday() !== state.today) refresh(); };
     document.addEventListener('visibilitychange', onVis);
@@ -141,10 +155,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setActive = useCallback((id: number) => { setSetting('activeProfile', id); setState(s => ({ ...s, activeId: id })); }, []);
 
   const value = useMemo<Store>(() => ({
-    ...state, setActive, refresh, setAds, afterSave,
+    ...state, setActive, refresh, setAds, afterSave, afterNav,
     active: state.data.get(state.activeId) ?? null,
     self: state.data.get(SELF_ID) ?? null,
-  }), [state, setActive, refresh, setAds, afterSave]);
+  }), [state, setActive, refresh, setAds, afterSave, afterNav]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

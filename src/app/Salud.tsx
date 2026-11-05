@@ -7,12 +7,12 @@ import { Sheet, Switch, useToast } from './ui';
 const REASONS = ['Control anual', 'Por mi ciclo', 'Por dolor', 'Por pastillas', 'Otro'];
 
 export function Salud() {
-  const { health, today, refresh } = useStore();
+  const { health, today, refresh, afterSave } = useStore();
   const toast = useToast();
   const [q, setQ] = useState('');
   const [sheet, setSheet] = useState<Consult | 'new' | null>(null);
   const [sure, setSure] = useState<number | null>(null);
-  const save = async (h: Health, msg?: string) => { await setSetting('health', withLast(h)); await refresh(); if (msg) toast(msg); };
+  const save = async (h: Health, msg?: string) => { await setSetting('health', withLast(h)); await refresh(); if (msg) { toast(msg); afterSave(); } };
   const due = health.lastConsult ? addDays(health.lastConsult, Math.round(health.controlMonths * 30.4)) : '';
   const ago = health.lastConsult ? daysBetween(health.lastConsult, today) : 0;
   const list = [...health.consults].sort((a, b) => (a.date < b.date ? 1 : -1));

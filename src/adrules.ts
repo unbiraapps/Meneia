@@ -6,7 +6,7 @@ export type Plan = '' | 'free' | 'premium';
 export interface AdState {
   plan: Plan;               // '' = todavía no eligió
   installDate: string;      // primer día de uso
-  lastInterstitial: string; // último día con anuncio de pantalla completa
+  lastInterstitial: string; // cuándo se mostró el último anuncio de pantalla completa (fecha y hora ISO)
   adFreeUntil: string;      // semana sin anuncios por mirar un video (incluye ese día)
   subUntil?: string | null; // fin del período pagado de la suscripción, según Google Play
   willCancel?: boolean;     // canceló la renovación (sigue sin anuncios hasta subUntil)
@@ -34,8 +34,20 @@ export function adsAllowed(s: AdState, c: AdContext): boolean {
 /** Banner: solo al pie de Calendario e Historial. */
 export const bannerAllowed = (s: AdState, c: AdContext, tab: string) => adsAllowed(s, c) && (tab === 'calendario' || tab === 'historial');
 
-/** Pantalla completa: como mucho uno por día, y solo después de guardar algo. */
-export const interstitialAllowed = (s: AdState, c: AdContext) => adsAllowed(s, c) && s.lastInterstitial !== c.today;
+/** Minutos mínimos entre dos anuncios de pantalla completa (en la versión de prueba, menos, para poder verlos). */
+export const INTERSTITIAL_GAP = 30;
+export const INTERSTITIAL_GAP_TEST = 2;
+/** Cada cuántos cambios de pestaña puede tocar uno (además de después de guardar). */
+export const NAV_EVERY = 4;
+
+/** Pantalla completa: después de guardar o cada tanto al cambiar de pestaña, con al menos 30 minutos entre uno y otro. */
+export function interstitialAllowed(s: AdState, c: AdContext, now: number): boolean {
+  if (!adsAllowed(s, c)) return false;
+  if (!s.lastInterstitial) return true;
+  const last = Date.parse(s.lastInterstitial);
+  if (Number.isNaN(last)) return true;
+  return now - last >= (c.testing ? INTERSTITIAL_GAP_TEST : INTERSTITIAL_GAP) * 60_000;
+}
 
 /** Mirar un video da una semana sin anuncios (hoy y los 6 días siguientes). */
 export const rewardUntil = (today: string) => addDays(today, 6);
