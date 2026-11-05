@@ -21,6 +21,8 @@ export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: (
   const [sub, setSub] = useState<Sub>(null);
   const [pin, setPin] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
+  const [ver, setVer] = useState('');
+  useEffect(() => { import('@capacitor/app').then(m => m.App.getInfo()).then(i => setVer(`Versión ${i.version} (${i.build})`)).catch(() => setVer('Versión web')); }, []);
   useEffect(() => { if (cloudAvailable()) currentUser().then(setEmail).catch(() => setEmail(null)); }, [sub]);
   if (!self) return null;
   if (sub === 'familia') return <Familia onBack={() => setSub(null)} onOpenKid={onOpenKid} />;
@@ -100,6 +102,7 @@ export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: (
       </div>
       {pin && <PinSheet onClose={() => setPin(false)} />}
       <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
+      {ver && <p className="muted" style={{ fontSize: 11.5, textAlign: 'center', margin: 0 }}>{ver}</p>}
     </div>
   );
 }

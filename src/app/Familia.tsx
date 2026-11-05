@@ -3,12 +3,14 @@ import { ageOn, daysBetween, fmtShort, plural, addDays, type Profile } from '../
 import { deleteProfile, saveProfile, setSetting } from '../db';
 import { useStore } from './store';
 import { Avatar, COLORS, Icon, Sheet, SubHeader, useToast } from './ui';
+import { PeriodSheet } from './PeriodSheet';
 
 export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: () => void }) {
-  const { profiles, data, today, refresh, shopping, setActive, activeId } = useStore();
+  const { profiles, data, today, refresh, shopping, setActive, activeId, active } = useStore();
   const toast = useToast();
   const [edit, setEdit] = useState<Profile | 'new' | null>(null);
   const [item, setItem] = useState('');
+  const [logFor, setLogFor] = useState<number | null>(null);
   const [done, setDone] = useState<Record<number, boolean>>({});
   const kids = profiles.filter(p => p.kind === 'child');
 
@@ -23,7 +25,7 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
         <h2 style={{ margin: 0 }}>Cómo funciona</h2>
         <ol className="muted" style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
           <li>Agregás a tu hija con su nombre o apodo. Ella no necesita tener la app.</li>
-          <li>Tocás <b>Ver y anotar sus días</b> y anotás cuándo le vino, desde tu celular.</li>
+          <li>Tocás <b>Anotar que le vino</b> y elegís el día, desde tu celular.</li>
           <li>Unos días antes del próximo, te llega un aviso con la lista de compras.</li>
         </ol>
         <span className="muted" style={{ fontSize: 12.5 }}>Todo queda solo en tu celular. El aviso nunca dice su nombre ni la palabra período.</span>
@@ -48,9 +50,12 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
                   onClick={async () => { await saveProfile({ ...k, alertDays: n }); await refresh(); }}>{n === 0 ? 'Apagado' : plural(n, 'día', 'días')}</button>)}
               </div>
             </div>
-            {activeId === k.id
-              ? <button type="button" className="btn ghost small" onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mis días</button>
-              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); onOpenKid(); }}>Ver y anotar sus días</button>}
+            <div className="btns">
+              <button type="button" className="btn fam small" onClick={() => { setActive(k.id!); setLogFor(k.id!); }}>{k.notYet || !d.A.last ? 'Anotar que le vino' : 'Anotar que le vino de nuevo'}</button>
+              {activeId === k.id
+                ? <button type="button" className="btn ghost small" style={{ flex: 'none' }} onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mí</button>
+                : <button type="button" className="btn ghost small" style={{ flex: 'none' }} onClick={() => { setActive(k.id!); onOpenKid(); }}>Ver sus días</button>}
+            </div>
           </div>
         );
       })}
@@ -72,6 +77,7 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
         </form>
       </div>
 
+      {logFor != null && active?.profile.id === logFor && <PeriodSheet defaultStart={today} onClose={() => setLogFor(null)} />}
       {edit && <KidSheet kid={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
     </div>
   );
