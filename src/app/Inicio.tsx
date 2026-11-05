@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { ageOn } from '../calc';
 import { saveProfile, setSetting } from '../db';
 import { GRACE_TEXT, SubTerms, SubscribeButton, usePrice } from './Plan';
-import { useToast } from './ui';
+import { PinForm } from './Pin';
 import { useStore } from './store';
 
 /** Primera vez: fecha de nacimiento y qué querés seguir. Buscar embarazo solo con 18 años o más. */
 export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
   const { self, today, refresh, ads, setAds } = useStore();
-  const toast = useToast();
   const [step, setStep] = useState(1);
   const [birth, setBirth] = useState(self?.profile.birthDate ?? '');
   const [tryOn, setTryOn] = useState(false);
@@ -27,7 +26,7 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
 
   return (
     <div className="screen plain">
-      <span className="eyebrow">Meneia · paso {step} de 3</span>
+      <span className="eyebrow">Meneia · paso {step} de 4</span>
       {step === 1 ? (
         <>
           <h1 style={{ fontSize: 30 }}>¿Cuándo naciste?</h1>
@@ -66,6 +65,14 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
       ) : null}
       {step === 3 && (
         <>
+          <h1 style={{ fontSize: 30 }}>Protegé tu información</h1>
+          <p className="muted" style={{ fontSize: 14.5 }}>Con un PIN, nadie puede abrir Meneia si dejás el celular desbloqueado. Se pide al abrir la app y cada vez que volvés a ella.</p>
+          <PinForm cta="Activar PIN" onSaved={() => setStep(4)} />
+          <button type="button" className="btn link" onClick={() => setStep(4)}>Ahora no</button>
+        </>
+      )}
+      {step === 4 && (
+        <>
           <h1 style={{ fontSize: 30 }}>¿Cómo querés usarla?</h1>
           <div className="card">
             <b style={{ font: '700 18px var(--display)' }}>Gratis con anuncios</b>
@@ -78,7 +85,7 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
             <SubscribeButton onDone={() => finish(true)} />
           </div>
           <p className="muted" style={{ fontSize: 12.5 }}>Los anuncios nunca usan lo que anotás en la app. Podés cambiar de opción cuando quieras desde Perfil.</p>
-          <button type="button" className="btn link" onClick={() => setStep(2)}>Volver</button>
+          <button type="button" className="btn link" onClick={() => setStep(3)}>Volver</button>
         </>
       )}
     </div>

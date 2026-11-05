@@ -6,6 +6,9 @@ import { Avatar, Icon, useToast } from './ui';
 import { SymptomSheet } from './SymptomSheet';
 import { MarginSheet } from './MarginSheet';
 import { PillToday } from './Pastillas';
+import { PinSheet } from './Pin';
+import { getSetting, setSetting } from '../db';
+import { useEffect } from 'react';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -27,7 +30,10 @@ export function ProfileChips() {
 export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' | 'perfil') => void }) {
   const { active, today, refresh, migrated, health, profiles } = useStore();
   const toast = useToast();
-  const [sheet, setSheet] = useState<false | 'sym' | 'margin'>(false);
+  const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin'>(false);
+  const { privacy } = useStore();
+  const [pinNag, setPinNag] = useState(false);
+  useEffect(() => { if (!privacy.lock) getSetting('pinPromptDismissed', false).then(d => setPinNag(!d)); else setPinNag(false); }, [privacy.lock]);
   if (!active) return null;
   const { profile, A } = active;
   const fertility = showsFertility(profile) && !A.onPill;
@@ -88,6 +94,13 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       </div>
       <ProfileChips />
 
+      {pinNag && (
+        <div className="alert info"><span className="dot" /><div><b>Poné un PIN.</b> Así nadie puede abrir Meneia si dejás el celular desbloqueado.
+          <div className="row" style={{ marginTop: 8, gap: 8 }}>
+            <button type="button" className="btn small" onClick={() => setSheet('pin')}>Poner PIN</button>
+            <button type="button" className="btn link" style={{ fontSize: 13 }} onClick={() => { setSetting('pinPromptDismissed', true); setPinNag(false); }}>Ahora no</button>
+          </div></div></div>
+      )}
       {alerts.length > 0 && <div className="alerts">{alerts.map((a, i) => <div key={i} className={'alert ' + a.kind}><span className="dot" /><div>{a.text}</div></div>)}</div>}
 
       {profile.notYet ? (
@@ -155,6 +168,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       )}
       {sheet === 'sym' && <SymptomSheet date={today} onClose={() => setSheet(false)} />}
       {sheet === 'margin' && <MarginSheet onClose={() => setSheet(false)} />}
+      {sheet === 'pin' && <PinSheet onClose={() => setSheet(false)} />}
     </div>
   );
 }
