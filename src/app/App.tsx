@@ -74,7 +74,7 @@ function Shell() {
       {tab === 'calendario' && <Calendario />}
       {tab === 'historial' && <Historial />}
       {tab === 'salud' && <Salud />}
-      {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} /> : <Perfil />)}
+      {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} onOpenKid={() => { setFamFirst(false); setTab('hoy'); window.scrollTo(0, 0); }} /> : <Perfil onOpenKid={() => { setTab('hoy'); window.scrollTo(0, 0); }} onLock={() => setLocked(true)} />)}
       <nav className="nav" aria-label="Secciones" ref={navRef}>
         <div className="nav-in">
           {TABS.map(([id, label, Ico]) => (

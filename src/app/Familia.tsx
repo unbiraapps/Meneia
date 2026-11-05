@@ -4,7 +4,7 @@ import { deleteProfile, saveProfile, setSetting } from '../db';
 import { useStore } from './store';
 import { Avatar, COLORS, Icon, Sheet, SubHeader, useToast } from './ui';
 
-export function Familia({ onBack }: { onBack: () => void }) {
+export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: () => void }) {
   const { profiles, data, today, refresh, shopping, setActive, activeId } = useStore();
   const toast = useToast();
   const [edit, setEdit] = useState<Profile | 'new' | null>(null);
@@ -50,7 +50,7 @@ export function Familia({ onBack }: { onBack: () => void }) {
             </div>
             {activeId === k.id
               ? <button type="button" className="btn ghost small" onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mis días</button>
-              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); toast('Ahora anotás los días de ' + k.name + '. Para volver a los tuyos, tocá «Volver a mí» en Hoy.'); }}>Ver y anotar sus días</button>}
+              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); onOpenKid(); }}>Ver y anotar sus días</button>}
           </div>
         );
       })}

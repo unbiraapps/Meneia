@@ -9,15 +9,21 @@ import { Avisos } from './Avisos';
 import { Copia } from './Copia';
 import { Pastillas } from './Pastillas';
 import { PlanSettings } from './Plan';
+import { PinSheet } from './Pin';
+import { cloudAvailable, currentUser, signOut } from '../cloud';
+import { useEffect } from 'react';
 
 type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas';
 
-export function Perfil() {
+export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: () => void }) {
   const { self, profiles, today, refresh, privacy } = useStore();
   const toast = useToast();
   const [sub, setSub] = useState<Sub>(null);
+  const [pin, setPin] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => { if (cloudAvailable()) currentUser().then(setEmail).catch(() => setEmail(null)); }, [sub]);
   if (!self) return null;
-  if (sub === 'familia') return <Familia onBack={() => setSub(null)} />;
+  if (sub === 'familia') return <Familia onBack={() => setSub(null)} onOpenKid={onOpenKid} />;
   if (sub === 'privacidad') return <Privacidad onBack={() => setSub(null)} />;
   if (sub === 'avisos') return <Avisos onBack={() => setSub(null)} />;
   if (sub === 'copia') return <Copia onBack={() => setSub(null)} />;
@@ -78,6 +84,18 @@ export function Perfil() {
           <button type="button" className="list-item" onClick={() => setSub('copia')}><span style={{ color: 'var(--plum)' }}><Icon.save /></span><span className="grow"><b>Copia de seguridad</b><small>Para no perder nada si cambiás de celular</small></span><Icon.chev /></button>
         </div>
       </div>
+      <div className="stack" style={{ gap: 6 }}>
+        <span className="eyebrow">Sesión</span>
+        <div className="list">
+          {email != null && (
+            <button type="button" className="list-item" onClick={async () => { await signOut(); setEmail(null); toast('Saliste de tu cuenta de Google. Tu copia sigue guardada'); }}>
+              <span style={{ color: 'var(--plum)' }}><Icon.save /></span><span className="grow"><b>Salir de Google</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
+          )}
+          <button type="button" className="list-item" onClick={() => { if (privacy.lock && privacy.pinHash) onLock(); else setPin(true); }}>
+            <span style={{ color: 'var(--plum)' }}><Icon.lock /></span><span className="grow"><b>Cerrar sesión</b><small>{privacy.lock && privacy.pinHash ? 'Bloquea Meneia: para volver a entrar te pide el PIN' : 'Primero elegí un PIN para poder cerrar sesión'}</small></span></button>
+        </div>
+      </div>
+      {pin && <PinSheet onClose={() => setPin(false)} />}
       <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
     </div>
   );
