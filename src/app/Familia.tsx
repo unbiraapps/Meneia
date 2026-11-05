@@ -5,7 +5,7 @@ import { useStore } from './store';
 import { Avatar, COLORS, Icon, Sheet, SubHeader, useToast } from './ui';
 
 export function Familia({ onBack }: { onBack: () => void }) {
-  const { profiles, data, today, refresh, shopping, setActive } = useStore();
+  const { profiles, data, today, refresh, shopping, setActive, activeId } = useStore();
   const toast = useToast();
   const [edit, setEdit] = useState<Profile | 'new' | null>(null);
   const [item, setItem] = useState('');
@@ -19,7 +19,15 @@ export function Familia({ onBack }: { onBack: () => void }) {
   return (
     <div className="screen">
       <SubHeader title="Familia" onBack={onBack} />
-      <p className="muted" style={{ fontSize: 14 }}>Para cada hija hay un solo aviso: antes de su próximo período, junto con la lista de compras. El aviso nunca dice su nombre ni la palabra período.</p>
+      <div className="card" style={{ gap: 8 }}>
+        <h2 style={{ margin: 0 }}>Cómo funciona</h2>
+        <ol className="muted" style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
+          <li>Agregás a tu hija con su nombre o apodo. Ella no necesita tener la app.</li>
+          <li>Tocás <b>Ver y anotar sus días</b> y anotás cuándo le vino, desde tu celular.</li>
+          <li>Unos días antes del próximo, te llega un aviso con la lista de compras.</li>
+        </ol>
+        <span className="muted" style={{ fontSize: 12.5 }}>Todo queda solo en tu celular. El aviso nunca dice su nombre ni la palabra período.</span>
+      </div>
 
       {kids.map(k => {
         const d = data.get(k.id!)!;
@@ -40,7 +48,9 @@ export function Familia({ onBack }: { onBack: () => void }) {
                   onClick={async () => { await saveProfile({ ...k, alertDays: n }); await refresh(); }}>{n === 0 ? 'Apagado' : plural(n, 'día', 'días')}</button>)}
               </div>
             </div>
-            <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); toast('Ahora ves a ' + k.name + ' en Hoy, Calendario e Historial'); }}>Ver y anotar sus días</button>
+            {activeId === k.id
+              ? <button type="button" className="btn ghost small" onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mis días</button>
+              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); toast('Ahora anotás los días de ' + k.name + '. Para volver a los tuyos, tocá tu nombre arriba en Hoy.'); }}>Ver y anotar sus días</button>}
           </div>
         );
       })}
