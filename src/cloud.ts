@@ -17,8 +17,12 @@ const TABLE = 'copias';
 /** Estado local. La clave derivada queda solo en este celular (protegido con PIN) para subir sin pedir la contraseña cada vez. */
 export interface CloudState { email: string; key: string; salt: string; iter: number; lastUpload: string; lastHash: string }
 
-export const cloudConfigured = () => !!(URL_ && ANON && GOOGLE);
+export const cloudConfigured = () => !!(URL_ && ANON);
 export const cloudAvailable = () => cloudConfigured() && isNative();
+/** Entrar con Google necesita además el ID de cliente web de Google. */
+export const googleAvailable = () => cloudAvailable() && !!GOOGLE;
+export const MIN_ACCOUNT_PASSWORD = 8;
+const CONFIRMED_URL = 'https://meneia.unbiraapps.com/cuenta-confirmada/';
 
 let client: SupabaseClient | null = null;
 async function sb(): Promise<SupabaseClient> {
@@ -49,6 +53,27 @@ export async function signInWithGoogle(): Promise<string> {
   const { data, error } = await (await sb()).auth.signInWithIdToken({ provider: 'google', token, nonce: raw });
   if (error) throw error;
   return data.user?.email ?? '';
+}
+
+/** Entrar con email y contraseña. */
+export async function signInWithEmail(email: string, password: string): Promise<string> {
+  const { data, error } = await (await sb()).auth.signInWithPassword({ email: email.trim(), password });
+  if (error) throw error;
+  return data.user?.email ?? email;
+}
+
+/** Crear cuenta con email y contraseña. Devuelve 'confirm' si hay que confirmar el email antes de entrar. */
+export async function signUpWithEmail(email: string, password: string): Promise<{ email: string; confirm: boolean }> {
+  const { data, error } = await (await sb()).auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: CONFIRMED_URL } });
+  if (error) throw error;
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('already registered');
+  return { email: data.user?.email ?? email, confirm: !data.session };
+}
+
+/** Mail para elegir una contraseña nueva de la cuenta (no cambia la contraseña de copia). */
+export async function resetAccountPassword(email: string): Promise<void> {
+  const { error } = await (await sb()).auth.resetPasswordForEmail(email.trim(), { redirectTo: 'https://meneia.unbiraapps.com/nueva-clave/' });
+  if (error) throw error;
 }
 
 /** Trae el sobre guardado, o null si todavía no hay copia. */
@@ -121,7 +146,7 @@ export async function syncIfChanged(): Promise<void> {
 export async function signOut(): Promise<void> {
   await setCloud(null);
   try { await (await sb()).auth.signOut(); } catch { /* nada */ }
-  try { const { SocialLogin } = await import('@capgo/capacitor-social-login'); await SocialLogin.logout({ provider: 'google' }); } catch { /* nada */ }
+  if (GOOGLE) try { const { SocialLogin } = await import('@capgo/capacitor-social-login'); await SocialLogin.initialize({ google: { webClientId: GOOGLE } }); await SocialLogin.logout({ provider: 'google' }); } catch { /* entró con email o ya había salido */ }
 }
 
 /** Borra la copia y la cuenta del servidor. Los datos de este celular no se tocan. */

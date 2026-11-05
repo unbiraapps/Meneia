@@ -87,9 +87,12 @@ export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: (
       <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Sesión</span>
         <div className="list">
-          {email != null && (
-            <button type="button" className="list-item" onClick={async () => { await signOut(); setEmail(null); toast('Saliste de tu cuenta de Google. Tu copia sigue guardada'); }}>
-              <span style={{ color: 'var(--plum)' }}><Icon.save /></span><span className="grow"><b>Salir de Google</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
+          {email != null ? (
+            <button type="button" className="list-item" onClick={async () => { await signOut(); setEmail(null); toast('Saliste de tu cuenta. Tu copia sigue guardada'); }}>
+              <span style={{ color: 'var(--plum)' }}><Icon.user /></span><span className="grow"><b>Salir de mi cuenta</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
+          ) : (
+            <button type="button" className="list-item" onClick={() => setSub('copia')}>
+              <span style={{ color: 'var(--plum)' }}><Icon.user /></span><span className="grow"><b>Mi cuenta</b><small>Opcional: entrar con Google o con email para la copia en la nube</small></span><Icon.chev /></button>
           )}
           <button type="button" className="list-item" onClick={() => { if (privacy.lock && privacy.pinHash) onLock(); else setPin(true); }}>
             <span style={{ color: 'var(--plum)' }}><Icon.lock /></span><span className="grow"><b>Cerrar sesión</b><small>{privacy.lock && privacy.pinHash ? 'Bloquea Meneia: para volver a entrar te pide el PIN' : 'Primero elegí un PIN para poder cerrar sesión'}</small></span></button>

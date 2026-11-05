@@ -6,7 +6,7 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 ## Decisiones tomadas
 
 - La app se llama **Meneia**. Es siempre oscura, con la paleta lila de `src/styles.css`, y el texto va en español rioplatense (vos).
-- Los datos de salud **nunca salen del celular sin cifrar** y no hay cuenta obligatoria. La copia en la nube es opcional: entra con Google, se cifra en el celular con una contraseña de copia que solo sabe ella (PBKDF2 + AES-GCM) y Supabase guarda solo el sobre cifrado. Si olvida la contraseña, la copia no se puede recuperar (decidido el 5/11/2026).
+- Los datos de salud **nunca salen del celular sin cifrar** y no hay cuenta obligatoria. La copia en la nube es opcional: entra con Google o con email y contraseña, se cifra en el celular con una contraseña de copia que solo sabe ella (PBKDF2 + AES-GCM) y Supabase guarda solo el sobre cifrado. Si olvida la contraseña, la copia no se puede recuperar (decidido el 5/11/2026).
 - **No se guardan estudios**: ni PDF ni fotos ni archivos médicos.
 - **Buscar embarazo** solo se muestra si el perfil tiene 18 años o más.
 - Los perfiles de hijas nunca muestran fertilidad, ovulación ni embarazo.

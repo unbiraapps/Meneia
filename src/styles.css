@@ -98,8 +98,9 @@ p{margin:0}
 .icon-btn{width:44px;height:44px;border-radius:12px;border:none;background:var(--soft);color:var(--fg);display:grid;place-items:center;cursor:pointer;flex:none}
 .icon-btn.round{border-radius:50%;background:var(--surface);border:1px solid var(--line)}
 label.field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
-input[type=date],input[type=text],input[type=password],input[type=tel],select,textarea{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-width:0;min-height:44px}
+input[type=date],input[type=text],input[type=password],input[type=tel],input[type=email],select,textarea{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-width:0;min-height:44px}
 textarea{resize:vertical}
+input:disabled,select:disabled,textarea:disabled{opacity:.5}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--fg);font-weight:600;font-size:14px;cursor:pointer}

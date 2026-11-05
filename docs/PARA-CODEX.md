@@ -70,7 +70,7 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
 - [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
 
-## Copia cifrada en la nube con Google (2026-11-05, decidido por la dueña)
+## Copia cifrada en la nube con Google o email (2026-11-05, decidido por la dueña)
 
 El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta que estén estos pasos, la app muestra "Muy pronto" en Perfil › Copia de seguridad. Los datos se cifran en el celular: al servidor llega solo un sobre cifrado. No guardes ni pegues claves en el repo.
 
@@ -98,14 +98,24 @@ El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta 
   - Pantalla de consentimiento OAuth: externa, nombre "Meneia", email de soporte `contacto@unbiraapps.com`, dominio `unbiraapps.com`, política `https://meneia.unbiraapps.com/privacidad/`. Scopes solo `openid`, `email`, `profile`. Publicarla (pasar a producción) para que cualquier cuenta pueda entrar.
   - Credencial **Android**: paquete `app.meneia`, SHA-1 de la clave de subida (keystore `meneia`, sacarla con `keytool -list -v`). Crear **otra** credencial Android con el SHA-1 de la **clave de firma de apps de Play** (Play Console › Meneia › Prueba y lanzamiento › Configuración › Integridad de la app › Firma de apps).
   - Credencial **Aplicación web** (se llama "web client" aunque sea para Android): sin orígenes ni redirecciones. Su ID de cliente es el que usa la app.
-- [ ] **3. Google en Supabase.** Authentication › Sign In / Providers › Google: activar, pegar el ID y el secreto del cliente **web** del paso 2. En "Authorized Client IDs" poner también el ID del cliente web. Dejar desactivado "Skip nonce checks" (la app manda nonce). Authentication › Settings: desactivar el registro por email y contraseña (solo Google).
+- [ ] **3. Google en Supabase.** Authentication › Sign In / Providers › Google: activar, pegar el ID y el secreto del cliente **web** del paso 2. En "Authorized Client IDs" poner también el ID del cliente web. Dejar desactivado "Skip nonce checks" (la app manda nonce).
+- [ ] **3b. Email y contraseña en Supabase** (la dueña lo pidió además de Google).
+  - Authentication › Sign In / Providers › Email: activado, "Confirm email" activado, largo mínimo de contraseña 8.
+  - Authentication › URL Configuration: Site URL `https://meneia.unbiraapps.com`. Redirect URLs: `https://meneia.unbiraapps.com/cuenta-confirmada/` y `https://meneia.unbiraapps.com/nueva-clave/`.
+  - **SMTP propio** (el de Supabase solo manda a miembros del equipo): Authentication › Emails › SMTP Settings. Usar Resend (plan gratis) con el dominio `unbiraapps.com` verificado por DNS en Cloudflare, remitente `Meneia <no-responder@unbiraapps.com>`.
+  - Plantillas en español (Authentication › Emails › Templates):
+    - Confirm signup: asunto "Confirmá tu cuenta de Meneia"; cuerpo "Tocá este link para confirmar tu email: {{ .ConfirmationURL }}. Si no creaste una cuenta en Meneia, ignorá este mail."
+    - Reset password: asunto "Elegí una contraseña nueva para Meneia"; cuerpo "Tocá este link para elegir una contraseña nueva: {{ .ConfirmationURL }}. Tu contraseña de copia no cambia. Si no lo pediste, ignorá este mail."
+  - Los mails nunca mencionan el período ni datos de salud.
+- [ ] **3c. Cloudflare Pages** (proyecto `meneia`): agregar las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (producción y previews) y volver a desplegar. Las usa la página `/nueva-clave/`.
 - [ ] **4. Secretos de GitHub** (Settings › Secrets and variables › Actions de `unbiraapps/Meneia`):
   - `SUPABASE_URL` (Project Settings › API › Project URL)
   - `SUPABASE_ANON_KEY` (la clave pública `anon`, **no** la `service_role`)
   - `GOOGLE_WEB_CLIENT_ID` (el ID del cliente web del paso 2)
+  Con solo los dos primeros ya funciona el ingreso con email; el botón de Google aparece cuando está el tercero.
   Después, correr a mano el workflow "App de Android" para que la APK del Drive salga con la copia activada.
 - [ ] **5. Play Console.**
-  - Seguridad de los datos: ahora se recopilan, de forma **opcional**, "Dirección de correo electrónico" (gestión de la cuenta) y "Información de salud" (copia de seguridad, **cifrada en tránsito**, el usuario puede pedir que se borren, no se comparten). Marcar que los datos se cifran en tránsito y que hay forma de pedir el borrado.
+  - Seguridad de los datos: ahora se recopilan, de forma **opcional**, "Dirección de correo electrónico" (gestión de la cuenta, con Google o con email y contraseña) y "Información de salud" (copia de seguridad, **cifrada en tránsito**, el usuario puede pedir que se borren, no se comparten). Marcar que los datos se cifran en tránsito y que hay forma de pedir el borrado.
   - Borrado de cuenta: URL `https://meneia.unbiraapps.com/borrar-cuenta/` (ya está en el repo, se publica sola con Cloudflare).
   - Acceso a la app para revisión: indicar que la app funciona sin cuenta; la cuenta es opcional, solo para la copia en la nube.
 - [ ] **6. Avisar a Claude** en `docs/PARA-CLAUDE.md` cuando esté todo, con el número de la corrida del workflow que salió con los secretos.

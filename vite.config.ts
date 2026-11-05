@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => mode === 'artifact'
   : {
       base: './',
       oxc,
-      build: { outDir: 'dist', emptyOutDir: true },
+      // nueva-clave/: página web para elegir una contraseña nueva de la cuenta (link del mail de Supabase)
+      build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: { main: 'index.html', clave: 'nueva-clave/index.html' } } },
       plugins: [VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }) => mode === 'artifact'
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png}'],
+          navigateFallbackDenylist: [/^\/(nueva-clave|cuenta-confirmada|privacidad|borrar-cuenta)\//],
           runtimeCaching: [
             { urlPattern: /^https:\/\/fonts\.googleapis\.com\//, handler: 'StaleWhileRevalidate', options: { cacheName: 'fuentes-css' } },
             { urlPattern: /^https:\/\/fonts\.gstatic\.com\//, handler: 'CacheFirst', options: { cacheName: 'fuentes', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }, cacheableResponse: { statuses: [0, 200] } } },
