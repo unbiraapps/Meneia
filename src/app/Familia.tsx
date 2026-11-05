@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ageOn, daysBetween, fmtShort, plural, addDays, type Profile } from '../calc';
 import { deleteProfile, savePeriod, saveProfile, setSetting } from '../db';
 import { useStore } from './store';
-import { Avatar, COLORS, Icon, Sheet, SubHeader, useToast } from './ui';
+import { Avatar, COLORS, DateField, Icon, Sheet, SubHeader, useToast } from './ui';
 import { PeriodSheet } from './PeriodSheet';
 
 export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: () => void }) {
@@ -118,15 +118,8 @@ export function KidSheet({ kid, onClose }: { kid: Profile | null; onClose: () =>
       <div className="row"><div className="stack grow"><b style={{ fontSize: 14.5 }}>Todavía no le vino</b><small className="muted" style={{ fontSize: 12.5 }}>No muestra fechas hasta que le venga</small></div>
         <button type="button" role="switch" aria-checked={notYet} aria-label="Todavía no le vino" className="switch" onClick={() => setNotYet(!notYet)} /></div>
       {!kid && !notYet && (
-        <div className="stack" style={{ gap: 8 }}>
-          <span className="eyebrow">¿Cuándo empezó la última vez que le vino?</span>
-          <div className="chips" role="radiogroup" aria-label="Último período">
-            {([[0, 'Hoy'], [1, 'Ayer'], [2, 'Anteayer']] as [number, string][]).map(([n, l]) => {
-              const d = addDays(today, -n);
-              return <button key={l} type="button" role="radio" aria-checked={last === d} className={'chip' + (last === d ? ' on fam' : '')} onClick={() => setLast(last === d ? '' : d)}>{l}</button>;
-            })}
-          </div>
-          <label className="field">Otra fecha<input type="date" value={last} max={today} onChange={e => { setLast(e.target.value); setErr(''); }} /></label>
+        <div className="stack" style={{ gap: 6 }}>
+          <DateField label="¿Cuándo empezó la última vez que le vino?" value={last} max={today} fam startOpen optional onChange={d => { setLast(d); setErr(''); }} />
           <small className="muted" style={{ fontSize: 12.5 }}>Si no te acordás, dejalo vacío y lo anotás después.</small>
         </div>
       )}

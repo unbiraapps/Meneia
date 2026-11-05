@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { addDays, analyze, daysBetween, type Flow, type Period, type PillType } from '../calc';
+import { analyze, daysBetween, type Flow, type Period, type PillType } from '../calc';
 import { db, savePeriod, savePillEvent, saveProfile } from '../db';
 import { notifyNow } from '../notify';
 import { useStore } from './store';
-import { Sheet, useToast } from './ui';
+import { DateField, Sheet, useToast } from './ui';
 
 /** Anotar o editar un período del perfil activo (o de otro perfil, con profileId: por ejemplo una hija desde Hoy). */
 export function PeriodSheet({ editing, defaultStart, profileId, onClose }: { editing?: Period; defaultStart?: string; profileId?: number; onClose: () => void }) {
@@ -50,18 +50,8 @@ export function PeriodSheet({ editing, defaultStart, profileId, onClose }: { edi
 
   return (
     <Sheet title={editing ? 'Editar período' : isSelf ? 'Anotar período' : '¿Cuándo le vino a ' + profile.name + '?'} onClose={onClose}>
-      {!editing && (
-        <div className="chips" role="radiogroup" aria-label="Primer día">
-          {([[0, 'Hoy'], [1, 'Ayer'], [2, 'Anteayer']] as [number, string][]).map(([n, l]) => {
-            const d = addDays(today, -n);
-            return <button key={l} type="button" role="radio" aria-checked={start === d} className={'chip' + (start === d ? (isSelf ? ' on' : ' on fam') : '')} onClick={() => { setStart(d); setErr(''); }}>{l}</button>;
-          })}
-        </div>
-      )}
-      <div className="grid2">
-        <label className="field">Primer día<input type="date" value={start} max={today} onChange={e => { setStart(e.target.value); setErr(''); }} /></label>
-        <label className="field">Último día<input type="date" value={end} max={today} onChange={e => { setEnd(e.target.value); setErr(''); }} /></label>
-      </div>
+      <DateField label={isSelf ? 'Primer día' : '¿Qué día empezó?'} value={start} max={today} fam={!isSelf} startOpen={!editing && !isSelf} onChange={d => { setStart(d); setErr(''); }} />
+      <DateField label="Último día (si ya terminó)" value={end} max={today} fam={!isSelf} optional onChange={d => { setEnd(d); setErr(''); }} />
       <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Cantidad de flujo</span>
         <div className="chips" role="radiogroup" aria-label="Cantidad de flujo">

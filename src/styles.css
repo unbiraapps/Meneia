@@ -203,3 +203,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum)}
 
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);transform:translateX(-50%);z-index:80;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease}@keyframes up{from{transform:translate(-50%,8px);opacity:0}}.sheet{animation:sh .2s ease}@keyframes sh{from{transform:translateY(24px);opacity:.6}}}
+.datefield{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);font:500 15px var(--body, inherit);cursor:pointer}
+.datefield[aria-expanded=true]{border-color:var(--plum)}
+.day:disabled{cursor:default}

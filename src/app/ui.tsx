@@ -65,3 +65,58 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 export const COLORS = ['#9FD8C8', '#F2C38B', '#8FB8F2', '#F0A6DC', '#B5A4E6', '#C9E28A'];
+
+// ---------- Elegir un día en un calendario ----------
+const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const pad = (n: number) => String(n).padStart(2, '0');
+const isoOf = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
+const longDate = (s: string) => { const [y, m, d] = s.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return `${DIA[w]} ${d} de ${MES[m - 1]}`; };
+
+/** Calendario de un mes para tocar un día. Los días después de `max` no se pueden elegir. */
+export function MonthPicker({ value, max, onPick, fam }: { value: string; max: string; onPick: (d: string) => void; fam?: boolean }) {
+  const base = value || max;
+  const [ym, setYm] = useState<[number, number]>([+base.slice(0, 4), +base.slice(5, 7) - 1]);
+  const [y, m] = ym;
+  const first = new Date(Date.UTC(y, m, 1)).getUTCDay(); // 0 = domingo
+  const lead = (first + 6) % 7; // la semana empieza el lunes
+  const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const canNext = (m === 11 ? `${y + 1}-01` : `${y}-${pad(m + 2)}`) <= max.slice(0, 7);
+  const go = (d: number) => setYm(([yy, mm]) => { const t = mm + d; return [yy + Math.floor(t / 12), ((t % 12) + 12) % 12]; });
+  const on = fam ? 'var(--fam)' : 'var(--plum)';
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <button type="button" className="icon-btn" aria-label="Mes anterior" onClick={() => go(-1)}><svg width="18" height="18" viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>
+        <b style={{ fontSize: 15, textTransform: 'capitalize' }}>{MES[m]} {y}</b>
+        <button type="button" className="icon-btn" aria-label="Mes siguiente" disabled={!canNext} style={canNext ? undefined : { opacity: .3 }} onClick={() => go(1)}><svg width="18" height="18" viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+      </div>
+      <div className="cal" role="grid" aria-label={`${MES[m]} ${y}`}>
+        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className="dow" aria-hidden="true">{d}</span>)}
+        {Array.from({ length: lead }, (_, i) => <span key={'e' + i} />)}
+        {Array.from({ length: days }, (_, i) => {
+          const d = isoOf(y, m, i + 1), future = d > max, sel = d === value;
+          return <button key={d} type="button" className={'day' + (d === max ? ' today' : '')} disabled={future} aria-pressed={sel} aria-label={longDate(d) + (future ? ', todavía no llegó' : '')}
+            style={sel ? { background: on, color: '#17131F', fontWeight: 700 } : future ? { opacity: .3, cursor: 'default' } : undefined} onClick={() => onPick(d)}>{i + 1}</button>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Botón con la fecha elegida que abre un calendario debajo. */
+export function DateField({ label, value, max, onChange, fam, startOpen, optional }: { label: string; value: string; max: string; onChange: (d: string) => void; fam?: boolean; startOpen?: boolean; optional?: boolean }) {
+  const [open, setOpen] = useState(!!startOpen);
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <span className="eyebrow">{label}</span>
+      <button type="button" className="datefield" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span style={{ color: fam ? 'var(--fam)' : 'var(--plum)', display: 'grid', width: 22, height: 22 }}><Icon.cal /></span>
+        <span className="grow" style={{ textAlign: 'left', color: value ? 'var(--fg)' : 'var(--muted)' }}>{value ? longDate(value).replace(/^./, c => c.toUpperCase()) : 'Elegir el día en el calendario'}</span>
+        <span className="muted" style={{ fontSize: 13 }}>{open ? 'Cerrar' : value ? 'Cambiar' : ''}</span>
+      </button>
+      {open && <MonthPicker value={value} max={max} fam={fam} onPick={d => { onChange(d); setOpen(false); }} />}
+      {optional && value && <button type="button" className="btn link" style={{ alignSelf: 'flex-start', minHeight: 32, fontSize: 13 }} onClick={() => onChange('')}>Borrar fecha</button>}
+    </div>
+  );
+}
