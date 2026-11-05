@@ -31,3 +31,10 @@ describe('reglas de anuncios', () => {
     expect(adsAllowed({ ...base, adFreeUntil: until }, { ...ctx, today: '2026-11-17' })).toBe(true);
   });
 });
+
+describe('versión de prueba', () => {
+  it('sin semana de gracia para poder ver los anuncios de prueba', () => {
+    expect(adsAllowed(base, { ...ctx, today: '2026-11-02', testing: true })).toBe(true);
+    expect(adsAllowed({ ...base, plan: 'premium' }, { ...ctx, testing: true })).toBe(false);
+  });
+});

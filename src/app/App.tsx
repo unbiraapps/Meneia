@@ -4,7 +4,7 @@ import { App as CapApp } from '@capacitor/app';
 import { setSecureScreen } from '../privacy';
 import { isNative } from '../notify';
 import { bannerAllowed } from '../adrules';
-import { hideBanner, showBanner } from '../ads';
+import { ADS_TESTING, hideBanner, showBanner } from '../ads';
 import { StoreProvider, useStore } from './store';
 import { Icon, ToastProvider } from './ui';
 import { Hoy } from './Hoy';
@@ -53,7 +53,7 @@ function Shell() {
 
   // Banner: solo al pie de Calendario e Historial, nunca bloqueada, tapada ni en perfiles de hijas.
   const isLocked = (lockOn.current && locked) || covered;
-  const banner = ready && onboarded && bannerAllowed(ads, { today, childActive: active?.profile.kind === 'child', locked: isLocked }, tab);
+  const banner = ready && onboarded && bannerAllowed(ads, { today, childActive: active?.profile.kind === 'child', locked: isLocked, testing: ADS_TESTING }, tab);
   useEffect(() => {
     if (banner) showBanner(navRef.current?.offsetHeight ?? 72); else hideBanner();
   }, [banner]);

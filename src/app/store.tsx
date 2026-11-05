@@ -7,7 +7,7 @@ import {
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
 import { DEFAULT_ADS, interstitialAllowed, type AdState } from '../adrules';
-import { ownsNoAds, showInterstitial } from '../ads';
+import { ADS_TESTING, showInterstitial, subscriptionStatus } from '../ads';
 
 export interface Consult { date: string; reason: string; note: string }
 export interface Health { lastConsult: string; controlMonths: number; controlOn: boolean; questions: { text: string; done: boolean }[]; consults: Consult[] }
@@ -102,17 +102,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
-  // Si ya compró "Sin anuncios" con su cuenta de Google (por ejemplo en otro celular), se restaura solo.
+  // La suscripción se verifica con Google Play al abrir y al volver a la app: nunca queda "premium para siempre".
+  const checkSub = useCallback(async () => {
+    const st = await subscriptionStatus();
+    if (st === null) return; // sin conexión o en la web: se mantiene lo último conocido
+    setState(s => {
+      const plan = st.active ? 'premium' as const : s.ads.plan === 'premium' ? 'free' as const : s.ads.plan;
+      const a = { ...s.ads, plan, subUntil: st.until, willCancel: st.willCancel };
+      if (a.plan === s.ads.plan && a.subUntil === s.ads.subUntil && a.willCancel === s.ads.willCancel) return s;
+      setSetting('ads', a);
+      return { ...s, ads: a };
+    });
+  }, []);
+  useEffect(() => { if (state.ready) checkSub(); }, [state.ready, checkSub]);
   useEffect(() => {
-    if (!state.ready || state.ads.plan === 'premium') return;
-    ownsNoAds().then(async owns => { if (owns) { const a = { ...state.ads, plan: 'premium' as const }; await setSetting('ads', a); setState(s => ({ ...s, ads: a })); } });
-  }, [state.ready]); // eslint-disable-line react-hooks/exhaustive-deps
+    const onVis = () => { if (document.visibilityState === 'visible') checkSub(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [checkSub]);
 
   const setAds = useCallback(async (a: AdState) => { await setSetting('ads', a); setState(s => ({ ...s, ads: a })); }, []);
   const afterSave = useCallback(() => {
     setState(s => {
       const child = s.data.get(s.activeId)?.profile.kind === 'child';
-      if (!interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false })) return s;
+      if (!interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false, testing: ADS_TESTING })) return s;
       const a = { ...s.ads, lastInterstitial: s.today };
       setSetting('ads', a);
       setTimeout(() => { showInterstitial(); }, 900); // después de que se vea el "guardado"

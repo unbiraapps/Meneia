@@ -65,6 +65,11 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Ficha y formularios de Play:** público objetivo **18 años o más** (la app no está dirigida a menores: los perfiles de hijas los maneja una persona adulta); formulario de apps de salud (Seguimiento del período); Seguridad de los datos: la app **sí** muestra anuncios y comparte el ID de publicidad y datos del dispositivo con AdMob; los datos de salud **no** se recopilan ni se comparten (quedan en el celular); política de privacidad `https://meneia.unbiraapps.com/privacidad`. Declarar el permiso de ID de publicidad.
 - [x] Subir `meneia.aab` (sale en cada release: `https://github.com/unbiraapps/Meneia/releases/download/ultima-version/meneia.aab`) a la prueba cerrada.
 
+## Prueba de la suscripción
+
+- [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
+- [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
+
 ## Más adelante
 
 - [ ] Prueba cerrada con el servicio de testers contratado (12 personas, 14 días seguidos). Lo coordina la dueña.

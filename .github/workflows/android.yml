@@ -22,7 +22,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run build
+      - name: Armar la web (anuncios reales, para Google Play)
+        run: npm run build
         env:
           VITE_ADMOB_BANNER_ID: ${{ secrets.ADMOB_BANNER_ID }}
           VITE_ADMOB_INTERSTITIAL_ID: ${{ secrets.ADMOB_INTERSTITIAL_ID }}
@@ -37,7 +38,7 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/meneia.jks"
           echo "MENEIA_KEYSTORE=$RUNNER_TEMP/meneia.jks" >> "$GITHUB_ENV"
-      - name: Compilar APK
+      - name: Compilar
         working-directory: android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -48,10 +49,15 @@ jobs:
         run: |
           chmod +x gradlew
           if [ "$HAS_KEYSTORE" = "true" ]; then
-            ./gradlew assembleRelease bundleRelease
-            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/meneia.apk"
+            # 1) AAB para Google Play, con los anuncios reales
+            ./gradlew bundleRelease
             cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/meneia.aab"
+            # 2) APK para probar (Drive), con anuncios de prueba de Google
+            (cd .. && VITE_ADS_TEST=1 npm run build && npx cap sync android)
+            ./gradlew assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/meneia.apk"
           else
+            (cd .. && VITE_ADS_TEST=1 npm run build && npx cap sync android)
             ./gradlew assembleDebug
             cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/meneia.apk"
           fi

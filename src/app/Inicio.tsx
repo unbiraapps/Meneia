@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { ageOn } from '../calc';
 import { saveProfile, setSetting } from '../db';
-import { buyNoAds } from '../ads';
-import type { Plan } from '../adrules';
-import { PlanChoice } from './Plan';
+import { GRACE_TEXT, SubTerms, SubscribeButton, usePrice } from './Plan';
 import { useToast } from './ui';
 import { useStore } from './store';
 
@@ -11,7 +9,6 @@ import { useStore } from './store';
 export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
   const { self, today, refresh, ads, setAds } = useStore();
   const toast = useToast();
-  const [plan, setPlan] = useState<Plan>('free');
   const [step, setStep] = useState(1);
   const [birth, setBirth] = useState(self?.profile.birthDate ?? '');
   const [tryOn, setTryOn] = useState(false);
@@ -19,13 +16,9 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
   const age = ageOn(birth, today);
   const adult = age != null && age >= 18;
 
-  async function finish() {
-    let chosen: Plan = plan;
-    if (plan === 'premium') {
-      const r = await buyNoAds();
-      if (r !== 'ok') { chosen = 'free'; toast(r === 'cancel' ? 'Seguís con la versión gratis. Lo podés cambiar en Perfil.' : 'No se pudo abrir el pago. Seguís con la versión gratis; lo podés cambiar en Perfil.'); }
-    }
-    await setAds({ ...ads, plan: chosen });
+  const price = usePrice();
+  async function finish(premium = false) {
+    if (!premium) await setAds({ ...ads, plan: 'free' });
     await saveProfile({ ...self!.profile, birthDate: birth, trying: adult && tryOn });
     await setSetting('onboarded', true);
     await refresh();
@@ -74,13 +67,18 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
       {step === 3 && (
         <>
           <h1 style={{ fontSize: 30 }}>¿Cómo querés usarla?</h1>
-          <p className="muted" style={{ fontSize: 14.5 }}>Las dos versiones tienen todo. Podés cambiar cuando quieras desde Perfil.</p>
-          <PlanChoice value={plan} onChange={setPlan} />
-          <p className="muted" style={{ fontSize: 13 }}>No te pedimos ninguna tarjeta. Si elegís "Sin anuncios", el pago lo hace Google Play. Los anuncios nunca usan lo que anotás en la app.</p>
-          <div style={{ marginTop: 'auto' }} className="stack">
-            <button type="button" className="btn" onClick={finish}>Empezar</button>
-            <button type="button" className="btn link" onClick={() => setStep(2)}>Volver</button>
+          <div className="card">
+            <b style={{ font: '700 18px var(--display)' }}>Gratis con anuncios</b>
+            <p className="muted" style={{ fontSize: 13.5 }}>{GRACE_TEXT} Sin tarjeta y sin compromiso.</p>
+            <button type="button" className="btn" onClick={() => finish(false)}>Continuar gratis con anuncios</button>
           </div>
+          <div className="card">
+            <b style={{ font: '700 18px var(--display)' }}>Sin anuncios</b>
+            <SubTerms price={price} />
+            <SubscribeButton onDone={() => finish(true)} />
+          </div>
+          <p className="muted" style={{ fontSize: 12.5 }}>Los anuncios nunca usan lo que anotás en la app. Podés cambiar de opción cuando quieras desde Perfil.</p>
+          <button type="button" className="btn link" onClick={() => setStep(2)}>Volver</button>
         </>
       )}
     </div>

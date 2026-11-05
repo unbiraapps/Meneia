@@ -8,7 +8,10 @@ const native = () => Capacitor.isNativePlatform();
 
 // Si no están los IDs reales (secretos de GitHub), se usan los de prueba oficiales de Google.
 const env = import.meta.env;
-const TEST = env.VITE_ADMOB_BANNER_ID ? false : true;
+// La APK de prueba (la del Drive) se arma con VITE_ADS_TEST=1: anuncios de prueba, para no mirar anuncios reales en el propio celular.
+const TEST = env.VITE_ADS_TEST === '1' || !env.VITE_ADMOB_BANNER_ID;
+/** true mientras la app usa los anuncios de prueba de Google (todavía no están los IDs reales). */
+export const ADS_TESTING = TEST;
 const IDS = {
   banner: env.VITE_ADMOB_BANNER_ID || 'ca-app-pub-3940256099942544/9214589741',
   interstitial: env.VITE_ADMOB_INTERSTITIAL_ID || 'ca-app-pub-3940256099942544/1033173712',
@@ -67,33 +70,59 @@ export async function showRewarded(): Promise<boolean> {
   } catch { return false; }
 }
 
-// ---------- Compra "Sin anuncios" (pago único) ----------
+// ---------- Suscripción "Sin anuncios" (mensual, Google Play) ----------
 
-export async function productPrice(): Promise<string | null> {
+export const SUB_ID = 'sin_anuncios_mensual';
+export const BASE_PLAN = 'mensual';
+
+export interface SubPrice { price: string; period: string }
+
+/** Precio y período que informa Google Play (nunca un precio fijo en la app). */
+export async function subscriptionPrice(): Promise<SubPrice | null> {
   if (!native()) return null;
   try {
-    const { product } = await NativePurchases.getProduct({ productIdentifier: PRODUCT_ID, productType: PURCHASE_TYPE.INAPP });
-    return product?.priceString ?? null;
+    const { product } = await NativePurchases.getProduct({ productIdentifier: SUB_ID, productType: PURCHASE_TYPE.SUBS });
+    if (!product?.priceString) return null;
+    return { price: product.priceString, period: 'por mes' };
   } catch { return null; }
 }
 
-/** Abre la pantalla de pago de Google Play. La tarjeta la pide Google, nunca la app. */
-export async function buyNoAds(): Promise<'ok' | 'cancel' | 'error'> {
+/** Abre la pantalla de suscripción de Google Play. Solo se llama cuando la persona toca "Suscribirme".
+ *  La tarjeta la pide Google, nunca la app. */
+export async function subscribe(): Promise<'ok' | 'cancel' | 'error'> {
   if (!native()) return 'error';
   try {
-    const t = await NativePurchases.purchaseProduct({ productIdentifier: PRODUCT_ID, productType: PURCHASE_TYPE.INAPP, autoAcknowledgePurchases: true });
-    return t?.productIdentifier === PRODUCT_ID ? 'ok' : 'cancel';
+    const t = await NativePurchases.purchaseProduct({ productIdentifier: SUB_ID, planIdentifier: BASE_PLAN, productType: PURCHASE_TYPE.SUBS, autoAcknowledgePurchases: true });
+    return t?.productIdentifier === SUB_ID ? 'ok' : 'cancel';
   } catch (e) {
     const msg = String((e as { message?: string })?.message ?? e).toLowerCase();
     return msg.includes('cancel') ? 'cancel' : 'error';
   }
 }
 
-/** ¿Ya compró "Sin anuncios" con esta cuenta de Google? (para restaurar en otro celular) */
-export async function ownsNoAds(): Promise<boolean | null> {
+export interface SubStatus { active: boolean; willCancel: boolean; until: string | null }
+
+/** Estado vigente de la suscripción con esta cuenta de Google. null si no se pudo consultar (sin conexión, web). */
+export async function subscriptionStatus(): Promise<SubStatus | null> {
   if (!native()) return null;
   try {
-    const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.INAPP });
-    return purchases.some(p => p.productIdentifier === PRODUCT_ID && (p.purchaseState == null || ['1', 'PURCHASED', 'purchased'].includes(String(p.purchaseState))));
+    const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.SUBS, onlyCurrentEntitlements: true });
+    const now = Date.now();
+    const mine = purchases.filter(p => p.productIdentifier === SUB_ID);
+    const active = mine.find(p => {
+      if (p.isActive === false) return false;
+      if (p.subscriptionState && !['subscribed', 'inGracePeriod', 'unknown'].includes(p.subscriptionState)) return false;
+      if (p.expirationDate && Date.parse(p.expirationDate) < now) return false;
+      if (p.purchaseState != null && !['1', 'PURCHASED', 'purchased'].includes(String(p.purchaseState))) return false;
+      return true;
+    });
+    if (!active) return { active: false, willCancel: false, until: null };
+    return { active: true, willCancel: active.willCancel === true, until: active.expirationDate ? active.expirationDate.slice(0, 10) : null };
   } catch { return null; }
+}
+
+/** Abre "Suscripciones" de Google Play para cancelar o cambiar el medio de pago. */
+export async function manageSubscription(): Promise<void> {
+  if (!native()) return;
+  try { await NativePurchases.manageSubscriptions(); } catch { /* sin Play */ }
 }
