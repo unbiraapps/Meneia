@@ -26,7 +26,7 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 <body>
 <main>
   <header>
-    <p class="muted">Meneia · actualizado el 4 de noviembre de 2026 (anuncios, suscripción y contacto)</p>
+    <p class="muted">Meneia · actualizado el 5 de noviembre de 2026 (copia cifrada en la nube)</p>
     <h1>Política de privacidad</h1>
   </header>
   <p>Meneia es una app para anotar el ciclo menstrual. Está hecha para que tus datos de salud queden en tu celular y en ningún otro lado.</p>
@@ -44,12 +44,22 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 
   <section>
     <h2>Dónde quedan</h2>
-    <p>Todo se guarda dentro de la app, en tu celular. Meneia no tiene servidores que reciban tus datos de salud, no pide cuenta y no los vende ni los comparte. No guarda estudios, fotos ni documentos médicos.</p>
+    <p>Todo se guarda dentro de la app, en tu celular. Meneia no pide cuenta para usarla, no lee tus datos de salud y no los vende ni los comparte. Lo único que puede salir del celular es la copia en la nube, si la activás, y sale cifrada (ver abajo). No guarda estudios, fotos ni documentos médicos.</p>
   </section>
 
   <section>
     <h2>Copias de seguridad</h2>
     <p>Si elegís hacer una copia, la app arma un texto o un archivo con tus datos y vos decidís dónde guardarlo (por ejemplo, en tu Drive o en un chat con vos misma). Desde ese momento esa copia queda bajo tu control y bajo las reglas del servicio que elijas.</p>
+  </section>
+
+  <section>
+    <h2>Copia en la nube (opcional)</h2>
+    <p>Si la activás, entrás con tu cuenta de Google y elegís una <b>contraseña de copia</b>. Antes de salir del celular, tus datos se cifran con esa contraseña (AES-GCM de 256 bits, con una clave derivada por PBKDF2). Al servidor llega solo ese bloque cifrado: ni Meneia ni nadie puede leerlo sin tu contraseña, que nunca se envía.</p>
+    <ul>
+      <li>Del ingreso con Google guardamos tu email y un identificador de cuenta, para saber de quién es cada copia. No usamos tu email para nada más.</li>
+      <li>La copia cifrada se guarda en Supabase, un servicio de bases de datos, y solo la puede pedir tu cuenta.</li>
+      <li>Si olvidás la contraseña de copia, no hay forma de recuperar la copia.</li>
+    </ul>
   </section>
 
   <section>
@@ -74,7 +84,7 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 
   <section>
     <h2>Borrar tus datos</h2>
-    <p>Podés borrar cualquier registro desde la app. Para borrar todo, desinstalá la app o borrá sus datos desde los ajustes del celular. Como no hay copias en servidores, no queda nada guardado en otro lado.</p>
+    <p>Podés borrar cualquier registro desde la app. Para borrar todo, desinstalá la app o borrá sus datos desde los ajustes del celular. Si activaste la copia en la nube, podés borrar la copia y tu cuenta desde Perfil › Copia de seguridad › "Borrar mi copia y mi cuenta": se borran al instante y para siempre. Si ya no tenés la app, seguí los pasos de <a href="../borrar-cuenta/">borrar tu cuenta</a>.</p>
   </section>
 
   <section>

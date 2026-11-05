@@ -28,7 +28,7 @@ No hay SDK de Android en todos los entornos: el APK lo compila GitHub Actions (`
 
 ## Reglas que no se rompen
 
-- Los datos de salud nunca salen del celular. Nada de fetch con datos del usuario.
+- Los datos de salud nunca salen del celular sin cifrar. La única excepción es la copia en la nube opcional (`src/cloud.ts`): se cifra en el celular con la contraseña de copia de la usuaria y al servidor llega solo el sobre cifrado. Ningún otro fetch con datos del usuario.
 - No se guardan estudios, PDF ni fotos.
 - Buscar embarazo solo para perfiles de 18 años o más. Los perfiles de hijas no muestran fertilidad.
 - Los avisos nunca dicen "período" ni nombres: el texto es neutro.

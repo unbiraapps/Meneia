@@ -70,6 +70,46 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
 - [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
 
+## Copia cifrada en la nube con Google (2026-11-05, decidido por la dueña)
+
+El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta que estén estos pasos, la app muestra "Muy pronto" en Perfil › Copia de seguridad. Los datos se cifran en el celular: al servidor llega solo un sobre cifrado. No guardes ni pegues claves en el repo.
+
+- [ ] **1. Proyecto en Supabase.** Cuenta de Unbira (la misma de Código de Estilo sirve), proyecto nuevo `meneia`, región São Paulo (`sa-east-1`), plan gratis. En SQL Editor, correr:
+  ```sql
+  create table public.copias (
+    user_id uuid primary key references auth.users(id) on delete cascade,
+    data text not null check (length(data) < 5000000),
+    updated_at timestamptz not null default now()
+  );
+  alter table public.copias enable row level security;
+  create policy "cada una ve solo su copia" on public.copias
+    for all to authenticated
+    using ((select auth.uid()) = user_id)
+    with check ((select auth.uid()) = user_id);
+
+  create or replace function public.borrar_mi_cuenta() returns void
+    language sql security definer set search_path = ''
+    as $$ delete from auth.users where id = auth.uid(); $$;
+  revoke all on function public.borrar_mi_cuenta() from public, anon;
+  grant execute on function public.borrar_mi_cuenta() to authenticated;
+  ```
+  Verificar en Table Editor que `copias` tiene RLS activado y que con la clave anon, sin sesión, un `select` devuelve vacío.
+- [ ] **2. Google Cloud (OAuth).** En el proyecto de Google Cloud de Unbira (o uno nuevo `meneia`):
+  - Pantalla de consentimiento OAuth: externa, nombre "Meneia", email de soporte `contacto@unbiraapps.com`, dominio `unbiraapps.com`, política `https://meneia.unbiraapps.com/privacidad/`. Scopes solo `openid`, `email`, `profile`. Publicarla (pasar a producción) para que cualquier cuenta pueda entrar.
+  - Credencial **Android**: paquete `app.meneia`, SHA-1 de la clave de subida (keystore `meneia`, sacarla con `keytool -list -v`). Crear **otra** credencial Android con el SHA-1 de la **clave de firma de apps de Play** (Play Console › Meneia › Prueba y lanzamiento › Configuración › Integridad de la app › Firma de apps).
+  - Credencial **Aplicación web** (se llama "web client" aunque sea para Android): sin orígenes ni redirecciones. Su ID de cliente es el que usa la app.
+- [ ] **3. Google en Supabase.** Authentication › Sign In / Providers › Google: activar, pegar el ID y el secreto del cliente **web** del paso 2. En "Authorized Client IDs" poner también el ID del cliente web. Dejar desactivado "Skip nonce checks" (la app manda nonce). Authentication › Settings: desactivar el registro por email y contraseña (solo Google).
+- [ ] **4. Secretos de GitHub** (Settings › Secrets and variables › Actions de `unbiraapps/Meneia`):
+  - `SUPABASE_URL` (Project Settings › API › Project URL)
+  - `SUPABASE_ANON_KEY` (la clave pública `anon`, **no** la `service_role`)
+  - `GOOGLE_WEB_CLIENT_ID` (el ID del cliente web del paso 2)
+  Después, correr a mano el workflow "App de Android" para que la APK del Drive salga con la copia activada.
+- [ ] **5. Play Console.**
+  - Seguridad de los datos: ahora se recopilan, de forma **opcional**, "Dirección de correo electrónico" (gestión de la cuenta) y "Información de salud" (copia de seguridad, **cifrada en tránsito**, el usuario puede pedir que se borren, no se comparten). Marcar que los datos se cifran en tránsito y que hay forma de pedir el borrado.
+  - Borrado de cuenta: URL `https://meneia.unbiraapps.com/borrar-cuenta/` (ya está en el repo, se publica sola con Cloudflare).
+  - Acceso a la app para revisión: indicar que la app funciona sin cuenta; la cuenta es opcional, solo para la copia en la nube.
+- [ ] **6. Avisar a Claude** en `docs/PARA-CLAUDE.md` cuando esté todo, con el número de la corrida del workflow que salió con los secretos.
+
 ## Más adelante
 
 - [ ] Prueba cerrada con el servicio de testers contratado (12 personas, 14 días seguidos). Lo coordina la dueña.

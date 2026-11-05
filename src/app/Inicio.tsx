@@ -35,6 +35,7 @@ export function Inicio({ onDone }: { onDone: (fam: boolean) => void }) {
           <div style={{ marginTop: 'auto' }} className="stack">
             <button type="button" className="btn" onClick={() => setStep(2)}>Continuar</button>
             <button type="button" className="btn link" onClick={() => { setBirth(''); setStep(2); }}>Prefiero no decirlo</button>
+            <p className="muted" style={{ fontSize: 12.5, textAlign: 'center', margin: 0 }}>¿Cambiaste de celular? Terminá estos pasos y recuperá tu copia en Perfil › Copia de seguridad.</p>
           </div>
         </>
       ) : step === 2 ? (

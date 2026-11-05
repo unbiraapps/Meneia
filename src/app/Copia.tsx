@@ -4,6 +4,7 @@ import { exportBackup, parseBackup, restoreBackup, type Backup } from '../db';
 import { isNative } from '../notify';
 import { useStore } from './store';
 import { SubHeader, useToast } from './ui';
+import { CloudCard } from './Nube';
 
 export function Copia({ onBack }: { onBack: () => void }) {
   const { refresh, today } = useStore();
@@ -35,7 +36,9 @@ export function Copia({ onBack }: { onBack: () => void }) {
   return (
     <div className="screen">
       <SubHeader title="Copia de seguridad" onBack={onBack} />
-      <p className="muted" style={{ fontSize: 14 }}>Tus datos se guardan solo en este celular. Guardá una copia de vez en cuando para no perderlos si cambiás de teléfono.</p>
+      <CloudCard />
+      <h2 style={{ margin: '6px 0 0' }}>Copia en un archivo</h2>
+      <p className="muted" style={{ fontSize: 14 }}>Sin cuenta: guardás vos el archivo donde quieras, por ejemplo en tus notas o en un chat con vos misma.</p>
       <div className="btns">
         <button type="button" className="btn" onClick={share}>{isNative() ? 'Guardar o compartir copia' : 'Copiar mis datos'}</button>
       </div>

@@ -1,4 +1,5 @@
 import type React from 'react';
+import { syncIfChanged } from '../cloud';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { App as CapApp } from '@capacitor/app';
 import { setSecureScreen } from '../privacy';
@@ -42,7 +43,11 @@ function Shell() {
 
   // Al salir de la app, se bloquea (si el bloqueo está activo).
   useEffect(() => {
-    const onHide = () => { if (document.visibilityState === 'hidden' && lockOn.current) setLocked(true); };
+    const onHide = () => {
+      if (document.visibilityState !== 'hidden') return;
+      if (lockOn.current) setLocked(true);
+      syncIfChanged(); // copia en la nube, si está activada y algo cambió
+    };
     document.addEventListener('visibilitychange', onHide);
     let off: (() => void) | undefined;
     if (isNative()) CapApp.addListener('pause', () => { if (lockOn.current) setLocked(true); }).then(h => { off = () => h.remove(); });
