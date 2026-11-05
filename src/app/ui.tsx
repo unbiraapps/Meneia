@@ -6,6 +6,7 @@ export const Icon = {
   today: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 0 0 16" /></svg>,
   cal: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>,
   list: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9" /></svg>,
+  pen: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /></svg>,
   heart: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>,
   user: () => <svg viewBox="0 0 24 24" {...P} aria-hidden="true"><circle cx="12" cy="9" r="3.5" /><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5" /></svg>,
   eyeOff: () => <svg width="20" height="20" viewBox="0 0 24 24" {...P} aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.9 9.9 0 0 1 12 6c5 0 9 6 9 6a17 17 0 0 1-2.6 3.2M6.3 7.6C4.2 9.2 3 12 3 12s4 6 9 6c1.4 0 2.7-.4 3.9-1" /></svg>,

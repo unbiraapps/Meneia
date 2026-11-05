@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { analyze, daysBetween, type Flow, type Period, type PillType } from '../calc';
+import { addDays, analyze, daysBetween, type Flow, type Period, type PillType } from '../calc';
 import { db, savePeriod, savePillEvent, saveProfile } from '../db';
 import { notifyNow } from '../notify';
 import { useStore } from './store';
@@ -36,7 +36,7 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
     onClose();
     await refresh();
     // ¿Apareció un cambio nuevo en el ciclo? (solo para el perfil propio)
-    let msg = editing ? 'Cambios guardados' : start ? 'Período guardado' : 'Cambio de pastillas guardado';
+    let msg = editing ? 'Cambios guardados' : !isSelf && start ? 'Anotado para ' + profile.name : start ? 'Período guardado' : 'Cambio de pastillas guardado';
     if (isSelf && start) {
       const periods = await db.periods.where('profileId').equals(profile.id!).toArray();
       const A = analyze(periods, active!.events, today);
@@ -48,7 +48,15 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
   }
 
   return (
-    <Sheet title={editing ? 'Editar período' : 'Anotar período'} onClose={onClose}>
+    <Sheet title={editing ? 'Editar período' : isSelf ? 'Anotar período' : '¿Cuándo le vino a ' + profile.name + '?'} onClose={onClose}>
+      {!editing && (
+        <div className="chips" role="radiogroup" aria-label="Primer día">
+          {([[0, 'Hoy'], [1, 'Ayer'], [2, 'Anteayer']] as [number, string][]).map(([n, l]) => {
+            const d = addDays(today, -n);
+            return <button key={l} type="button" role="radio" aria-checked={start === d} className={'chip' + (start === d ? (isSelf ? ' on' : ' on fam') : '')} onClick={() => { setStart(d); setErr(''); }}>{l}</button>;
+          })}
+        </div>
+      )}
       <div className="grid2">
         <label className="field">Primer día<input type="date" value={start} max={today} onChange={e => { setStart(e.target.value); setErr(''); }} /></label>
         <label className="field">Último día<input type="date" value={end} max={today} onChange={e => { setEnd(e.target.value); setErr(''); }} /></label>
@@ -78,7 +86,8 @@ export function PeriodSheet({ editing, defaultStart, onClose }: { editing?: Peri
       )}
       <label className="field">Notas<textarea rows={2} maxLength={500} value={note} placeholder="Ej: cólicos fuertes el 1er día" onChange={e => setNote(e.target.value)} /></label>
       {err && <p className="err" role="alert">{err}</p>}
-      <button type="button" className="btn" onClick={save}>{editing ? 'Guardar cambios' : 'Guardar'}</button>
+      <button type="button" className={'btn' + (isSelf ? '' : ' fam')} onClick={save}>{editing ? 'Guardar cambios' : 'Guardar'}</button>
+      {!isSelf && <p className="muted" style={{ fontSize: 12.5, textAlign: 'center', margin: 0 }}>Se guarda en el perfil de {profile.name}, no en el tuyo.</p>}
     </Sheet>
   );
 }

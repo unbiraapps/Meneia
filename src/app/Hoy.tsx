@@ -7,6 +7,7 @@ import { SymptomSheet } from './SymptomSheet';
 import { MarginSheet } from './MarginSheet';
 import { PillToday } from './Pastillas';
 import { PinSheet } from './Pin';
+import { PeriodSheet } from './PeriodSheet';
 import { getSetting, setSetting } from '../db';
 import { useEffect } from 'react';
 
@@ -19,7 +20,7 @@ export function ProfileChips() {
   return (
     <div className="pchips" role="tablist" aria-label="Perfiles">
       {profiles.map(p => (
-        <button key={p.id} type="button" role="tab" aria-selected={p.id === activeId} className={'pchip' + (p.id === activeId ? ' on' : '')} onClick={() => setActive(p.id!)}>
+        <button key={p.id} type="button" role="tab" aria-selected={p.id === activeId} className={'pchip' + (p.id === activeId ? (p.kind === 'child' ? ' on fam' : ' on') : '')} onClick={() => setActive(p.id!)}>
           <Avatar name={p.name} color={p.color} />{p.name}
         </button>
       ))}
@@ -30,8 +31,8 @@ export function ProfileChips() {
 export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' | 'perfil') => void }) {
   const { active, today, refresh, migrated, health, profiles } = useStore();
   const toast = useToast();
-  const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin'>(false);
-  const { privacy } = useStore();
+  const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin' | 'period'>(false);
+  const { privacy, setActive } = useStore();
   const [pinNag, setPinNag] = useState(false);
   useEffect(() => { if (!privacy.lock) getSetting('pinPromptDismissed', false).then(d => setPinNag(!d)); else setPinNag(false); }, [privacy.lock]);
   if (!active) return null;
@@ -93,6 +94,10 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
         <button type="button" className="icon-btn round" aria-label="Tapar la pantalla" onClick={onCover}><Icon.eyeOff /></button>
       </div>
       <ProfileChips />
+      {profile.kind === 'child' && (
+        <div className="alert famnote" role="status"><Icon.pen /><div className="grow">Estás anotando los días de <b>{profile.name}</b></div>
+          <button type="button" className="btn link" style={{ color: 'inherit', minHeight: 36, fontSize: 13.5 }} onClick={() => setActive(1)}>Volver a mí</button></div>
+      )}
 
       {pinNag && (
         <div className="alert info"><span className="dot" /><div><b>Poné un PIN.</b> Así nadie puede abrir Meneia si dejás el celular desbloqueado.
@@ -108,7 +113,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
           <span className="eyebrow">{profile.name}{age != null ? ` · ${age} años` : ''}</span>
           <h2>Todavía no le vino</h2>
           <p className="muted" style={{ fontSize: 14 }}>Cuando le venga por primera vez, anotalo y la app empieza a estimar sus fechas. Mientras tanto, conviene que tenga un kit en la mochila: una toallita, una bombacha de repuesto y algo para el dolor.</p>
-          <button type="button" className="btn fam" onClick={meVino}>Le vino hoy</button>
+          <button type="button" className="btn fam" onClick={() => setSheet('period')}>Le vino</button>
         </div>
       ) : (
         <>
@@ -126,7 +131,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
                   <span className="ring-big num">{daysLeft != null && daysLeft > 0 ? daysLeft : A.late > 0 ? A.late : (A.rangeEnd ? Math.max(0, daysBetween(today, A.rangeEnd)) : 0)}</span>
                   <span className="muted" style={{ fontSize: 14 }}>{daysLeft != null && daysLeft > 0 ? 'días para el período' : A.late > 0 ? (A.late === 1 ? 'día de atraso' : 'días de atraso') : daysLeft === 0 ? 'hoy es el día más probable' : 'posibles días que quedan'}</span>
                 </>
-              ) : <span className="muted" style={{ fontSize: 14, maxWidth: 150 }}>Anotá tu último período para empezar</span>}
+              ) : <span className="muted" style={{ fontSize: 14, maxWidth: 150 }}>{profile.kind === 'child' ? 'Anotá su último período para empezar' : 'Anotá tu último período para empezar'}</span>}
             </div>
           </div>
           {A.next && A.rangeStart && A.rangeEnd && (
@@ -148,7 +153,9 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
           )}
           {A.onPill && profile.kind === 'self' && <p className="muted" style={{ fontSize: 13, textAlign: 'center' }}>Con pastillas la ovulación estimada no aplica.</p>}
           <div className="btns">
-            <button type="button" className="btn period" onClick={meVino}>{ongoing ? 'Terminó hoy' : 'Me vino'}</button>
+            {profile.kind === 'child' && !ongoing
+              ? <button type="button" className="btn fam" onClick={() => setSheet('period')}>Le vino a {profile.name}</button>
+              : <button type="button" className="btn period" onClick={meVino}>{ongoing ? 'Terminó hoy' : 'Me vino'}</button>}
             <button type="button" className="btn ghost" style={{ flex: 'none' }} onClick={() => setSheet('sym')}>Cómo estoy</button>
           </div>
         </>
@@ -169,6 +176,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       {sheet === 'sym' && <SymptomSheet date={today} onClose={() => setSheet(false)} />}
       {sheet === 'margin' && <MarginSheet onClose={() => setSheet(false)} />}
       {sheet === 'pin' && <PinSheet onClose={() => setSheet(false)} />}
+      {sheet === 'period' && <PeriodSheet defaultStart={today} onClose={() => setSheet(false)} />}
     </div>
   );
 }

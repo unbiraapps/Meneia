@@ -50,7 +50,7 @@ export function Familia({ onBack }: { onBack: () => void }) {
             </div>
             {activeId === k.id
               ? <button type="button" className="btn ghost small" onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mis días</button>
-              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); toast('Ahora anotás los días de ' + k.name + '. Para volver a los tuyos, tocá tu nombre arriba en Hoy.'); }}>Ver y anotar sus días</button>}
+              : <button type="button" className="btn ghost small" onClick={() => { setActive(k.id!); toast('Ahora anotás los días de ' + k.name + '. Para volver a los tuyos, tocá «Volver a mí» en Hoy.'); }}>Ver y anotar sus días</button>}
           </div>
         );
       })}
