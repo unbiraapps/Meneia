@@ -10,6 +10,7 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 - **No se guardan estudios**: ni PDF ni fotos ni archivos médicos.
 - **Buscar embarazo** solo se muestra si el perfil tiene 18 años o más.
 - Los perfiles de hijas nunca muestran fertilidad, ovulación ni embarazo.
+- **Hijas: los días los anota la mamá** desde su celular. No hay invitación ni sincronización entre celulares (decidido el 5/11/2026; la opción de que la hija comparta desde su teléfono quedó descartada por ahora).
 - **Gratis con anuncios, y versión "Sin anuncios" de pago único.** Las dos tienen todas las funciones. Al empezar se elige una de las dos y la app nunca pide tarjeta: el pago lo hace Google Play. Se puede cambiar desde Perfil.
 - Supabase se usa solo más adelante y es opcional: para que una hija comparta con la mamá, con los datos cifrados.
 - La web y la política de privacidad van en `meneia.unbiraapps.com` (Cloudflare Pages).
