@@ -26,6 +26,14 @@ function Shell() {
   const { ready, privacy, onboarded, ads, today, active, afterNav } = useStore();
   const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
+  // Solo en la compilación de capturas (VITE_DEMO_TOUR=1): recorre las pestañas sola, una cada 6 segundos.
+  useEffect(() => {
+    if (import.meta.env.VITE_DEMO_TOUR !== '1') return;
+    const order: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
+    let i = 0;
+    const t = setInterval(() => { i = (i + 1) % order.length; setTab(order[i]); window.scrollTo(0, 0); }, 6000);
+    return () => clearInterval(t);
+  }, []);
   const [famFirst, setFamFirst] = useState(false);
   const [covered, setCovered] = useState(false);
   const [locked, setLocked] = useState(true);

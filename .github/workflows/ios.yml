@@ -33,10 +33,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - name: Armar la web (anuncios de prueba)
+      - name: Armar la web (anuncios de prueba, datos inventados y recorrido de pestañas para las capturas)
         run: npm run build
         env:
           VITE_ADS_TEST: '1'
+          VITE_DEMO: '1'
+          VITE_DEMO_TOUR: '1'
       - run: npx cap sync ios
       - run: xcodebuild -version
       - name: Compilar para el simulador, sin firma

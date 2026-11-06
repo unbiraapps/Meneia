@@ -1,6 +1,6 @@
 #!/bin/bash
 # Corre en la Mac de GitHub después de compilar: instala Meneia en un simulador de iPhone,
-# la abre y saca capturas a los 8, 20 y 40 segundos. Compilar no alcanza: una app puede compilar y abrir en blanco.
+# la abre y saca capturas mientras recorre las pestañas (4 a 28 s) y una más a los 40 s. Compilar no alcanza: una app puede compilar y abrir en blanco.
 set -euo pipefail
 mkdir -p evidence
 APP="build/Build/Products/Debug-iphonesimulator/App.app"
@@ -19,7 +19,8 @@ for try in 1 2 3 4 5; do
   sleep 20
 done
 START=$(date +%s)
-for at in 8 20 40; do
+# La compilación de capturas recorre las pestañas cada 6 s: Hoy, Calendario, Historial, Salud, Perfil.
+for at in 4 10 16 22 28 40; do
   wait=$(( START + at - $(date +%s) )); if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-${at}s.png"
   if xcrun simctl spawn "$DEVICE" launchctl list 2>/dev/null | grep -q "$BUNDLE"; then echo "${at}s: abierta" ; else echo "${at}s: NO está corriendo"; fi | tee -a evidence/resultado.txt
