@@ -70,6 +70,24 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
 - [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
 
+## iPhone · etapa 2: conectar cuentas (2026-11-06)
+
+Contexto: `docs/IOS.md`. La app de iPhone ya está preparada (etapa 1). Usar la cuenta Apple Developer y App Store Connect que ya existen (equipo `72L65TRKSY`, las mismas de Código de Estilo). No tocar Código de Estilo ni sus claves. No enviar nada a revisión de Apple. No pegar claves en el repo ni en el chat.
+
+- [ ] **1. Identificador.** developer.apple.com › Certificates, Identifiers & Profiles › Identifiers › nuevo App ID explícito `com.unbiraapps.meneia`, descripción "Meneia". Capacidades: **Sign In with Apple** (como App ID principal). In-App Purchase viene activada.
+- [ ] **2. Ficha en App Store Connect.** Apps › nueva app iOS: nombre "Meneia" (si está tomado, "Meneia: tu ciclo"), idioma principal español (el mismo que Código de Estilo), bundle `com.unbiraapps.meneia`, SKU `meneia-ios`, acceso completo. Anotar acá el Apple ID numérico. Publicación de versiones: **manual**.
+- [ ] **3. Acuerdo de apps pagas.** Business › Paid Apps: la dueña acepta el acuerdo y carga cuenta bancaria y formulario de impuestos ella misma (Codex la guía, no escribe sus datos). Sin esto no se pueden crear suscripciones.
+- [ ] **4. Programa para pequeños desarrolladores.** https://developer.apple.com/app-store/small-business-program/enroll/ (sirve para todas las apps de la cuenta). Lo envía la dueña.
+- [ ] **5. Suscripción.** En la ficha de Meneia › Suscripciones: grupo "Sin anuncios"; producto ID `com.unbiraapps.meneia.sinanuncios.mensual`, nombre de referencia "Sin anuncios mensual", duración 1 mes, precio base USD 9,99 (países: los que Apple calcule). Localización español: nombre "Sin anuncios", descripción "Usá Meneia sin publicidad". Sin prueba gratis ni ofertas. La captura para la revisión se agrega en la etapa 4.
+- [ ] **6. Disponibilidad.** Precios y disponibilidad: todos los países **menos los de la Unión Europea**. En Business › Compliance, declarar el estado de comerciante (DSA) de la cuenta si todavía no se hizo: como Meneia no se distribuye en la UE, no se publican dirección ni teléfono.
+- [ ] **7. Clave de la API para GitHub.** Users and Access › Integrations › App Store Connect API › Team Keys › nueva clave "GitHub Meneia" con rol **Admin** (Xcode la necesita para crear el certificado de distribución en la nube con `-allowProvisioningUpdates`). Descargar el .p8 una sola vez. Secretos en GitHub (`unbiraapps/Meneia` › Settings › Secrets › Actions):
+  - `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID`, `ASC_API_KEY_P8` (el contenido completo del .p8), `APPLE_TEAM_ID` = `72L65TRKSY`.
+  - Si la dueña prefiere no crear una clave Admin: avisar en `docs/PARA-CLAUDE.md` y pasamos la firma a Codemagic con la clave que ya existe.
+- [ ] **8. AdMob para iPhone.** En la cuenta de AdMob de Meneia: nueva app iOS "Meneia" (todavía no publicada). Bloques: banner, intersticial y bonificado, como los de Android. Secretos: `ADMOB_IOS_APP_ID` (el `~`), `ADMOB_IOS_BANNER_ID`, `ADMOB_IOS_INTERSTITIAL_ID`, `ADMOB_IOS_REWARDED_ID`. Revisar que el mensaje de consentimiento (UMP) también aplique a la app de iOS. No crear mensaje de rastreo (ATT): no rastreamos.
+- [ ] **9. Apple en Supabase** (cuando el proyecto de la copia en la nube exista). Authentication › Providers › Apple: activar; Client IDs: `com.unbiraapps.meneia`. Para el ingreso nativo no hace falta el secreto. Anotar si Supabase pide la clave de "Sign in with Apple" para revocar el acceso al borrar la cuenta: lo necesitamos antes de la etapa 4.
+- [ ] **10. Primera subida.** GitHub › Actions › "App de iPhone" › Run workflow con **subir** marcado (anuncios reales sin marcar). Confirmar en el registro "Subida a TestFlight" y en App Store Connect que la compilación se procesa. No agregar probadores ni enviar a Beta App Review: eso es la etapa 3.
+- [ ] **11. Avisar a Claude** en `docs/PARA-CLAUDE.md` con el Apple ID de la ficha y el número de compilación procesada (o el error textual si falla).
+
 ## Drive: client_id propio para rclone (2026-11-05, urgente)
 
 El log de la subida al Drive avisa: "This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026". Si deja de andar, las APK no llegan más al Drive.

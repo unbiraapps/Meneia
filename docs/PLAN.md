@@ -11,6 +11,7 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 - **Buscar embarazo** solo se muestra si el perfil tiene 18 años o más.
 - Los perfiles de hijas nunca muestran fertilidad, ovulación ni embarazo.
 - **Anuncios de pantalla completa:** después de guardar algo o cada 4 cambios de pestaña, con al menos 30 minutos entre uno y otro (2 minutos en la APK de prueba). Antes era uno por día; la dueña pidió que aparezcan cada tanto (5/11/2026).
+- **iPhone** (6/11/2026): se publica también en el App Store con la cuenta de Apple de Unbira. Etapas y decisiones en `docs/IOS.md`.
 - **Familia solo en Perfil › Familia** (5/11/2026): Hoy, Calendario e Historial muestran siempre tus días, sin selector de perfiles. Ahí está cada hija con "Le vino" y "Ver sus días" (su calendario e historial).
 - **Hijas: los días los anota la mamá** desde su celular. No hay invitación ni sincronización entre celulares (decidido el 5/11/2026; la opción de que la hija comparta desde su teléfono quedó descartada por ahora).
 - **Gratis con anuncios, y versión "Sin anuncios" de pago único.** Las dos tienen todas las funciones. Al empezar se elige una de las dos y la app nunca pide tarjeta: el pago lo hace Google Play. Se puede cambiar desde Perfil.
