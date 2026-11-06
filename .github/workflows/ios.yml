@@ -16,6 +16,8 @@ on:
         description: 'Usar los IDs reales de AdMob (solo para la versión que va a la tienda)'
         type: boolean
         default: false
+permissions:
+  contents: write
 concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: true
@@ -45,6 +47,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO | tail -n 40
       - name: Abrir en el simulador y sacar capturas
         run: bash scripts/ios-smoke.sh
+      - name: Guardar las capturas en la rama ios-capturas (para revisarlas sin bajar artefactos)
+        if: always() && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          ls evidence/*.png >/dev/null 2>&1 || exit 0
+          SHA=${GITHUB_SHA::7}
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          if git fetch -q origin ios-capturas 2>/dev/null; then git worktree add -q ../caps origin/ios-capturas; else git worktree add -q --detach ../caps; (cd ../caps && git checkout -q --orphan ios-capturas && git rm -rq . || true); fi
+          rm -rf ../caps/ultima && mkdir -p ../caps/ultima && cp evidence/*.png evidence/resultado.txt ../caps/ultima/ 2>/dev/null || true
+          echo "$SHA" > ../caps/ultima/commit.txt
+          cd ../caps && git add -A ultima && (git commit -qm "Capturas de iPhone de $SHA" && git push -q origin HEAD:ios-capturas) || echo "Sin cambios"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
