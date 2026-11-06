@@ -3,7 +3,6 @@ import { cycleSymptoms, daysBetween, fmtLong, fmtShort, patterns, plural, type P
 import { db } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
-import { ProfileChips } from './Hoy';
 import { PeriodSheet } from './PeriodSheet';
 
 export function Historial() {
@@ -36,7 +35,6 @@ export function Historial() {
   return (
     <div className="screen">
       <div className="top"><h1>Historial</h1><span className="muted num" style={{ fontSize: 13 }}>{plural(A.rows.length, 'período', 'períodos')}</span></div>
-      <ProfileChips />
       <div className="fum"><span>FUM · fecha de última menstruación</span><b>{A.last ? fmtLong(A.last.start) : 'Sin datos'}</b></div>
 
       {profile.kind === 'self' && A.tryingCycles > 0 && (

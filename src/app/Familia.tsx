@@ -1,12 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Calendario } from './Calendario';
+import { Historial } from './Historial';
 import { ageOn, daysBetween, fmtShort, plural, addDays, type Profile } from '../calc';
 import { deleteProfile, savePeriod, saveProfile, setSetting } from '../db';
 import { useStore } from './store';
 import { Avatar, COLORS, DateField, Icon, Sheet, SubHeader, useToast } from './ui';
 import { PeriodSheet } from './PeriodSheet';
 
-export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: () => void }) {
-  const { profiles, data, today, refresh, shopping, setActive, activeId, active } = useStore();
+/** Sus días: el calendario y el historial de una hija, dentro de Familia. */
+function SusDias({ id, onBack }: { id: number; onBack: () => void }) {
+  const { data, today, setActive } = useStore();
+  const [view, setView] = useState<'cal' | 'hist'>('cal');
+  const [log, setLog] = useState(false);
+  useEffect(() => { setActive(id); return () => setActive(1); }, [id, setActive]);
+  const d = data.get(id);
+  if (!d) return null;
+  return (
+    <div className="screen">
+      <SubHeader title={d.profile.name} onBack={onBack} />
+      <div className="btns">
+        <button type="button" className="btn fam" onClick={() => setLog(true)}>Le vino</button>
+      </div>
+      <div className="chips" role="tablist" aria-label="Qué ver">
+        <button type="button" role="tab" aria-selected={view === 'cal'} className={'chip' + (view === 'cal' ? ' on fam' : '')} onClick={() => setView('cal')}>Calendario</button>
+        <button type="button" role="tab" aria-selected={view === 'hist'} className={'chip' + (view === 'hist' ? ' on fam' : '')} onClick={() => setView('hist')}>Historial</button>
+      </div>
+      <div className="embed">{view === 'cal' ? <Calendario /> : <Historial />}</div>
+      {log && <PeriodSheet profileId={id} defaultStart={today} onClose={() => setLog(false)} />}
+    </div>
+  );
+}
+
+export function Familia({ onBack }: { onBack: () => void }) {
+  const { profiles, data, today, refresh, shopping } = useStore();
+  const [see, setSee] = useState<number | null>(null);
   const toast = useToast();
   const [edit, setEdit] = useState<Profile | 'new' | null>(null);
   const [item, setItem] = useState('');
@@ -18,18 +45,20 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
   const nextShop = kids.map(k => data.get(k.id!)).filter(d => d && !d.profile.notYet && d.profile.alertDays && d.A.next)
     .map(d => addDays(d!.A.next!, -d!.profile.alertDays)).filter(d => d >= today).sort()[0];
 
+  if (see != null) return <SusDias id={see} onBack={() => { setSee(null); window.scrollTo(0, 0); }} />;
+
   return (
     <div className="screen">
       <SubHeader title="Familia" onBack={onBack} />
-      <div className="card" style={{ gap: 8 }}>
+      {kids.length === 0 && <div className="card" style={{ gap: 8 }}>
         <h2 style={{ margin: 0 }}>Cómo funciona</h2>
         <ol className="muted" style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.5 }}>
           <li>Agregás a tu hija con su nombre o apodo. Ella no necesita tener la app.</li>
-          <li>Tocás <b>Anotar que le vino</b> y elegís el día, desde tu celular.</li>
+          <li>Cuando le viene, tocás <b>Le vino</b> y elegís el día en el calendario.</li>
           <li>Unos días antes del próximo, te llega un aviso con la lista de compras.</li>
         </ol>
         <span className="muted" style={{ fontSize: 12.5 }}>Todo queda solo en tu celular. El aviso nunca dice su nombre ni la palabra período.</span>
-      </div>
+      </div>}
 
       {kids.map(k => {
         const d = data.get(k.id!)!;
@@ -51,10 +80,8 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
               </div>
             </div>
             <div className="btns">
-              <button type="button" className="btn fam small" onClick={() => { setActive(k.id!); setLogFor(k.id!); }}>{k.notYet || !d.A.last ? 'Anotar que le vino' : 'Anotar que le vino de nuevo'}</button>
-              {activeId === k.id
-                ? <button type="button" className="btn ghost small" style={{ flex: 'none' }} onClick={() => { setActive(1); toast('Volviste a tus días'); }}>Volver a mí</button>
-                : <button type="button" className="btn ghost small" style={{ flex: 'none' }} onClick={() => { setActive(k.id!); onOpenKid(); }}>Ver sus días</button>}
+              <button type="button" className="btn fam small" onClick={() => setLogFor(k.id!)}>Le vino</button>
+              <button type="button" className="btn ghost small" onClick={() => { setSee(k.id!); window.scrollTo(0, 0); }}>Ver sus días</button>
             </div>
           </div>
         );
@@ -77,7 +104,7 @@ export function Familia({ onBack, onOpenKid }: { onBack: () => void; onOpenKid: 
         </form>
       </div>
 
-      {logFor != null && active?.profile.id === logFor && <PeriodSheet defaultStart={today} onClose={() => setLogFor(null)} />}
+      {logFor != null && <PeriodSheet profileId={logFor} defaultStart={today} onClose={() => setLogFor(null)} />}
       {edit && <KidSheet kid={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
     </div>
   );

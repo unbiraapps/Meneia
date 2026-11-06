@@ -66,7 +66,7 @@ function Shell() {
   if (!ready) return <div className="screen" aria-busy="true" />;
   if (lockOn.current && locked) return <Lock pinHash={privacy.pinHash} onUnlock={unlock} />;
   if (covered) return <button type="button" className="cover" aria-label="Pantalla tapada. Tocá para seguir" onClick={() => { if (lockOn.current) setLocked(true); setCovered(false); }}><span className="dot" /><span style={{ fontSize: 12.5 }}>Tocá para seguir</span></button>;
-  if (!onboarded) return <Inicio onDone={() => setTab('hoy')} />;
+  if (!onboarded) return <Inicio onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
 
   return (
     <div className={'app' + (banner ? ' with-ad' : '')}>
@@ -74,7 +74,7 @@ function Shell() {
       {tab === 'calendario' && <Calendario />}
       {tab === 'historial' && <Historial />}
       {tab === 'salud' && <Salud />}
-      {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} onOpenKid={() => { setFamFirst(false); setTab('hoy'); window.scrollTo(0, 0); }} /> : <Perfil onOpenKid={() => { setTab('hoy'); window.scrollTo(0, 0); }} onLock={() => setLocked(true)} />)}
+      {tab === 'perfil' && (famFirst ? <Familia onBack={() => setFamFirst(false)} /> : <Perfil onLock={() => setLocked(true)} />)}
       <nav className="nav" aria-label="Secciones" ref={navRef}>
         <div className="nav-in">
           {TABS.map(([id, label, Ico]) => (

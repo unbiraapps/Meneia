@@ -15,7 +15,7 @@ import { useEffect } from 'react';
 
 type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas';
 
-export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: () => void }) {
+export function Perfil({ onLock }: { onLock: () => void }) {
   const { self, profiles, today, refresh, privacy } = useStore();
   const toast = useToast();
   const [sub, setSub] = useState<Sub>(null);
@@ -25,7 +25,7 @@ export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: (
   useEffect(() => { import('@capacitor/app').then(m => m.App.getInfo()).then(i => setVer(`Versión ${i.version} (${i.build})`)).catch(() => setVer('Versión web')); }, []);
   useEffect(() => { if (cloudAvailable()) currentUser().then(setEmail).catch(() => setEmail(null)); }, [sub]);
   if (!self) return null;
-  if (sub === 'familia') return <Familia onBack={() => setSub(null)} onOpenKid={onOpenKid} />;
+  if (sub === 'familia') return <Familia onBack={() => setSub(null)} />;
   if (sub === 'privacidad') return <Privacidad onBack={() => setSub(null)} />;
   if (sub === 'avisos') return <Avisos onBack={() => setSub(null)} />;
   if (sub === 'copia') return <Copia onBack={() => setSub(null)} />;
@@ -61,7 +61,7 @@ export function Perfil({ onOpenKid, onLock }: { onOpenKid: () => void; onLock: (
         <span className="eyebrow">Familia</span>
         <button type="button" className="list" style={{ padding: 0, background: 'var(--fam-bg)', borderColor: 'transparent' }} onClick={() => setSub('familia')}>
           <span className="list-item"><span style={{ color: 'var(--fam)' }}><Icon.family /></span>
-            <span className="grow"><b style={{ color: 'var(--fam)' }}>{kids.length ? kids.map(k => k.name).join(' y ') : 'Ciclos de mis hijas'}</b><small>{kids.length ? 'Aviso antes de su período y lista de compras' : 'Agregá a tus hijas para saber cuándo les toca'}</small></span><Icon.chev /></span>
+            <span className="grow"><b style={{ color: 'var(--fam)' }}>Familia</b><small>{kids.length ? kids.map(k => k.name).join(', ') + ' · sus días, avisos y lista de compras' : 'Anotá los días de tus hijas y te aviso antes'}</small></span><Icon.chev /></span>
         </button>
       </div>
 

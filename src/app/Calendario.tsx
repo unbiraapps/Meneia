@@ -3,7 +3,6 @@ import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, show
 import { savePeriod } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
-import { ProfileChips } from './Hoy';
 import { PeriodSheet } from './PeriodSheet';
 import { SymptomSheet } from './SymptomSheet';
 
@@ -53,7 +52,6 @@ export function Calendario() {
           <button type="button" className="icon-btn" aria-label="Mes siguiente" onClick={() => move(1)}>›</button>
         </div>
       </div>
-      <ProfileChips />
       <div className="cal">
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className="dow" aria-hidden="true">{d}</span>)}
         {cells.map(s => {

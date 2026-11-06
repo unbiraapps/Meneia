@@ -82,7 +82,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const today = localToday();
     const [profiles, periods, events, symptoms, reminders, privacy, shopping, pills, health, onboarded, activeId] = await Promise.all([
       db.profiles.toArray(), db.periods.toArray(), db.events.toArray(), db.symptoms.toArray(), getReminders(), getPrivacy(), getShopping(), getPills(),
-      getSetting<Health>('health', DEFAULT_HEALTH), getSetting('onboarded', false), getSetting<number>('activeProfile', SELF_ID),
+      getSetting<Health>('health', DEFAULT_HEALTH), getSetting('onboarded', false), Promise.resolve(SELF_ID),
     ]);
     let ads = { ...DEFAULT_ADS, ...(await getSetting<Partial<AdState>>('ads', {})) };
     if (!ads.installDate) { ads = { ...ads, installDate: today }; await setSetting('ads', ads); }
@@ -152,7 +152,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, [refresh, state.today]);
 
-  const setActive = useCallback((id: number) => { setSetting('activeProfile', id); setState(s => ({ ...s, activeId: id })); }, []);
+  const setActive = useCallback((id: number) => { setState(s => ({ ...s, activeId: id })); }, []); // no se guarda: la app siempre arranca en tus días
 
   const value = useMemo<Store>(() => ({
     ...state, setActive, refresh, setAds, afterSave, afterNav,

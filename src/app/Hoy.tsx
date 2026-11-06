@@ -8,68 +8,22 @@ import { MarginSheet } from './MarginSheet';
 import { PillToday } from './Pastillas';
 import { PinSheet } from './Pin';
 import { PeriodSheet } from './PeriodSheet';
-import { KidSheet } from './Familia';
 import { getSetting, setSetting } from '../db';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Fila de perfiles para cambiar entre "Yo" y las hijas. Solo aparece si hay más de uno. */
-export function ProfileChips({ onAdd }: { onAdd?: () => void }) {
-  const { profiles, activeId, setActive } = useStore();
-  if (profiles.length < 2) return null;
-  return (
-    <div className="pchips" role="tablist" aria-label="De quién son los días">
-      {profiles.map(p => (
-        <button key={p.id} type="button" role="tab" aria-selected={p.id === activeId} className={'pchip' + (p.id === activeId ? (p.kind === 'child' ? ' on fam' : ' on') : '')} onClick={() => setActive(p.id!)}>
-          <Avatar name={p.name} color={p.color} />{p.name}
-        </button>
-      ))}
-      {onAdd && <button type="button" className="pchip add" aria-label="Agregar una hija" onClick={onAdd}>+</button>}
-    </div>
-  );
-}
 
-/** En tu Hoy: tus hijas a mano, para anotar que les vino sin cambiar de perfil. */
-function Hijas({ onAdd, onLog }: { onAdd: () => void; onLog: (id: number) => void }) {
-  const { profiles, data, today, setActive } = useStore();
-  const kids = profiles.filter(p => p.kind === 'child');
-  return (
-    <div className="card fam" style={{ gap: 10 }}>
-      <div className="top"><h2 style={{ margin: 0 }}>Tus hijas</h2>
-        <button type="button" className="btn link" style={{ color: 'var(--fam)', minHeight: 36 }} onClick={onAdd}>+ Agregar</button></div>
-      {kids.length === 0 && <p style={{ fontSize: 14, margin: 0 }}>Anotá los días de tus hijas desde tu celular y te aviso antes para comprar lo que haga falta. Ellas no necesitan la app.</p>}
-      {kids.map(k => {
-        const d = data.get(k.id!)!;
-        const left = d.A.next ? daysBetween(today, d.A.next) : null;
-        const status = k.notYet ? 'Todavía no le vino' : !d.A.last ? 'Falta anotar cuándo le vino' : left == null ? '' : left > 0 ? `${plural(left, 'día', 'días')} para su período` : left === 0 ? 'Le podría venir hoy' : `Debía venirle el ${fmtShort(d.A.next!)}`;
-        return (
-          <div key={k.id} className="row" style={{ gap: 10 }}>
-            <button type="button" className="row grow" style={{ gap: 10, background: 'none', border: 'none', color: 'inherit', padding: 0, textAlign: 'left', minHeight: 44, cursor: 'pointer' }} onClick={() => setActive(k.id!)} aria-label={'Ver los días de ' + k.name}>
-              <Avatar name={k.name} color={k.color} />
-              <span className="stack"><b style={{ fontSize: 15 }}>{k.name}</b><small className="muted" style={{ fontSize: 12.5 }}>{status}</small></span>
-            </button>
-            <button type="button" className="btn fam small" style={{ flex: 'none' }} onClick={() => onLog(k.id!)}>Le vino</button>
-          </div>
-        );
-      })}
-      {kids.length === 0 && <button type="button" className="btn fam" onClick={onAdd}>Agregar una hija</button>}
-    </div>
-  );
-}
 
 export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' | 'perfil') => void }) {
   const { active, today, refresh, migrated, health, profiles, afterSave } = useStore();
   const toast = useToast();
-  const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin' | 'period' | 'kid'>(false);
-  const [logKid, setLogKid] = useState<number | null>(null);
-  const [famMode, setFamMode] = useState(false);
-  useEffect(() => { getSetting('familyMode', false).then(setFamMode); }, [profiles.length]);
+  const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin' | 'period'>(false);
   const { privacy, setActive } = useStore();
   const [pinNag, setPinNag] = useState(false);
   useEffect(() => { if (!privacy.lock) getSetting('pinPromptDismissed', false).then(d => setPinNag(!d)); else setPinNag(false); }, [privacy.lock]);
   if (!active) return null;
   const { profile, A } = active;
-  const showKids = profile.kind === 'self' && (famMode || profiles.some(p => p.kind === 'child'));
   const fertility = showsFertility(profile) && !A.onPill;
   const last = A.last;
   const ongoing = !!last && !last.end && daysBetween(last.start, today) <= 10;
@@ -123,11 +77,10 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
     <div className="screen">
       <div className="top">
         <div className="top-left">
-          {profiles.length < 2 && <><Avatar name={profile.name} color={profile.color} /><h1 style={{ fontSize: 24 }}>Hoy</h1></>}
+          <Avatar name={profile.name} color={profile.color} /><h1 style={{ fontSize: 24 }}>Hoy</h1>
         </div>
         <button type="button" className="icon-btn round" aria-label="Tapar la pantalla" onClick={onCover}><Icon.eyeOff /></button>
       </div>
-      <ProfileChips onAdd={showKids || profile.kind === 'child' ? () => setSheet('kid') : undefined} />
       {profile.kind === 'child' && (
         <div className="alert famnote" role="status"><Icon.pen /><div className="grow">Estás anotando los días de <b>{profile.name}</b></div>
           <button type="button" className="btn link" style={{ color: 'inherit', minHeight: 36, fontSize: 13.5 }} onClick={() => setActive(1)}>Volver a mí</button></div>
@@ -195,7 +148,6 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
         </>
       )}
 
-      {showKids && <Hijas onAdd={() => setSheet('kid')} onLog={id => setLogKid(id)} />}
       {profile.kind === 'self' && <PillToday />}
       {reps.length > 0 && (
         <div className="card soft" style={{ gap: 4 }}>
@@ -212,8 +164,6 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       {sheet === 'margin' && <MarginSheet onClose={() => setSheet(false)} />}
       {sheet === 'pin' && <PinSheet onClose={() => setSheet(false)} />}
       {sheet === 'period' && <PeriodSheet defaultStart={today} onClose={() => setSheet(false)} />}
-      {sheet === 'kid' && <KidSheet kid={null} onClose={() => setSheet(false)} />}
-      {logKid != null && <PeriodSheet profileId={logKid} defaultStart={today} onClose={() => setLogKid(null)} />}
     </div>
   );
 }
