@@ -20,3 +20,10 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
   - Verificar con Billing de prueba que: gratis funciona sin medio de pago; cancelar/cerrar el pago permite continuar gratis; suscripción/restauración vigente quitan anuncios; vencimiento vuelve a gratis sin perder datos. La APK que estaba disponible antes de este cambio todavía tiene textos e integración de pago único; no presentarla como implementación final mensual.
 
   Hecho (Claude, 2026-11-05): suscripción `sin_anuncios_mensual` / plan `mensual` (Billing SUBS); el precio y período se leen de Play; al abrir y al volver a la app se consulta el derecho vigente (cancelada = sin anuncios hasta el fin del período; vencida = vuelve a gratis sin tocar datos); "Administrar o cancelar" abre Play; "Restaurar suscripción". Al empezar: botón principal "Continuar gratis con anuncios"; el cobro solo se abre con "Suscribirme", con precio, renovación y cancelación visibles antes. Política con contacto y suscripción. La APK del Drive se arma con anuncios de prueba de Google (para no mirar anuncios reales en el propio celular); el AAB de Play usa los IDs reales. Falta validar el cobro con una cuenta de prueba de licencias en Play (ver PARA-CODEX).
+
+
+### Estado de preparación de Play (Codex, 2026-11-06)
+
+- La firma UnbiraApps de `c9da844` y la corrida 37 ya están verificadas; no duplicar la integración.
+- Textos e ícono de ficha cargados y guardados en borrador de Play. Del pedido de materiales siguen faltando el gráfico 1024x500 y las capturas; conservar datos ficticios.
+- El login implementado todavía espera Supabase y OAuth: faltan los tres secretos. La dueña recibió las pantallas de creación de contraseña de Supabase y activación de 2FA obligatoria de Google Cloud. No presentar la APK 37 como ingreso Google funcionando ni asumir configuración completada. Seguimiento en PARA-CODEX.
