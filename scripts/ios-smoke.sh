@@ -10,8 +10,15 @@ DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl install "$DEVICE" "$APP"
+# Recién encendido, el simulador a veces rechaza abrir apps ("denied by service delegate"): se reintenta.
+sleep 15
+for try in 1 2 3 4 5; do
+  if xcrun simctl launch --stdout="$PWD/evidence/app-stdout.txt" --stderr="$PWD/evidence/app-stderr.txt" "$DEVICE" "$BUNDLE" > evidence/launch.txt 2> evidence/launch-error.txt; then break; fi
+  echo "Intento $try: el simulador todavía no deja abrir la app"; cat evidence/launch-error.txt | head -3
+  [ "$try" = 5 ] && { echo "No se pudo abrir la app"; exit 1; }
+  sleep 20
+done
 START=$(date +%s)
-xcrun simctl launch --stdout="evidence/app-stdout.txt" --stderr="evidence/app-stderr.txt" "$DEVICE" "$BUNDLE" > evidence/launch.txt
 for at in 8 20 40; do
   wait=$(( START + at - $(date +%s) )); if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-${at}s.png"
