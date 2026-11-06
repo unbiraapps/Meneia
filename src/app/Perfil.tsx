@@ -102,7 +102,11 @@ export function Perfil({ onLock }: { onLock: () => void }) {
       </div>
       {pin && <PinSheet onClose={() => setPin(false)} />}
       <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
-      {ver && <p className="muted" style={{ fontSize: 11.5, textAlign: 'center', margin: 0 }}>{ver}</p>}
+      <div className="stack" style={{ alignItems: 'center', gap: 2, paddingTop: 4 }}>
+        {/* Firma de la desarrolladora: cuando esté el logo aprobado de UnbiraApps, va acá arriba del texto, chico */}
+        <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>Creado por UnbiraApps</p>
+        {ver && <p className="muted" style={{ fontSize: 11.5, margin: 0, opacity: .8 }}>{ver}</p>}
+      </div>
     </div>
   );
 }
