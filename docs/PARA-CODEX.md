@@ -70,6 +70,14 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
 - [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
 
+## Drive: client_id propio para rclone (2026-11-05, urgente)
+
+El log de la subida al Drive avisa: "This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026". Si deja de andar, las APK no llegan más al Drive.
+
+- [ ] En Google Cloud (proyecto de Unbira), activar la API de Google Drive y crear un cliente OAuth de tipo "App de escritorio" (guía: https://rclone.org/drive/#making-your-own-client-id).
+- [ ] En tu compu, `rclone config` › editar el remoto `unbira` › poner ese `client_id` y `client_secret` › volver a autorizar.
+- [ ] Actualizar el secreto `RCLONE_CONF` de GitHub con el contenido nuevo de `rclone.conf` y correr el workflow a mano para probar.
+
 ## Copia cifrada en la nube con Google o email (2026-11-05, decidido por la dueña)
 
 El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta que estén estos pasos, la app muestra "Muy pronto" en Perfil › Copia de seguridad. Los datos se cifran en el celular: al servidor llega solo un sobre cifrado. No guardes ni pegues claves en el repo.
