@@ -95,6 +95,10 @@ jobs:
           mkdir -p ~/.config/rclone
           printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
           STAMP=$(TZ=America/Argentina/Buenos_Aires date +%Y-%m-%d_%H%M)
-          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/meneia.apk"
-          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/anteriores/meneia_$STAMP.apk"
-          echo "Subida a Drive: $DRIVE_FOLDER/meneia.apk"
+          VNAME=$(grep -m1 'versionName' android/app/build.gradle | sed -E 's/.*"(.*)".*/\1/')
+          NAME="Meneia ${VNAME} (${{ github.run_number }}).apk"
+          # En la carpeta principal queda solo la última, con la versión en el nombre
+          rclone delete "unbira:$DRIVE_FOLDER" --max-depth 1 --include "Meneia *.apk" --include "meneia.apk" || true
+          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/$NAME"
+          rclone copyto "$RUNNER_TEMP/meneia.apk" "unbira:$DRIVE_FOLDER/anteriores/Meneia ${VNAME} (${{ github.run_number }}) $STAMP.apk"
+          echo "Subida a Drive: $DRIVE_FOLDER/$NAME"
