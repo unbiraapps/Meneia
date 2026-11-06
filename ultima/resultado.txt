@@ -1,0 +1,4 @@
+8s: abierta
+20s: abierta
+40s: abierta
+Modelo: iPhone 17 Pro
