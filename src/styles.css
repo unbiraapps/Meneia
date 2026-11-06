@@ -214,3 +214,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum)}
 .firma img{display:block;width:120px;height:auto}
 /* Botón "Iniciar sesión con Apple": blanco con texto negro, como pide Apple sobre fondo oscuro */
 .btn.apple{background:#fff;color:#000;border:none}
+/* iPhone (Safari): el campo de fecha tiene ancho propio y se sale del borde; se ajusta al contenedor */
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:48px}
+input[type=date]::-webkit-date-and-time-value{text-align:left}

@@ -55,7 +55,8 @@ jobs:
           SHA=${GITHUB_SHA::7}
           git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
           if git fetch -q origin ios-capturas 2>/dev/null; then git worktree add -q ../caps origin/ios-capturas; else git worktree add -q --detach ../caps; (cd ../caps && git checkout -q --orphan ios-capturas && git rm -rq . || true); fi
-          rm -rf ../caps/ultima && mkdir -p ../caps/ultima && cp evidence/*.png evidence/resultado.txt ../caps/ultima/ 2>/dev/null || true
+          (cd ../caps && git rm -rq --ignore-unmatch . && git clean -fdq) || true
+          mkdir -p ../caps/ultima && cp evidence/*.png evidence/resultado.txt ../caps/ultima/ 2>/dev/null || true
           echo "$SHA" > ../caps/ultima/commit.txt
           cd ../caps && git add -A ultima && (git commit -qm "Capturas de iPhone de $SHA" && git push -q origin HEAD:ios-capturas) || echo "Sin cambios"
       - uses: actions/upload-artifact@v4
