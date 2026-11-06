@@ -27,6 +27,7 @@ const CH_PRIVATE = 'meneia-privado'; // se ve que hay un aviso, sin contenido
 let channelsReady = false;
 async function ensureChannels() {
   if (channelsReady) return;
+  if (Capacitor.getPlatform() !== 'android') { channelsReady = true; return; } // los canales existen solo en Android
   for (const [id, visibility] of [[CH_HIDDEN, -1], [CH_PRIVATE, 0]] as const) {
     try {
       await LocalNotifications.createChannel({ id, name: id === CH_HIDDEN ? 'Recordatorios (ocultos)' : 'Recordatorios', description: 'Recordatorios de Meneia', importance: 2, visibility, vibration: false, lights: false });
@@ -35,6 +36,7 @@ async function ensureChannels() {
   channelsReady = true;
 }
 
+const IOS_MAX = 60;
 const at = (date: string, hour: number) => { const [y, m, d] = date.split('-').map(Number); return new Date(y, m - 1, d, hour, 0, 0); };
 
 /** Reemplaza todos los avisos programados por la lista nueva. */
@@ -45,6 +47,8 @@ export async function syncReminders(list: Reminder[], pr: PrivacySettings): Prom
   const pending = await LocalNotifications.getPending();
   if (pending.notifications.length) await LocalNotifications.cancel({ notifications: pending.notifications.map(n => ({ id: n.id })) });
   if (!list.length) return 0;
+  // iOS guarda como mucho 64 avisos pendientes por app: quedan los más próximos (se reprograman cada vez que se abre la app).
+  if (Capacitor.getPlatform() === 'ios' && list.length > IOS_MAX) list = [...list].sort((x, y) => +at(x.date, x.hour) - +at(y.date, y.hour)).slice(0, IOS_MAX);
   const channelId = pr.hideOnLock ? CH_HIDDEN : CH_PRIVATE;
   await LocalNotifications.schedule({
     notifications: list.map(r => ({ id: r.id, title: r.title, body: r.body, channelId, smallIcon: 'ic_stat_ciclo', iconColor: pr.dotColor, schedule: { at: at(r.date, r.hour), allowWhileIdle: true } })),

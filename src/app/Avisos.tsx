@@ -21,7 +21,7 @@ export function Avisos({ onBack }: { onBack: () => void }) {
   return (
     <div className="screen">
       <SubHeader title="Avisos" onBack={onBack} />
-      {!isNative() ? <div className="alert info"><span className="dot" /><div>En esta versión los avisos aparecen adentro de la app. En la app de Android llegan como notificación aunque esté cerrada.</div></div>
+      {!isNative() ? <div className="alert info"><span className="dot" /><div>En esta versión los avisos aparecen adentro de la app. En la app del celular llegan como notificación aunque esté cerrada.</div></div>
         : perm !== 'granted' ? <div className="alert warn"><span className="dot" /><div>Para recibir avisos, permití las notificaciones.<div style={{ marginTop: 8 }}><button type="button" className="btn small" onClick={async () => { const s = await requestPermission(); setPerm(s); if (s === 'granted') { await refresh(); toast('Notificaciones activadas'); } else toast('Activalas desde Ajustes del teléfono › Apps › Meneia'); }}>Permitir notificaciones</button></div></div></div>
           : next && <div className="alert ok"><span className="dot" /><div>Próximo aviso: {fmtLong(next.date)} a las {hh(next.hour)}.</div></div>}
 

@@ -1,7 +1,7 @@
-// Bloqueo con huella o PIN y pantalla protegida. Nada de esto sale del celular.
+// Bloqueo con huella, Face ID o PIN, y pantalla protegida. Nada de esto sale del celular.
 import { Capacitor } from '@capacitor/core';
 import { PrivacyScreen } from '@capacitor-community/privacy-screen';
-import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { BiometryType, NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 const native = () => Capacitor.isNativePlatform();
 
@@ -14,10 +14,21 @@ export async function hashPin(pin: string): Promise<string> {
 
 export const validPin = (pin: string) => /^\d{4,6}$/.test(pin);
 
-export async function biometricAvailable(): Promise<boolean> {
-  if (!native()) return false;
-  try { return (await NativeBiometric.isAvailable()).isAvailable; } catch { return false; }
+/** Cómo se llama el desbloqueo del celular, para los textos. */
+export type BioName = 'Face ID' | 'Touch ID' | 'huella';
+
+/** El desbloqueo biométrico disponible, o null si no hay. */
+export async function biometricAvailable(): Promise<BioName | null> {
+  if (!native()) return null;
+  try {
+    const r = await NativeBiometric.isAvailable();
+    if (!r.isAvailable) return null;
+    return r.biometryType === BiometryType.FACE_ID ? 'Face ID' : r.biometryType === BiometryType.TOUCH_ID ? 'Touch ID' : 'huella';
+  } catch { return null; }
 }
+
+/** "tu huella" / "Face ID" / "Touch ID", para meter en una frase. */
+export const withBio = (b: BioName) => (b === 'huella' ? 'tu huella' : b);
 
 /** Pide la huella (o el desbloqueo del celular). true si la persona se identificó. */
 export async function verifyBiometric(): Promise<boolean> {
@@ -28,7 +39,7 @@ export async function verifyBiometric(): Promise<boolean> {
   } catch { return false; }
 }
 
-/** No aparece en apps recientes ni en capturas de pantalla (FLAG_SECURE en Android). */
+/** No aparece en apps recientes ni en capturas de pantalla (FLAG_SECURE en Android; en iPhone tapa la vista y la captura sale en negro). */
 export async function setSecureScreen(on: boolean): Promise<void> {
   if (!native()) return;
   try { await (on ? PrivacyScreen.enable() : PrivacyScreen.disable()); } catch { /* no disponible */ }

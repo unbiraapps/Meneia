@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { biometricAvailable, hashPin, verifyBiometric } from '../privacy';
+import { biometricAvailable, hashPin, verifyBiometric, withBio, type BioName } from '../privacy';
 import { Icon } from './ui';
 
-/** Pantalla de bloqueo: huella si hay, y PIN de respaldo. */
+/** Pantalla de bloqueo: huella o Face ID si hay, y PIN de respaldo. */
 export function Lock({ pinHash, onUnlock }: { pinHash: string; onUnlock: () => void }) {
   const [pin, setPin] = useState('');
-  const [bio, setBio] = useState(false);
+  const [bio, setBio] = useState<BioName | null>(null);
   const [err, setErr] = useState('');
 
   useEffect(() => {
@@ -27,12 +27,12 @@ export function Lock({ pinHash, onUnlock }: { pinHash: string; onUnlock: () => v
       <span className="logo"><Icon.logo /></span>
       <div className="stack" style={{ alignItems: 'center' }}>
         <h1 style={{ fontSize: 22 }}>Ingresá tu PIN</h1>
-        <span className="muted" style={{ fontSize: 13 }} role="status">{err || (bio ? 'o usá tu huella' : ' ')}</span>
+        <span className="muted" style={{ fontSize: 13 }} role="status">{err || (bio ? `o usá ${withBio(bio)}` : ' ')}</span>
       </div>
       <div className="pin-dots" aria-label={pin.length + ' números ingresados'}>{Array.from({ length: Math.max(4, pin.length) }, (_, i) => <span key={i} className={i < pin.length ? 'on' : ''} />)}</div>
       <div className="keypad">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', bio ? 'bio' : '', '0', 'del'].map((k, i) => k === '' ? <span key={i} /> : (
-          <button key={i} type="button" className={'key' + (k === 'bio' || k === 'del' ? ' alt' : '')} aria-label={k === 'del' ? 'Borrar' : k === 'bio' ? 'Usar huella' : k} onClick={() => press(k)}>{k === 'del' ? '⌫' : k === 'bio' ? 'Huella' : k}</button>
+          <button key={i} type="button" className={'key' + (k === 'bio' || k === 'del' ? ' alt' : '')} aria-label={k === 'del' ? 'Borrar' : k === 'bio' ? 'Usar ' + (bio ?? 'huella') : k} onClick={() => press(k)}>{k === 'del' ? '⌫' : k === 'bio' ? (bio === 'huella' ? 'Huella' : bio) : k}</button>
         ))}
       </div>
     </div>

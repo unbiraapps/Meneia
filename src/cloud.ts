@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { deriveKey, newSalt, open, parseEnvelope, randomNonce, seal, sha256Hex, ITERATIONS, type Envelope } from './crypt';
 import { exportBackup, getSetting, parseBackup, restoreBackup, setSetting, type Backup } from './db';
 import { isNative } from './notify';
+import { isIOS } from './platform';
 
 const env = import.meta.env;
 const URL_ = env.VITE_SUPABASE_URL as string | undefined;
@@ -19,8 +20,12 @@ export interface CloudState { email: string; key: string; salt: string; iter: nu
 
 export const cloudConfigured = () => !!(URL_ && ANON);
 export const cloudAvailable = () => cloudConfigured() && isNative();
-/** Entrar con Google necesita además el ID de cliente web de Google. */
-export const googleAvailable = () => cloudAvailable() && !!GOOGLE;
+/** Entrar con Google (solo Android): necesita además el ID de cliente web de Google. */
+export const googleAvailable = () => cloudAvailable() && !!GOOGLE && !isIOS();
+/** Entrar con Apple (solo iPhone). */
+export const appleAvailable = () => cloudAvailable() && isIOS();
+/** Bundle ID de la app de iPhone: es el "client_id" de Apple que Supabase tiene que aceptar. */
+const APPLE_CLIENT_ID = 'com.unbiraapps.meneia';
 export const MIN_ACCOUNT_PASSWORD = 8;
 const CONFIRMED_URL = 'https://meneia.unbiraapps.com/cuenta-confirmada/';
 
@@ -53,6 +58,18 @@ export async function signInWithGoogle(): Promise<string> {
   const { data, error } = await (await sb()).auth.signInWithIdToken({ provider: 'google', token, nonce: raw });
   if (error) throw error;
   return data.user?.email ?? '';
+}
+
+/** Iniciar sesión con Apple (iPhone). Apple recibe el nonce cifrado; Supabase, el original, para comprobarlo. */
+export async function signInWithApple(): Promise<string> {
+  const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+  const raw = randomNonce();
+  const r = await SignInWithApple.authorize({ clientId: APPLE_CLIENT_ID, redirectURI: 'https://meneia.unbiraapps.com/', scopes: 'email', nonce: await sha256Hex(raw) });
+  const token = r.response?.identityToken;
+  if (!token) throw new Error('Apple no devolvió el ingreso.');
+  const { data, error } = await (await sb()).auth.signInWithIdToken({ provider: 'apple', token, nonce: raw });
+  if (error) throw error;
+  return data.user?.email ?? r.response.email ?? '';
 }
 
 /** Entrar con email y contraseña. */
