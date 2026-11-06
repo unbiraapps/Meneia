@@ -209,3 +209,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--plum)}
 /* Calendario e historial de una hija dentro de Familia */
 .embed>.screen{padding:0;min-height:0;max-width:none}
 .embed .top>h1{display:none}
+/* Firma UnbiraApps: el logo a color va sobre fondo claro, como indica su guía */
+.firma{display:inline-flex;padding:8px 12px;border-radius:12px;background:#F7F5FB}
+.firma img{display:block;width:120px;height:auto}

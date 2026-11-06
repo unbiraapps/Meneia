@@ -9,6 +9,7 @@ import { Avisos } from './Avisos';
 import { Copia } from './Copia';
 import { Pastillas } from './Pastillas';
 import { PlanSettings } from './Plan';
+import unbiraLogo from '../assets/unbiraapps/horizontal-color.png';
 import { PinSheet } from './Pin';
 import { cloudAvailable, currentUser, signOut } from '../cloud';
 import { useEffect } from 'react';
@@ -91,10 +92,10 @@ export function Perfil({ onLock }: { onLock: () => void }) {
         <div className="list">
           {email != null ? (
             <button type="button" className="list-item" onClick={async () => { await signOut(); setEmail(null); toast('Saliste de tu cuenta. Tu copia sigue guardada'); }}>
-              <span style={{ color: 'var(--plum)' }}><Icon.user /></span><span className="grow"><b>Salir de mi cuenta</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
+              <span style={{ color: 'var(--plum)', display: 'grid', width: 20, height: 20 }}><Icon.user /></span><span className="grow"><b>Salir de mi cuenta</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
           ) : (
             <button type="button" className="list-item" onClick={() => setSub('copia')}>
-              <span style={{ color: 'var(--plum)' }}><Icon.user /></span><span className="grow"><b>Mi cuenta</b><small>Opcional: entrar con Google o con email para la copia en la nube</small></span><Icon.chev /></button>
+              <span style={{ color: 'var(--plum)', display: 'grid', width: 20, height: 20 }}><Icon.user /></span><span className="grow"><b>Mi cuenta</b><small>Opcional: entrar con Google o con email para la copia en la nube</small></span><Icon.chev /></button>
           )}
           <button type="button" className="list-item" onClick={() => { if (privacy.lock && privacy.pinHash) onLock(); else setPin(true); }}>
             <span style={{ color: 'var(--plum)' }}><Icon.lock /></span><span className="grow"><b>Cerrar sesión</b><small>{privacy.lock && privacy.pinHash ? 'Bloquea Meneia: para volver a entrar te pide el PIN' : 'Primero elegí un PIN para poder cerrar sesión'}</small></span></button>
@@ -102,8 +103,9 @@ export function Perfil({ onLock }: { onLock: () => void }) {
       </div>
       {pin && <PinSheet onClose={() => setPin(false)} />}
       <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
-      <div className="stack" style={{ alignItems: 'center', gap: 2, paddingTop: 4 }}>
-        {/* Firma de la desarrolladora: cuando esté el logo aprobado de UnbiraApps, va acá arriba del texto, chico */}
+      <div className="stack" style={{ alignItems: 'center', gap: 6, paddingTop: 8 }}>
+        {/* Firma de la desarrolladora. El logo a color es para fondos claros: va sobre una placa clara, sin recolorear */}
+        <span className="firma"><img src={unbiraLogo} alt="UnbiraApps" width={120} height={28} /></span>
         <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>Creado por UnbiraApps</p>
         {ver && <p className="muted" style={{ fontSize: 11.5, margin: 0, opacity: .8 }}>{ver}</p>}
       </div>
