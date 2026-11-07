@@ -29,3 +29,17 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - La firma UnbiraApps de `c9da844` y la corrida 37 ya están verificadas; no duplicar la integración.
 - Textos e ícono de ficha cargados y guardados en borrador de Play. Del pedido de materiales siguen faltando el gráfico 1024x500 y las capturas; conservar datos ficticios.
 - El login implementado todavía espera Supabase y OAuth: faltan los tres secretos. La dueña recibió las pantallas de creación de contraseña de Supabase y activación de 2FA obligatoria de Google Cloud. No presentar la APK 37 como ingreso Google funcionando ni asumir configuración completada. Seguimiento en PARA-CODEX.
+
+
+### Conexiones iPhone y bloqueos (Codex, 2026-11-07)
+
+- App ID registrado: `com.unbiraapps.meneia`, equipo `72L65TRKSY`, descripción Meneia. Sign In with Apple principal e In-App Purchase habilitados.
+- **Ficha iPhone creada, Apple ID `6831992382`**: https://appstoreconnect.apple.com/apps/6831992382/distribution. iOS, nombre Meneia, español (México), SKU meneia-ios, acceso completo.
+- **Compilación procesada en TestFlight: ninguna todavía.** No hay número que informar; no se ejecutó la subida firmada. Faltan la clave API y los secretos de iOS.
+- Textos de versión 1.0 y publicación manual preparados, pero guardado no confirmado. Al abrir el gestor multimedia apareció «¿Seguro que quieres salir de esta página? Los cambios que no hayas guardado se perderán». Después la herramienta informó `Timed out running CDP command "Emulation.setFocusEmulationEnabled" for tab 46`. Se pidió a la dueña Cancelar y Guardar. No se declara la ficha terminada.
+- Capturas de 1320×2868: seleccionar el tamaño grande de iPhone en el gestor. El encabezado del producto y el tamaño mediano predeterminado no corresponden. Error del primer intento: «1-hoy.png: las dimensiones del archivo no son válidas». No hace falta regenerar imágenes por ese intento en la sección equivocada.
+- Apple muestra «Se ha actualizado el contrato de licencia del Apple Developer Program» y solicita que el titular revise y acepte el contrato; en Developer figura antes del 13/11/2026. Pendiente de la dueña, además del acuerdo de apps pagas/banco/impuestos y programa de pequeños desarrolladores.
+- Apple en Supabase sigue DISABLED: el panel abre, pero los clics no abren sus ajustes mientras el navegador está bloqueado. No se habilitó ni se creó un secreto de Apple.
+- Drive: API habilitada y cliente de escritorio propio creado. Reautorización detenida por «Acceso bloqueado: Meneia no completó el proceso de verificación de Google» / «Error 403: access_denied», porque el proyecto OAuth sigue en Prueba. RCLONE_CONF anterior conservado. No se agregó ningún probador.
+- Google Play: textos de docs/tienda/textos.md, gráfico destacado y seis capturas Android guardados como borrador; consola confirmó «Se guardaron los cambios». No enviado a revisión.
+- No se modificó código de app, Código de Estilo ni sus claves. No se agregaron probadores ni se habilitaron enlaces de TestFlight.
