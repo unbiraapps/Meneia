@@ -4,5 +4,6 @@ historial: captura tomada
 familia: captura tomada
 salud: captura tomada
 perfil: captura tomada
+calendario (repetida): captura tomada
 Modelo: iPhone 17 Pro Max
 Sin informes de fallo
