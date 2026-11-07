@@ -70,11 +70,33 @@ El código de anuncios y de "Sin anuncios" ya está en la app y usa IDs de prueb
 - [ ] **Cuentas de prueba de licencias:** en Play Console › Configuración › Prueba de licencias, agregar el Gmail con el que la dueña prueba la app (respuesta "RESPOND_NORMALLY"). Así puede suscribirse sin cobro real desde la versión de la prueba cerrada (instalada desde Play, no desde el Drive: la facturación solo funciona con la app instalada desde Play).
 - [ ] Verificar con esa cuenta: entrar gratis sin tarjeta; cerrar el pago y seguir gratis; suscribirse y que desaparezcan los anuncios; cancelar desde Play y seguir sin anuncios hasta el vencimiento; y que al vencer vuelva a gratis sin perder datos. Anotar el resultado.
 
+## Android · prueba cerrada de Google Play (2026-11-07)
+
+**Compilación para cargar en Play:** commit `95d6cb7`, compilación de GitHub Actions **App de Android #55**, `versionCode 55`, `versionName 1.2`. AAB firmado con la clave de subida (SHA-256 del certificado `6B:AA:2B:9B:CC:E4:CC:0A:3F:2E:09:28:BD:82:45:78:AE:A9:8D:61:C1:44:FB:83:84:96:1C:81:89:57:7A:10`). Se descarga de GitHub › Releases › "Meneia (última versión)" › `meneia.aab` (si hubo commits después, verificar en el registro de la corrida #55 o en el artefacto de esa corrida). La APK de prueba equivalente está en el Drive: `Meneia/APK/Meneia 1.2 (55).apk` (anuncios de prueba).
+
+Lo que el código ya resuelve (revisado y con pruebas, 70 en verde):
+- Entrar gratis sin tarjeta y sin cuenta: "Continuar gratis con anuncios"; el cobro solo se abre con "Suscribirme".
+- Cuenta opcional con Google o email y contraseña (Perfil › Copia de seguridad), copia cifrada en el celular, restauración y "Borrar mi copia y mi cuenta" (llama a `borrar_mi_cuenta`).
+- Suscripción `sin_anuncios_mensual`, plan `mensual`: compra, pago pendiente, "Restaurar suscripción", "Administrar o cancelar" (abre Play), cancelada sigue sin anuncios hasta el fin del mes pagado, vencida vuelve a gratis sin tocar datos. Las compras que quedaron sin reconocer se reconocen al abrir la app.
+- Política de privacidad coherente con cuenta y copia opcionales (`/privacidad/`), páginas `/borrar-cuenta/`, `/cuenta-confirmada/`, `/nueva-clave/`, `/soporte/`.
+- La compilación #55 ya tiene `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `GOOGLE_WEB_CLIENT_ID`: la copia en la nube aparece activa.
+
+Bloqueos (conexiones y formularios, sin cambios de código):
+- [ ] **Correos de Supabase (SMTP propio).** Sin esto, "Crear cuenta" con email no manda el mail de confirmación y "Me olvidé la contraseña" no llega. Pasos en la sección "Copia cifrada…", 3b.
+- [ ] **Google OAuth en producción.** Publicar la pantalla de consentimiento y tener clientes OAuth de **Android** para `app.meneia` con el SHA-1 de la clave de subida **y** el SHA-1 de la clave de firma de apps de Play (Play Console › Integridad de la app). Sin el segundo, "Entrar con Google" falla en la versión instalada desde Play aunque funcione en la del Drive.
+- [ ] **URLs de Supabase.** Site URL `https://meneia.unbiraapps.com` y Redirect URLs `…/cuenta-confirmada/` y `…/nueva-clave/` (sección 3b).
+- [ ] **Suscripción en Play.** `sin_anuncios_mensual` activa con el plan base `mensual` activo (USD 9,99, renovación mensual, sin prueba gratis). Testers de licencias agregados (Configuración › Pruebas de licencias) para probar la compra sin cobro.
+- [ ] **Prueba cerrada.** Subir el AAB #55 al track de prueba cerrada, con la lista de testers que defina la dueña. No pasar a producción.
+- [ ] **Seguridad de los datos y Contenido de la app.** Declarar, como opcionales: dirección de email (cuenta) e información de salud (copia en la nube cifrada en tránsito y en el celular, el usuario puede pedir que se borre); datos de AdMob (ID del dispositivo, interacción, diagnóstico; publicidad). URL de borrado: `https://meneia.unbiraapps.com/borrar-cuenta/`. Acceso para revisión: la app funciona sin cuenta.
+- [ ] **Ficha de Play.** Sección "Fichas de las tiendas: materiales listos".
+- [ ] **Drive.** Sección "Drive: client_id propio para rclone" (si deja de andar, las APK no llegan al Drive).
+- [ ] **Avisar a Claude** en `docs/PARA-CLAUDE.md` si algo de esto falla en la prueba, con el error textual.
+
 ## iPhone · etapa 2: conectar cuentas (2026-11-06)
 
 Contexto: `docs/IOS.md`. La app de iPhone ya está preparada (etapa 1). Usar la cuenta Apple Developer y App Store Connect que ya existen (equipo `72L65TRKSY`, las mismas de Código de Estilo). No tocar Código de Estilo ni sus claves. No enviar nada a revisión de Apple. No pegar claves en el repo ni en el chat.
 
-- [ ] **1. Identificador.** developer.apple.com › Certificates, Identifiers & Profiles › Identifiers › nuevo App ID explícito `com.unbiraapps.meneia`, descripción "Meneia". Capacidades: **Sign In with Apple** (como App ID principal). In-App Purchase viene activada.
+- [x] **1. Identificador.** (Codex informó el 7/11: App ID `com.unbiraapps.meneia` creado con Sign In with Apple e In-App Purchase.) developer.apple.com › Certificates, Identifiers & Profiles › Identifiers › nuevo App ID explícito `com.unbiraapps.meneia`, descripción "Meneia". Capacidades: **Sign In with Apple** (como App ID principal). In-App Purchase viene activada.
 - [ ] **2. Ficha en App Store Connect.** Apps › nueva app iOS: nombre "Meneia" (si está tomado, "Meneia: tu ciclo"), idioma principal español (el mismo que Código de Estilo), bundle `com.unbiraapps.meneia`, SKU `meneia-ios`, acceso completo. Anotar acá el Apple ID numérico. Publicación de versiones: **manual**.
 - [ ] **3. Acuerdo de apps pagas.** Business › Paid Apps: la dueña acepta el acuerdo y carga cuenta bancaria y formulario de impuestos ella misma (Codex la guía, no escribe sus datos). Sin esto no se pueden crear suscripciones.
 - [ ] **4. Programa para pequeños desarrolladores.** https://developer.apple.com/app-store/small-business-program/enroll/ (sirve para todas las apps de la cuenta). Lo envía la dueña.
