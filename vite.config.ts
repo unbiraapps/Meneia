@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => mode === 'artifact'
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png}'],
-          navigateFallbackDenylist: [/^\/(nueva-clave|cuenta-confirmada|privacidad|borrar-cuenta)\//],
+          navigateFallbackDenylist: [/^\/(nueva-clave|cuenta-confirmada|privacidad|borrar-cuenta|soporte)\//],
           runtimeCaching: [
             { urlPattern: /^https:\/\/fonts\.googleapis\.com\//, handler: 'StaleWhileRevalidate', options: { cacheName: 'fuentes-css' } },
             { urlPattern: /^https:\/\/fonts\.gstatic\.com\//, handler: 'CacheFirst', options: { cacheName: 'fuentes', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 }, cacheableResponse: { statuses: [0, 200] } } },

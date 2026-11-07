@@ -33,8 +33,9 @@ function Shell() {
     const tabs: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
     let off: (() => void) | undefined;
     import('@capacitor/app').then(({ App: Cap }) => Cap.addListener('appUrlOpen', e => {
-      const t = e.url.replace(/^meneia:\/\//, '').replace(/\/$/, '') as Tab;
-      if (tabs.includes(t)) setTab(t);
+      const t = e.url.replace(/^meneia:\/\//, '').replace(/\/$/, '');
+      if (t === 'familia') { setTab('perfil'); setFamFirst(true); }
+      else if (tabs.includes(t as Tab)) { setFamFirst(false); setTab(t as Tab); }
     })).then(h => { off = () => h.remove(); });
     return () => off?.();
   }, []);

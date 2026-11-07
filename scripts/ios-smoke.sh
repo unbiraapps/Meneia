@@ -6,9 +6,17 @@ mkdir -p evidence
 APP="build/Build/Products/Debug-iphonesimulator/App.app"
 BUNDLE=com.unbiraapps.meneia
 test -d "$APP"
-DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for rt,a in sorted(d["devices"].items(), reverse=True) for x in a if x.get("isAvailable") and x["name"].startswith("iPhone")))')
+# iPhone de 6,9 pulgadas (Pro Max): sus capturas (1320×2868) son las que pide el App Store.
+DEVICE=$(xcrun simctl list devices available -j | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+devs=[x for rt,a in sorted(d["devices"].items(), reverse=True) for x in a if x.get("isAvailable") and x["name"].startswith("iPhone")]
+pm=[x for x in devs if "Pro Max" in x["name"]]
+print((pm or devs)[0]["udid"])')
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
 xcrun simctl bootstatus "$DEVICE" -b
+# Barra de estado prolija para las capturas de la tienda
+xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularMode active --cellularBars 4 || true
 xcrun simctl install "$DEVICE" "$APP"
 # Recién encendido, el simulador a veces rechaza abrir apps ("denied by service delegate"): se reintenta.
 sleep 15
@@ -23,7 +31,7 @@ sleep 10
 xcrun simctl io "$DEVICE" screenshot "evidence/iphone-1-hoy.png"; echo "hoy: captura tomada" | tee -a evidence/resultado.txt
 # La compilación de capturas cambia de pestaña al abrir meneia://<pestaña>
 n=2
-for t in calendario historial salud perfil; do
+for t in calendario historial familia salud perfil; do
   xcrun simctl openurl "$DEVICE" "meneia://$t" || true
   sleep 4
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-$n-$t.png"; echo "$t: captura tomada" | tee -a evidence/resultado.txt

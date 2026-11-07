@@ -21,6 +21,9 @@ export async function seedDemo(): Promise<void> {
   await saveSymptoms({ profileId: SELF_ID, date: addDays(today, -40), pain: 2, body: ['Cólicos', 'Dolor de cabeza'], mood: ['Irritable'], note: '' });
   const sofi = await saveProfile({ name: 'Sofi', kind: 'child', color: '#9FD8C8', birthDate: '2012-03-12', trying: false, notYet: false, alertDays: 2 });
   for (const back of [3, 31, 60]) await savePeriod({ profileId: sofi, start: addDays(today, -back), end: addDays(today, -back + 4), flow: 'Normal', note: '' });
+  await setSetting('health', { lastConsult: '', controlMonths: 12, controlOn: true,
+    questions: [{ text: '¿Cuándo me toca el PAP?', done: false }, { text: 'Cólicos fuertes los primeros días', done: false }],
+    consults: [{ date: addDays(today, -150), reason: 'Control anual', note: '' }, { date: addDays(today, -520), reason: 'Por mi ciclo', note: '' }] });
   await setSetting('familyMode', true);
   // Sin anuncios en las capturas
   await setSetting('ads', { plan: 'premium', installDate: addDays(today, -60), lastInterstitial: '', adFreeUntil: '' });

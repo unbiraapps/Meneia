@@ -26,7 +26,7 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 <body>
 <main>
   <header>
-    <p class="muted">Meneia · actualizado el 5 de noviembre de 2026 (copia cifrada en la nube)</p>
+    <p class="muted">Meneia · actualizado el 6 de noviembre de 2026 (app de iPhone)</p>
     <h1>Política de privacidad</h1>
   </header>
   <p>Meneia es una app para anotar el ciclo menstrual. Está hecha para que tus datos de salud queden en tu celular y en ningún otro lado.</p>
@@ -54,7 +54,7 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 
   <section>
     <h2>Copia en la nube (opcional)</h2>
-    <p>Si la activás, entrás con tu cuenta de Google o con un email y una contraseña, y elegís una <b>contraseña de copia</b>. Antes de salir del celular, tus datos se cifran con esa contraseña (AES-GCM de 256 bits, con una clave derivada por PBKDF2). Al servidor llega solo ese bloque cifrado: ni Meneia ni nadie puede leerlo sin tu contraseña, que nunca se envía.</p>
+    <p>Si la activás, entrás con tu cuenta de Google (Android), con Apple (iPhone) o con un email y una contraseña, y elegís una <b>contraseña de copia</b>. Antes de salir del celular, tus datos se cifran con esa contraseña (AES-GCM de 256 bits, con una clave derivada por PBKDF2). Al servidor llega solo ese bloque cifrado: ni Meneia ni nadie puede leerlo sin tu contraseña, que nunca se envía.</p>
     <ul>
       <li>De tu cuenta guardamos tu email y un identificador de cuenta, para saber de quién es cada copia. No usamos tu email para nada más.</li>
       <li>La copia cifrada se guarda en Supabase, un servicio de bases de datos, y solo la puede pedir tu cuenta.</li>
@@ -64,7 +64,7 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 
   <section>
     <h2>Avisos y bloqueo</h2>
-    <p>Los recordatorios se programan en el celular. Por defecto llegan con texto neutro ("Tenés un recordatorio"), sin sonido y ocultos en la pantalla de bloqueo. Si activás el bloqueo, el PIN se guarda cifrado (como un código que no se puede revertir) y la huella la maneja el propio celular: Meneia nunca la ve.</p>
+    <p>Los recordatorios se programan en el celular. Por defecto llegan con texto neutro ("Tenés un recordatorio"), sin sonido y ocultos en la pantalla de bloqueo. Si activás el bloqueo, el PIN se guarda cifrado (como un código que no se puede revertir) y la huella, Face ID o Touch ID los maneja el propio celular: Meneia nunca los ve.</p>
   </section>
 
   <section>
@@ -74,11 +74,11 @@ section{background:var(--surface);border:1px solid var(--line);border-radius:18p
 
   <section>
     <h2>Publicidad</h2>
-    <p>La versión gratuita muestra anuncios de Google AdMob. Son siempre <b>no personalizados</b>: no se eligen según lo que anotás ni según tu actividad en otras apps. Para mostrarlos, AdMob recibe datos técnicos del celular (por ejemplo, el identificador de publicidad, el modelo y la dirección IP), según la <a href="https://policies.google.com/technologies/partner-sites?hl=es">política de Google</a>. Meneia nunca le pasa a AdMob tus períodos, síntomas, pastillas, consultas ni perfiles.</p>
+    <p>La versión gratuita muestra anuncios de Google AdMob. Son siempre <b>no personalizados</b>: no se eligen según lo que anotás ni según tu actividad en otras apps. Para mostrarlos, AdMob recibe datos técnicos del celular (por ejemplo, un identificador del dispositivo, el modelo y la dirección IP). En iPhone, Meneia no pide permiso para rastrearte entre apps y no usa el identificador de publicidad de Apple, según la <a href="https://policies.google.com/technologies/partner-sites?hl=es">política de Google</a>. Meneia nunca le pasa a AdMob tus períodos, síntomas, pastillas, consultas ni perfiles.</p>
     <ul>
       <li>No hay anuncios durante los primeros 7 días, en la pantalla de bloqueo, en los avisos ni en los perfiles de hijas.</li>
       <li>Los anuncios de pantalla completa aparecen cada tanto, después de guardar algo o al pasar entre pantallas, con al menos 30 minutos entre uno y otro.</li>
-      <li>"Sin anuncios" es una suscripción mensual de Google Play con renovación automática. Se puede cancelar en cualquier momento desde Google Play y sigue sin anuncios hasta el final del mes pagado. El pago lo procesa Google: Meneia no ve ni guarda datos de tarjetas. La versión gratis tiene todas las funciones y no pide ningún medio de pago.</li>
+      <li>"Sin anuncios" es una suscripción mensual con renovación automática de Google Play (Android) o del App Store (iPhone). Se puede cancelar en cualquier momento desde la tienda (en iPhone, al menos 24 horas antes de la renovación) y sigue sin anuncios hasta el final del mes pagado. El pago lo procesa Google o Apple: Meneia no ve ni guarda datos de tarjetas. La versión gratis tiene todas las funciones y no pide ningún medio de pago.</li>
     </ul>
   </section>
 
