@@ -88,6 +88,19 @@ Contexto: `docs/IOS.md`. La app de iPhone ya está preparada (etapa 1). Usar la 
 - [ ] **10. Primera subida.** GitHub › Actions › "App de iPhone" › Run workflow con **subir** marcado (anuncios reales sin marcar). Confirmar en el registro "Subida a TestFlight" y en App Store Connect que la compilación se procesa. No agregar probadores ni enviar a Beta App Review: eso es la etapa 3.
 - [ ] **11. Avisar a Claude** en `docs/PARA-CLAUDE.md` con el Apple ID de la ficha y el número de compilación procesada (o el error textual si falla).
 
+## Fichas de las tiendas: materiales listos (2026-11-06)
+
+Todo está en el repo. Cargar sin enviar nada a revisión (ni en Play ni en Apple) hasta que la dueña lo pida.
+
+- [ ] **Google Play (ficha principal de la tienda).** Textos de `docs/tienda/textos.md` (sección Google Play y descripción larga). Gráfico destacado `store-assets/android/grafico-destacado.png`. Capturas de teléfono `store-assets/android/1-hoy.png` a `6-como-estoy.png` (1080×1920). Ícono `public/pwa-512.png`. Sitio web `https://meneia.unbiraapps.com/soporte/`.
+- [ ] **App Store (después de la etapa 2 de iPhone, cuando exista la ficha).** En la versión 1.0, idioma español:
+  - Textos, palabras clave, URL de soporte y de privacidad, copyright y categorías: `docs/tienda/textos.md` (sección App Store).
+  - Capturas de iPhone 6,9": `store-assets/ios/1-hoy.png` a `6-perfil.png` (1320×2868). No hace falta iPad: la app es solo para iPhone.
+  - Clasificación por edad y privacidad de la app: tablas de `docs/tienda/textos.md`. Revisar la guía de AdMob enlazada ahí antes de guardar la privacidad.
+  - Información para la revisión: notas de `docs/tienda/textos.md`; cuenta de demostración cuando la copia en la nube esté activa (la contraseña la escribe la dueña).
+  - Suscripción: nombre y descripción de `docs/tienda/textos.md`; captura para la revisión `store-assets/ios/6-perfil.png`.
+  - Publicación de la versión: **manual**. No enviar a revisión.
+
 ## Drive: client_id propio para rclone (2026-11-05, urgente)
 
 El log de la subida al Drive avisa: "This remote uses rclone's shared Google Drive client_id, which is being retired and will stop working during 2026". Si deja de andar, las APK no llegan más al Drive.
