@@ -1,7 +1,8 @@
-7s: abierta
-15s: abierta
-23s: NO está corriendo
-31s: NO está corriendo
-39s: NO está corriendo
-46s: abierta
+7s: captura tomada
+15s: captura tomada
+23s: captura tomada
+31s: captura tomada
+39s: captura tomada
+46s: captura tomada
 Modelo: iPhone 17 Pro
+Sin informes de fallo
