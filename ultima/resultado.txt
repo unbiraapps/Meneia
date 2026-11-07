@@ -1,8 +1,8 @@
-7s: captura tomada
-15s: captura tomada
-23s: captura tomada
-31s: captura tomada
-39s: captura tomada
-46s: captura tomada
-Modelo: iPhone 17 Pro
+hoy: captura tomada
+calendario: captura tomada
+historial: captura tomada
+familia: captura tomada
+salud: captura tomada
+perfil: captura tomada
+Modelo: iPhone 17 Pro Max
 Sin informes de fallo
