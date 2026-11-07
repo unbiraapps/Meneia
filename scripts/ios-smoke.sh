@@ -15,6 +15,12 @@ pm=[x for x in devs if "Pro Max" in x["name"]]
 print((pm or devs)[0]["udid"])')
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
 xcrun simctl bootstatus "$DEVICE" -b
+# Simulador en español de Argentina (fechas y textos del sistema), y se reinicia para que tome el cambio
+xcrun simctl spawn "$DEVICE" defaults write .GlobalPreferences AppleLanguages -array es-AR es
+xcrun simctl spawn "$DEVICE" defaults write .GlobalPreferences AppleLocale -string es_AR
+xcrun simctl shutdown "$DEVICE"
+xcrun simctl boot "$DEVICE"
+xcrun simctl bootstatus "$DEVICE" -b
 # Barra de estado prolija para las capturas de la tienda
 xcrun simctl status_bar "$DEVICE" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularMode active --cellularBars 4 || true
 xcrun simctl install "$DEVICE" "$APP"
@@ -38,6 +44,14 @@ for t in hoy calendario historial familia salud perfil; do
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-$n-$t.png"; echo "$t: captura tomada" | tee -a evidence/resultado.txt
   n=$((n+1))
 done
+# Al rato de encender, iOS muestra avisos propios: la captura del calendario se repite al final, ya sin avisos.
+sleep 20
+echo "calendario" > "$APP/public/demo-tab.txt"
+xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+xcrun simctl install "$DEVICE" "$APP"
+xcrun simctl launch "$DEVICE" "$BUNDLE" > /dev/null
+sleep 12
+xcrun simctl io "$DEVICE" screenshot "evidence/iphone-2-calendario.png"; echo "calendario (repetida): captura tomada" | tee -a evidence/resultado.txt
 find "$HOME/Library/Logs/DiagnosticReports" -name 'App*.ips' -newermt "@$START" -exec cp {} evidence/ \; 2>/dev/null || true
 echo "Modelo: $(xcrun simctl list devices -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["name"] for a in d["devices"].values() for x in a if x["udid"]==sys.argv[1]))' "$DEVICE")" | tee -a evidence/resultado.txt
 # Si la app se cerró sola, iOS deja un informe de fallo (.ips): eso sí es un error.
