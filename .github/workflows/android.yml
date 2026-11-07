@@ -8,6 +8,10 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+# Una compilación a la vez: dos seguidas chocaban al publicar la misma versión
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   apk:
     runs-on: ubuntu-latest
