@@ -19,8 +19,8 @@ for try in 1 2 3 4 5; do
   sleep 20
 done
 START=$(date +%s)
-# La compilación de capturas recorre las pestañas cada 6 s: Hoy, Calendario, Historial, Salud, Perfil.
-for at in 4 10 16 22 28 40; do
+# La compilación de capturas cambia de pestaña cada 8 s desde que carga la página: Hoy, Calendario, Historial, Salud, Perfil.
+for at in 7 15 23 31 39 46; do
   wait=$(( START + at - $(date +%s) )); if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-${at}s.png"
   if xcrun simctl spawn "$DEVICE" launchctl list 2>/dev/null | grep -q "$BUNDLE"; then echo "${at}s: abierta" ; else echo "${at}s: NO está corriendo"; fi | tee -a evidence/resultado.txt

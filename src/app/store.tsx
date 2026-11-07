@@ -106,6 +106,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => { refresh(); }, [refresh]);
   // La suscripción se verifica con Google Play al abrir y al volver a la app: nunca queda "premium para siempre".
   const checkSub = useCallback(async () => {
+    if (import.meta.env.VITE_DEMO === '1') return; // capturas: se queda sin anuncios
     const st = await subscriptionStatus();
     if (st === null) return; // sin conexión o en la web: se mantiene lo último conocido
     setState(s => {

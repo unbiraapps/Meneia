@@ -27,13 +27,14 @@ function Shell() {
   const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
   // Solo en la compilación de capturas (VITE_DEMO_TOUR=1): recorre las pestañas sola, una cada 6 segundos.
+  // El reloj cuenta desde que la página cargó, así un re-montaje no reinicia el recorrido (8 s por pestaña).
   useEffect(() => {
     if (import.meta.env.VITE_DEMO_TOUR !== '1') return;
     const order: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
-    let i = 0;
-    const t = setInterval(() => { i = (i + 1) % order.length; setTab(order[i]); window.scrollTo(0, 0); }, 6000);
+    const t = setInterval(() => { const i = Math.floor(performance.now() / 8000) % order.length; setTab(order[i]); }, 500);
     return () => clearInterval(t);
   }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, [tab]);
   const [famFirst, setFamFirst] = useState(false);
   const [covered, setCovered] = useState(false);
   const [locked, setLocked] = useState(true);
