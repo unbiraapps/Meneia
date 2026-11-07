@@ -51,3 +51,36 @@ export function interstitialAllowed(s: AdState, c: AdContext, now: number): bool
 
 /** Mirar un video da una semana sin anuncios (hoy y los 6 días siguientes). */
 export const rewardUntil = (today: string) => addDays(today, 6);
+
+// ---------- Suscripción: decisiones puras (con pruebas) ----------
+
+/** Lo que importa de una compra que informa la tienda (Google Play o App Store). */
+export interface StorePurchase {
+  productIdentifier?: string;
+  isActive?: boolean;
+  subscriptionState?: string;
+  expirationDate?: string;
+  purchaseState?: string | number | null;
+  isAcknowledged?: boolean;
+  purchaseToken?: string;
+  willCancel?: boolean | null;
+}
+
+/** La compra vigente de "Sin anuncios", o undefined. Pendiente, vencida, en espera o reembolsada no cuenta. */
+export function activePurchase<T extends StorePurchase>(purchases: T[], productId: string, now: number): T | undefined {
+  return purchases.filter(p => p.productIdentifier === productId).find(p => {
+    if (p.isActive === false) return false;
+    if (p.subscriptionState && !['subscribed', 'inGracePeriod', 'unknown'].includes(p.subscriptionState)) return false;
+    if (p.expirationDate && Date.parse(p.expirationDate) < now) return false;
+    if (p.purchaseState != null && !['1', 'PURCHASED', 'purchased'].includes(String(p.purchaseState))) return false;
+    return true;
+  });
+}
+
+/** Plan después de consultar la tienda. null = no se pudo consultar: queda lo último conocido.
+ *  Nunca toca los datos: vencer o cancelar solo vuelve a "gratis con anuncios". */
+export function planAfterCheck(s: AdState, st: { active: boolean; willCancel: boolean; until: string | null } | null): AdState {
+  if (st === null) return s;
+  const plan: Plan = st.active ? 'premium' : s.plan === 'premium' ? 'free' : s.plan;
+  return { ...s, plan, subUntil: st.until, willCancel: st.willCancel };
+}

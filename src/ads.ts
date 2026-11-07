@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { AdMob, BannerAdPosition, BannerAdSize, MaxAdContentRating } from '@capacitor-community/admob';
 import { NativePurchases, PURCHASE_TYPE } from '@capgo/native-purchases';
 import { isIOS } from './platform';
+import { activePurchase, type StorePurchase } from './adrules';
 
 const native = () => Capacitor.isNativePlatform();
 
@@ -106,7 +107,7 @@ export async function subscriptionPrice(): Promise<SubPrice | null> {
 
 /** Abre la pantalla de suscripción de la tienda. Solo se llama cuando la persona toca "Suscribirme".
  *  El pago lo pide Google o Apple, nunca la app. */
-export async function subscribe(): Promise<'ok' | 'cancel' | 'error'> {
+export async function subscribe(): Promise<'ok' | 'cancel' | 'pending' | 'error'> {
   if (!native()) return 'error';
   try {
     const t = await NativePurchases.purchaseProduct(IOS
@@ -115,6 +116,7 @@ export async function subscribe(): Promise<'ok' | 'cancel' | 'error'> {
     return t?.productIdentifier === SUB_ID ? 'ok' : 'cancel';
   } catch (e) {
     const msg = String((e as { message?: string })?.message ?? e).toLowerCase();
+    if (msg.includes('pending')) return 'pending'; // pago en efectivo o tarjeta en revisión: llega después
     return msg.includes('cancel') ? 'cancel' : 'error';
   }
 }
@@ -126,16 +128,12 @@ export async function subscriptionStatus(): Promise<SubStatus | null> {
   if (!native()) return null;
   try {
     const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.SUBS, onlyCurrentEntitlements: true });
-    const now = Date.now();
-    const mine = purchases.filter(p => p.productIdentifier === SUB_ID);
-    const active = mine.find(p => {
-      if (p.isActive === false) return false;
-      if (p.subscriptionState && !['subscribed', 'inGracePeriod', 'unknown'].includes(p.subscriptionState)) return false;
-      if (p.expirationDate && Date.parse(p.expirationDate) < now) return false;
-      if (p.purchaseState != null && !['1', 'PURCHASED', 'purchased'].includes(String(p.purchaseState))) return false;
-      return true;
-    });
+    const active = activePurchase(purchases as StorePurchase[], SUB_ID, Date.now());
     if (!active) return { active: false, willCancel: false, until: null };
+    // Google reembolsa sola una compra no reconocida a los 3 días: si quedó sin reconocer (la app se cerró justo), se reconoce acá.
+    if (!IOS && active.isAcknowledged === false && active.purchaseToken) {
+      try { await NativePurchases.acknowledgePurchase({ purchaseToken: active.purchaseToken }); } catch { /* se reintenta en la próxima consulta */ }
+    }
     return { active: true, willCancel: active.willCancel === true, until: active.expirationDate ? active.expirationDate.slice(0, 10) : null };
   } catch { return null; }
 }

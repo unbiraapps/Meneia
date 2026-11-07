@@ -6,7 +6,7 @@ import {
 } from '../calc';
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
-import { DEFAULT_ADS, NAV_EVERY, interstitialAllowed, type AdState } from '../adrules';
+import { DEFAULT_ADS, NAV_EVERY, interstitialAllowed, planAfterCheck, type AdState } from '../adrules';
 import { ADS_TESTING, preloadInterstitial, showInterstitial, subscriptionStatus } from '../ads';
 
 export interface Consult { date: string; reason: string; note: string }
@@ -110,8 +110,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const st = await subscriptionStatus();
     if (st === null) return; // sin conexión o en la web: se mantiene lo último conocido
     setState(s => {
-      const plan = st.active ? 'premium' as const : s.ads.plan === 'premium' ? 'free' as const : s.ads.plan;
-      const a = { ...s.ads, plan, subUntil: st.until, willCancel: st.willCancel };
+      const a = planAfterCheck(s.ads, st);
       if (a.plan === s.ads.plan && a.subUntil === s.ads.subUntil && a.willCancel === s.ads.willCancel) return s;
       setSetting('ads', a);
       return { ...s, ads: a };

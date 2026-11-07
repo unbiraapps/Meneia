@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fmtShort } from '../calc';
+import { planAfterCheck } from '../adrules';
 import { manageSubscription, restoreSubscription, showRewarded, subscribe, subscriptionPrice, type SubPrice } from '../ads';
 import { isIOS, store, storeAccount } from '../platform';
 import { GRACE_DAYS, rewardUntil } from '../adrules';
@@ -43,6 +44,7 @@ export function SubscribeButton({ onDone, label }: { onDone?: () => void; label?
     setBusy(false);
     if (r === 'ok') { await setAds({ ...ads, plan: 'premium' }); toast('Listo: ya no vas a ver anuncios'); onDone?.(); }
     else if (r === 'cancel') toast('No se hizo ningún cobro. Seguís con la versión gratis.');
+    else if (r === 'pending') toast('Tu pago está pendiente. Cuando se confirme, los anuncios se van solos. Mientras, seguís gratis.');
     else toast(`No se pudo abrir ${store()}. Seguís con la versión gratis.`);
   }
   return <button type="button" className="btn ghost" disabled={busy} onClick={go}>{label ?? `Suscribirme · ${price ? price.price + ' por mes' : 'mensual'}`}</button>;
@@ -62,7 +64,7 @@ export function PlanSettings() {
     const st = await restoreSubscription();
     setBusy(false);
     if (st === null) return toast(`No se pudo consultar ${store()}. Probá con conexión a internet.`);
-    await setAds({ ...ads, plan: st.active ? 'premium' : 'free' });
+    await setAds(planAfterCheck(ads, st));
     toast(st.active ? 'Suscripción activa: sin anuncios' : `No hay una suscripción activa con ${storeAccount()}`);
   }
   async function reward() {
