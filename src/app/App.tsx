@@ -27,17 +27,14 @@ function Shell() {
   const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
   // Solo en la compilación de capturas (VITE_DEMO_TOUR=1): recorre las pestañas sola, una cada 6 segundos.
-  // Solo en la compilación de capturas: el simulador abre cada pestaña con un enlace meneia://<pestaña>.
+  // Solo en la compilación de capturas: el simulador escribe la pestaña a mostrar en demo-tab.txt (dentro de la app de prueba).
   useEffect(() => {
     if (import.meta.env.VITE_DEMO_TOUR !== '1') return;
-    const tabs: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
-    let off: (() => void) | undefined;
-    import('@capacitor/app').then(({ App: Cap }) => Cap.addListener('appUrlOpen', e => {
-      const t = e.url.replace(/^meneia:\/\//, '').replace(/\/$/, '');
+    fetch('demo-tab.txt').then(r => (r.ok ? r.text() : '')).then(t => {
+      t = t.trim();
       if (t === 'familia') { setTab('perfil'); setFamFirst(true); }
-      else if (tabs.includes(t as Tab)) { setFamFirst(false); setTab(t as Tab); }
-    })).then(h => { off = () => h.remove(); });
-    return () => off?.();
+      else if (['hoy', 'calendario', 'historial', 'salud', 'perfil'].includes(t)) setTab(t as Tab);
+    }).catch(() => {});
   }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [tab]);
   const [famFirst, setFamFirst] = useState(false);
