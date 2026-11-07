@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Meneia</string>
-    <string name="title_activity_main">Meneia</string>
-    <string name="package_name">app.meneia</string>
-    <string name="custom_url_scheme">app.meneia</string>
-</resources>
