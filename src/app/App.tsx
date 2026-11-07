@@ -27,12 +27,16 @@ function Shell() {
   const navRef = useRef<HTMLElement>(null);
   const [tab, setTab] = useState<Tab>('hoy');
   // Solo en la compilación de capturas (VITE_DEMO_TOUR=1): recorre las pestañas sola, una cada 6 segundos.
-  // El reloj cuenta desde que la página cargó, así un re-montaje no reinicia el recorrido (8 s por pestaña).
+  // Solo en la compilación de capturas: el simulador abre cada pestaña con un enlace meneia://<pestaña>.
   useEffect(() => {
     if (import.meta.env.VITE_DEMO_TOUR !== '1') return;
-    const order: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
-    const t = setInterval(() => { const i = Math.floor(performance.now() / 8000) % order.length; setTab(order[i]); }, 500);
-    return () => clearInterval(t);
+    const tabs: Tab[] = ['hoy', 'calendario', 'historial', 'salud', 'perfil'];
+    let off: (() => void) | undefined;
+    import('@capacitor/app').then(({ App: Cap }) => Cap.addListener('appUrlOpen', e => {
+      const t = e.url.replace(/^meneia:\/\//, '').replace(/\/$/, '') as Tab;
+      if (tabs.includes(t)) setTab(t);
+    })).then(h => { off = () => h.remove(); });
+    return () => off?.();
   }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [tab]);
   const [famFirst, setFamFirst] = useState(false);

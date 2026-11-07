@@ -19,11 +19,15 @@ for try in 1 2 3 4 5; do
   sleep 20
 done
 START=$(date +%s)
-# La compilación de capturas cambia de pestaña cada 8 s desde que carga la página: Hoy, Calendario, Historial, Salud, Perfil.
-for at in 7 15 23 31 39 46; do
-  wait=$(( START + at - $(date +%s) )); if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
-  xcrun simctl io "$DEVICE" screenshot "evidence/iphone-${at}s.png"
-  echo "${at}s: captura tomada" | tee -a evidence/resultado.txt
+sleep 10
+xcrun simctl io "$DEVICE" screenshot "evidence/iphone-1-hoy.png"; echo "hoy: captura tomada" | tee -a evidence/resultado.txt
+# La compilación de capturas cambia de pestaña al abrir meneia://<pestaña>
+n=2
+for t in calendario historial salud perfil; do
+  xcrun simctl openurl "$DEVICE" "meneia://$t" || true
+  sleep 4
+  xcrun simctl io "$DEVICE" screenshot "evidence/iphone-$n-$t.png"; echo "$t: captura tomada" | tee -a evidence/resultado.txt
+  n=$((n+1))
 done
 find "$HOME/Library/Logs/DiagnosticReports" -name 'App*.ips' -newermt "@$START" -exec cp {} evidence/ \; 2>/dev/null || true
 echo "Modelo: $(xcrun simctl list devices -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["name"] for a in d["devices"].values() for x in a if x["udid"]==sys.argv[1]))' "$DEVICE")" | tee -a evidence/resultado.txt
