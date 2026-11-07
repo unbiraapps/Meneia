@@ -1,7 +1,7 @@
-4s: abierta
-10s: abierta
-16s: abierta
-22s: abierta
-28s: abierta
-40s: abierta
+7s: abierta
+15s: abierta
+23s: NO está corriendo
+31s: NO está corriendo
+39s: NO está corriendo
+46s: abierta
 Modelo: iPhone 17 Pro
