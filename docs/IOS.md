@@ -6,10 +6,10 @@ Codex se usa para las conexiones con cuentas que ya existen (Apple, App Store Co
 
 | Etapa | Qué | Quién | Estado |
 | --- | --- | --- | --- |
-| 1 | Preparar la app para iPhone y compilarla en la nube sin firma | Claude | En curso |
+| 1 | Preparar la app para iPhone y compilarla en la nube sin firma | Claude | Hecha (6/11/2026) |
 | 2 | Conectar cuentas: identificador, ficha, acuerdo de apps pagas, suscripción, AdMob iOS, Apple en Supabase, clave de API y secretos | Codex + dueña | Esperando a Codex (`docs/PARA-CODEX.md`, sección iPhone) |
 | 3 | Primera compilación firmada en TestFlight y prueba en el iPhone de la amiga | Claude + Codex + dueña | Pendiente |
-| 4 | Ficha, capturas, privacidad, edad, cuenta de demostración y envío a revisión | Claude (materiales) + Codex (carga) | Pendiente |
+| 4 | Ficha, capturas, privacidad, edad, cuenta de demostración y envío a revisión | Claude (materiales) + Codex (carga) | Materiales listos (`docs/tienda/textos.md`, `store-assets/ios/`); falta cargarlos y enviar |
 
 ## Etapa 1: detalle
 
@@ -20,7 +20,9 @@ Codex se usa para las conexiones con cuentas que ya existen (Apple, App Store Co
 - [x] Código: textos de tienda según el celular (`src/platform.ts`), IDs de AdMob de iPhone, producto `com.unbiraapps.meneia.sinanuncios.mensual`, «Restaurar compras», enlaces a términos de Apple y privacidad, canales de avisos solo en Android, tope de 60 avisos pendientes en iPhone, Face ID / Touch ID en los textos.
 - [x] Ícono 1024×1024 RGB sin transparencia y pantalla de inicio oscura (`npm run ios:res`).
 - [x] Compilación en GitHub (`.github/workflows/ios.yml`, Mac `macos-26`): en cada cambio, simulador sin firma + capturas a los 8, 20 y 40 s (artefacto `iphone-simulador`). A mano con «subir»: firma automática con la clave de la API y subida a TestFlight, sin enviar a revisión.
-- [ ] Primera compilación de simulador verde y capturas revisadas.
+- [x] Compilación de simulador verde y capturas revisadas en iPhone 17 Pro Max, en español: Hoy, Calendario, Historial, Familia, Salud y Perfil, sin fallos.
+- [x] Corregido en iPhone: campo de fecha que se salía del borde; idioma de la app en español.
+- [x] Capturas para la tienda (1320×2868, datos inventados, sin anuncios) en `store-assets/ios/`. Se regeneran en cada compilación: rama `ios-capturas`.
 
 ## Decisiones tomadas (6/11/2026, recomendaciones del plan aceptadas al arrancar)
 
