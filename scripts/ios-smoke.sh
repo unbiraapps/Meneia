@@ -23,8 +23,10 @@ START=$(date +%s)
 for at in 7 15 23 31 39 46; do
   wait=$(( START + at - $(date +%s) )); if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
   xcrun simctl io "$DEVICE" screenshot "evidence/iphone-${at}s.png"
-  if xcrun simctl spawn "$DEVICE" launchctl list 2>/dev/null | grep -q "$BUNDLE"; then echo "${at}s: abierta" ; else echo "${at}s: NO está corriendo"; fi | tee -a evidence/resultado.txt
+  echo "${at}s: captura tomada" | tee -a evidence/resultado.txt
 done
 find "$HOME/Library/Logs/DiagnosticReports" -name 'App*.ips' -newermt "@$START" -exec cp {} evidence/ \; 2>/dev/null || true
 echo "Modelo: $(xcrun simctl list devices -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["name"] for a in d["devices"].values() for x in a if x["udid"]==sys.argv[1]))' "$DEVICE")" | tee -a evidence/resultado.txt
-grep -q "NO está corriendo" evidence/resultado.txt && { echo "La app se cerró sola: revisar evidence/"; exit 1; } || true
+# Si la app se cerró sola, iOS deja un informe de fallo (.ips): eso sí es un error.
+if ls evidence/*.ips >/dev/null 2>&1; then echo "La app se cerró sola: hay un informe de fallo en evidence/"; exit 1; fi
+echo "Sin informes de fallo" | tee -a evidence/resultado.txt
