@@ -91,40 +91,52 @@ jobs:
           VITE_ADMOB_IOS_INTERSTITIAL_ID: ${{ secrets.ADMOB_IOS_INTERSTITIAL_ID }}
           VITE_ADMOB_IOS_REWARDED_ID: ${{ secrets.ADMOB_IOS_REWARDED_ID }}
       - run: npx cap sync ios
-      - name: Clave de la API de App Store Connect
+      - name: Herramientas de firma (las mismas que usa Codemagic en Código de Estilo)
+        run: pip3 install --break-system-packages --quiet codemagic-cli-tools
+      - name: Firma de distribución App Store (sin dispositivos ni perfil de desarrollo)
         env:
-          ASC_KEY: ${{ secrets.ASC_API_KEY_P8 }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.ASC_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.ASC_API_KEY_P8 }}
+          CERTIFICATE_PRIVATE_KEY: ${{ secrets.IOS_CERTIFICATE_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          test -n "$ASC_KEY" || { echo "Falta el secreto ASC_API_KEY_P8 (ver docs/PARA-CODEX.md)"; exit 1; }
-          mkdir -p "$RUNNER_TEMP/asc"
-          printf '%s' "$ASC_KEY" > "$RUNNER_TEMP/asc/key.p8"
-      - name: Archivar firmado (firma automática con la clave de la API)
+          test -n "$APP_STORE_CONNECT_PRIVATE_KEY" || { echo "Falta el secreto ASC_API_KEY_P8 (docs/PARA-CODEX.md)"; exit 1; }
+          test -n "$CERTIFICATE_PRIVATE_KEY" || { echo "Falta el secreto IOS_CERTIFICATE_PRIVATE_KEY (docs/PARA-CODEX.md)"; exit 1; }
+          keychain initialize
+          # Trae (o crea, la primera vez) el certificado Apple Distribution y el perfil App Store de com.unbiraapps.meneia
+          app-store-connect fetch-signing-files com.unbiraapps.meneia --platform IOS --type IOS_APP_STORE \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY --create
+          keychain add-certificates
+          xcode-project use-profiles --project ios/App/App.xcodeproj
+      - name: Número de compilación
         env:
-          KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ISSUER: ${{ secrets.ASC_API_ISSUER_ID }}
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.ASC_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.ASC_API_KEY_P8 }}
+          APPLE_APP_ID: '6831992382'
+        run: |
+          set -euo pipefail
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APPLE_APP_ID" 2>/dev/null || echo 0)
+          N=$(( LATEST + 1 )); [ "$N" -lt "${{ github.run_number }}" ] && N=${{ github.run_number }}
+          (cd ios/App && agvtool new-version -all "$N")
+          echo "BUILD_NUMBER=$N" >> "$GITHUB_ENV"
+      - name: Compilar IPA firmada
+        env:
           GAD_ID: ${{ inputs.anuncios_reales && secrets.ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511' }}
         run: |
           set -euo pipefail
-          xcodebuild archive -project ios/App/App.xcodeproj -scheme App -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Meneia.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" \
-            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}" GAD_APPLICATION_ID="$GAD_ID" | tail -n 40
+          xcode-project build-ipa --project ios/App/App.xcodeproj --scheme App \
+            --archive-xcargs "GAD_APPLICATION_ID=$GAD_ID"
+          ls -la build/ios/ipa/
       - name: Subir a App Store Connect (TestFlight, sin enviar a revisión)
         env:
-          KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
-          ISSUER: ${{ secrets.ASC_API_ISSUER_ID }}
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.ASC_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.ASC_API_KEY_P8 }}
         run: |
           set -euo pipefail
-          sed "s/__TEAM__/$TEAM/" ios/ExportOptions.plist > "$RUNNER_TEMP/ExportOptions.plist"
-          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Meneia.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/asc/key.p8" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" | tail -n 40
-          echo "Subida a TestFlight: Meneia compilación ${{ github.run_number }}"
+          app-store-connect publish --path "build/ios/ipa/*.ipa"
+          echo "Subida a TestFlight: Meneia compilación $BUILD_NUMBER"
       - if: always()
-        run: rm -rf "$RUNNER_TEMP/asc"
+        run: keychain use-login || true

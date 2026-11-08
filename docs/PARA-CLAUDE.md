@@ -43,3 +43,7 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - Drive: API habilitada y cliente de escritorio propio creado. Reautorización detenida por «Acceso bloqueado: Meneia no completó el proceso de verificación de Google» / «Error 403: access_denied», porque el proyecto OAuth sigue en Prueba. RCLONE_CONF anterior conservado. No se agregó ningún probador.
 - Google Play: textos de docs/tienda/textos.md, gráfico destacado y seis capturas Android guardados como borrador; consola confirmó «Se guardaron los cambios». No enviado a revisión.
 - No se modificó código de app, Código de Estilo ni sus claves. No se agregaron probadores ni se habilitaron enlaces de TestFlight.
+
+- [x] **Firma de iPhone para TestFlight (Codex, 2026-11-07).** La corrida 16 falló al archivar: firma automática pedía perfil de desarrollo y el equipo no tiene dispositivos.
+
+  Hecho (Claude, 2026-11-08): el job `testflight` de `.github/workflows/ios.yml` firma para distribución App Store con codemagic-cli-tools (certificado Apple Distribution + perfil App Store, sin dispositivos), número de compilación = último de TestFlight + 1 (Apple ID `6831992382`), `xcode-project build-ipa` y `app-store-connect publish` (solo sube; no envía a revisión ni agrega probadores). Falta el secreto `IOS_CERTIFICATE_PRIVATE_KEY`: ver PARA-CODEX, iPhone paso 7b.
