@@ -116,8 +116,18 @@ Contexto: `docs/IOS.md`. La app de iPhone ya está preparada (etapa 1). Usar la 
   - La clave de la API (`ASC_API_KEY_*`) tiene que poder crear certificados y perfiles: rol Admin, o Gestor de apps con acceso a "Certificados, identificadores y perfiles".
   - Resultado 2026-11-08: no existía IOS_CERTIFICATE_PRIVATE_KEY y no se encontró meneia_cert_key en las carpetas habituales. Se generó una clave exclusiva RSA 2048 en PEM, se validaron delimitadores RSA PRIVATE KEY sin mostrar contenido y se cargó cifrada en GitHub Secrets; existencia verificada. Los archivos temporales privado y público se eliminaron después de la carga. No se modificaron las claves de Código de Estilo.
   - Corrida manual **18** iniciada y verificada en curso: https://github.com/unbiraapps/Meneia/actions/runs/42481872413, commit `430b290c5b898dd15af9bfa564e80288d4011bad`, subir=true y anuncios_reales=false. Se avisó a Claude para seguirla. El número 18 identifica la corrida; todavía no se confirma una compilación procesada en TestFlight.
-- [ ] **10. Primera subida.** GitHub › Actions › "App de iPhone" › Run workflow con **subir** marcado (anuncios reales sin marcar). Confirmar en el registro "Subida a TestFlight" y en App Store Connect que la compilación se procesa. No agregar probadores ni enviar a Beta App Review: eso es la etapa 3.
+- [x] **10. Primera subida.** Resultado (Claude, 2026-11-08): corrida 18 (`42481872413`) verde. IPA firmada para App Store y subida sin errores: **Meneia 1.0 (18)**, «UPLOAD SUCCEEDED with no errors». Falta confirmar en App Store Connect que Apple terminó de procesarla (10 a 30 minutos). GitHub › Actions › "App de iPhone" › Run workflow con **subir** marcado (anuncios reales sin marcar). Confirmar en el registro "Subida a TestFlight" y en App Store Connect que la compilación se procesa. No agregar probadores ni enviar a Beta App Review: eso es la etapa 3.
 - [ ] **11. Avisar a Claude** en `docs/PARA-CLAUDE.md` con el Apple ID de la ficha y el número de compilación procesada (o el error textual si falla).
+
+## iPhone · etapa 3: prueba en el iPhone de la amiga (2026-11-08)
+
+Requiere el visto bueno de la dueña para enviar a la revisión beta de Apple. No enviar la versión 1.0 a revisión del App Store.
+
+- [ ] **1. Procesada.** App Store Connect › Meneia › TestFlight: la compilación **1.0 (18)** figura lista. Si pide cumplimiento de exportación, ya está declarado en la app (`ITSAppUsesNonExemptEncryption = NO`).
+- [ ] **2. Información de prueba.** TestFlight › Información de prueba: "Qué probar" de `docs/tienda/textos.md`, email de contacto `contacto@unbiraapps.com`, política de privacidad, y en la información para la revisión beta las mismas notas para el revisor (sin cuenta de demostración si la copia en la nube todavía no está lista para iPhone).
+- [ ] **3. Grupo externo.** Crear el grupo "Amiga" (prueba externa), agregar la compilación 18 y **con el OK de la dueña** enviarla a la revisión beta de Apple (suele tardar 1 día).
+- [ ] **4. Invitación.** Cuando Apple la apruebe: invitar a la amiga por su email de Apple ID, o un enlace público limitado a 1 persona. La amiga instala TestFlight desde el App Store y acepta.
+- [ ] **5. Avisar a Claude** en `docs/PARA-CLAUDE.md` con el estado de la revisión beta y lo que la amiga encuentre (con capturas si puede).
 
 ## Fichas de las tiendas: materiales listos (2026-11-06)
 

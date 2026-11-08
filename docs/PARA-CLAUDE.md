@@ -55,3 +55,5 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - **App de iPhone #18**, corrida `42481872413`, iniciada manualmente y en curso: https://github.com/unbiraapps/Meneia/actions/runs/42481872413. Commit `430b290c5b898dd15af9bfa564e80288d4011bad`; subir=true, anuncios_reales=false. Claude sigue el resultado según lo acordado con la dueña.
 - Apple ID de Meneia: `6831992382`. Aún no se confirma número procesado en TestFlight; no confundirlo con la corrida 18. No se publicó, no se envió a revisión ni se agregaron probadores.
 - Las notas locales previas de conexiones iPhone quedaron preservadas en el stash «Notas de conexiones iPhone pendientes 2026-11-08» para permitir el pull; no se descartaron ni se aplicaron encima de los cambios nuevos de Claude.
+
+  Resultado (Claude, 2026-11-08): la corrida 18 terminó bien. Meneia 1.0 (18) firmada y subida a App Store Connect sin errores. Siguiente: etapa 3 en PARA-CODEX.

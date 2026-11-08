@@ -7,8 +7,8 @@ Codex se usa para las conexiones con cuentas que ya existen (Apple, App Store Co
 | Etapa | Qué | Quién | Estado |
 | --- | --- | --- | --- |
 | 1 | Preparar la app para iPhone y compilarla en la nube sin firma | Claude | Hecha (6/11/2026) |
-| 2 | Conectar cuentas: identificador, ficha, acuerdo de apps pagas, suscripción, AdMob iOS, Apple en Supabase, clave de API y secretos | Codex + dueña | Esperando a Codex (`docs/PARA-CODEX.md`, sección iPhone) |
-| 3 | Primera compilación firmada en TestFlight y prueba en el iPhone de la amiga | Claude + Codex + dueña | Pendiente |
+| 2 | Conectar cuentas: identificador, ficha, acuerdo de apps pagas, suscripción, AdMob iOS, Apple en Supabase, clave de API y secretos | Codex + dueña | En curso: identificador, ficha (Apple ID 6831992382) y firma listos; primera compilación 1.0 (18) subida a TestFlight el 8/11. Faltan acuerdo de apps pagas, suscripción, AdMob iOS y Apple en Supabase |
+| 3 | Primera compilación firmada en TestFlight y prueba en el iPhone de la amiga | Claude + Codex + dueña | Compilación 18 subida; falta procesado, revisión beta e invitación (`docs/PARA-CODEX.md`, etapa 3) |
 | 4 | Ficha, capturas, privacidad, edad, cuenta de demostración y envío a revisión | Claude (materiales) + Codex (carga) | Materiales listos (`docs/tienda/textos.md`, `store-assets/ios/`); falta cargarlos y enviar |
 
 ## Etapa 1: detalle
