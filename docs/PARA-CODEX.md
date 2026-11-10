@@ -13,6 +13,7 @@ Hecho en el código (Android e iPhone, interfaz compartida). Nada publicado ni e
 - **Copia de seguridad** (`src/app/Copia.tsx`, `src/app/Nube.tsx`): primero se elige "Guardar un archivo" o "Guardar en la nube". En la nube: paso 1 cuenta (Google o email en Android; Apple o email en iPhone) y paso 2 contraseña de la copia. Explica que es distinta de la contraseña de la cuenta y que si se pierde no podemos recuperar la copia. Usa las funciones reales; no hay nada simulado.
 - **Acerca de** (Perfil › Acerca de Meneia): marca, nombre, versión, textos de la maqueta, enlaces a Copia de seguridad, Política de privacidad y Ayuda y contacto, logo de UnbiraApps y "Creado por UnbiraApps".
 - Se sacó la afirmación general "Tus datos quedan en tu celular" de la app, de la política de privacidad y de `docs/tienda/textos.md`. Ahora dice "Tus registros se guardan en este dispositivo" y menciona la copia cifrada opcional.
+- Compilaciones del commit `09de636`: Android #57 correcta (APK subido al Drive por el workflow); iPhone simulador correcto, sin cierres, con capturas en la rama `ios-capturas`. TestFlight no se subió.
 - Pruebas: 70/70 pasan y la compilación web está bien. Con Playwright, en 320×568 y 390×844, se probaron bienvenida, recuperar (archivo y nube), Inicio, Acerca de y Copia (archivo y nube). Sin desborde horizontal, todos los botones con nombre accesible y de al menos 40 px de alto. Se puede usar con teclado. El contraste del texto es de 6,9:1 o más.
 
 ### Pendiente
