@@ -26,15 +26,15 @@ LO QUE PODÉS HACER
 • Buscar embarazo (solo mayores de 18): días fértiles estimados.
 • Familia: anotá los días de tus hijas desde tu celular y recibí un aviso antes de su próximo período con la lista de compras. Ellas no necesitan la app.
 
-PRIVACIDAD DE VERDAD
-• Tus datos quedan en tu celular. Sin cuenta obligatoria.
+PRIVACIDAD
+• Tus registros se guardan en tu dispositivo. Sin cuenta obligatoria.
 • Bloqueo con PIN, huella o Face ID.
 • Avisos discretos: el texto es neutro y nunca dice "período" ni nombres.
 • La app se tapa en la lista de apps abiertas.
 • Copia de seguridad en un archivo, o en la nube cifrada con una contraseña que solo sabés vos.
 
 GRATIS CON ANUNCIOS
-Todas las funciones son gratis. Los anuncios no son personalizados y nunca reciben tus datos de salud. Si preferís no verlos, está la suscripción mensual "Sin anuncios".
+Se puede usar sin pagar. Los anuncios no son personalizados y nunca reciben tus datos de salud. Si preferís no verlos, está la suscripción mensual "Sin anuncios".
 
 Las fechas son estimaciones según tus ciclos anteriores. Meneia no es un método anticonceptivo ni reemplaza la consulta médica.
 
@@ -43,8 +43,8 @@ Las fechas son estimaciones según tus ciclos anteriores. Meneia no es un métod
 | Campo | Texto | Límite |
 | --- | --- | --- |
 | Nombre | Meneia · Ciclo menstrual | 30 |
-| Subtítulo | Tu ciclo, solo en tu celular | 30 |
-| Texto promocional | Seguí tu ciclo, tus pastillas y los días de tus hijas con avisos discretos. Tus datos quedan en tu celular, con PIN o Face ID. | 170 |
+| Subtítulo | Tu ciclo, a tu ritmo | 30 |
+| Texto promocional | Seguí tu ciclo, tus pastillas y los días de tus hijas con avisos discretos. Con PIN o Face ID y copia de seguridad cifrada opcional. | 170 |
 | Palabras clave | período,menstruación,regla,calendario,ovulación,fértil,pastillas,síntomas,hijas,ginecóloga,ciclo | 100 |
 | Categoría principal | Salud y forma física | |
 | Categoría secundaria | Estilo de vida | |
@@ -119,7 +119,7 @@ Rastreo: **No** (sin ATT, sin IDFA).
 | Campo | Texto | Límite |
 | --- | --- | --- |
 | Nombre | Meneia: ciclo menstrual | 30 |
-| Descripción breve | Tu ciclo, avisos discretos y los días de tus hijas. Todo queda en tu celular. | 80 |
+| Descripción breve | Tu ciclo a tu ritmo: avisos discretos y los días de tus hijas. | 80 |
 | Descripción completa | La descripción larga de arriba, igual | 4.000 |
 | Categoría | Salud y bienestar | |
 | Gráfico destacado | `store-assets/android/grafico-destacado.png` (1024×500) | |

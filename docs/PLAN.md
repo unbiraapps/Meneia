@@ -5,6 +5,8 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 
 ## Decisiones tomadas
 
+- 2026-11-10: identidad aprobada. La bienvenida solo aparece antes de Inicio (instalación nueva). "Ya uso Meneia" lleva a recuperar una copia (archivo o nube) y después a Inicio con los datos cargados. Mientras no esté el original, la marca dentro de la app es un recorte provisorio de la maqueta; los íconos del sistema no se tocan.
+
 - La app se llama **Meneia**. Es siempre oscura, con la paleta lila de `src/styles.css`, y el texto va en español rioplatense (vos).
 - Los datos de salud **nunca salen del celular sin cifrar** y no hay cuenta obligatoria. La copia en la nube es opcional: entra con Google o con email y contraseña, se cifra en el celular con una contraseña de copia que solo sabe ella (PBKDF2 + AES-GCM) y Supabase guarda solo el sobre cifrado. Si olvida la contraseña, la copia no se puede recuperar (decidido el 5/11/2026).
 - **No se guardan estudios**: ni PDF ni fotos ni archivos médicos.

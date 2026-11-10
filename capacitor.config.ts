@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   // Cada plataforma lleva solo sus complementos: en Android, Google (social-login); en iPhone, Apple.
   // social-login en iPhone metería el SDK de Facebook dentro de la app aunque no se use.
   android: {
-    backgroundColor: '#17131F',
+    backgroundColor: '#120b23',
     includePlugins: [
       '@capacitor-community/admob',
       '@capacitor-community/privacy-screen',
@@ -21,7 +21,7 @@ const config: CapacitorConfig = {
     ],
   },
   ios: {
-    backgroundColor: '#17131F',
+    backgroundColor: '#120b23',
     contentInset: 'never',
     scheme: 'Meneia',
     includePlugins: [

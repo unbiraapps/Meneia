@@ -27,7 +27,7 @@ const errText = (e: unknown) => {
 };
 
 /** Copia cifrada en la nube: opcional, con Google, cifrada con una contraseña que solo sabe ella. */
-export function CloudCard() {
+export function CloudCard({ recuperar, onRestored }: { recuperar?: boolean; onRestored?: () => void } = {}) {
   const { refresh } = useStore();
   const toast = useToast();
   const [step, setStep] = useState<Step>({ s: 'loading' });
@@ -61,25 +61,37 @@ export function CloudCard() {
 
   if (step.s === 'loading') return null;
   if (step.s === 'off' || step.s === 'out') return (
-    <div className="card">{head}
-      <p style={{ fontSize: 14, margin: 0 }}>Opcional. Entrás a tu cuenta y Meneia guarda una copia <b>cifrada en tu celular</b> antes de subirla. Solo vos podés abrirla, con una contraseña de copia que elegís vos.</p>
-      <p className="muted" style={{ fontSize: 13, margin: 0 }}>Sirve si cambiás o perdés el celular. Para usar la app no hace falta cuenta.</p>
+    <div className="card">
+      <p className="step-caption">{recuperar ? 'Paso 1 de 2 · Entrá con tu cuenta' : 'Paso 1 de 2 · Conectá una cuenta'}</p>
+      <h2 className="serif-title" style={{ fontSize: 26 }}>Tu cuenta es la puerta de entrada.</h2>
+      <p style={{ fontSize: 14, margin: 0 }}>La usás para encontrar tu copia cuando quieras recuperarla. Entrá con {isIOS() ? 'Apple' : 'Google'} o con tu email{recuperar ? ', la misma cuenta que usaste antes' : ''}.</p>
+      <p className="muted" style={{ fontSize: 13, margin: 0 }}>Es opcional: para usar Meneia no hace falta cuenta.</p>
       {step.s === 'off' && <div className="alert info"><span className="dot" /><div>Todavía no está activa: falta terminar de configurar el servidor. Mientras tanto podés usar la copia en un archivo.</div></div>}
       <Login disabled={step.s === 'off'} onIn={email => run(() => afterLogin(email))} />
+    </div>
+  );
+
+  if (step.s === 'new' && recuperar) return (
+    <div className="card">
+      <p className="step-caption">Entraste como {step.email || 'tu cuenta'}</p>
+      <h2 className="serif-title" style={{ fontSize: 26 }}>No hay una copia en esta cuenta.</h2>
+      <p style={{ fontSize: 14, margin: 0 }}>Probá con la cuenta que usabas en tu celular anterior, o empezá de cero y activá la copia más adelante desde Perfil.</p>
+      <button type="button" className="btn ghost" onClick={() => run(async () => { await signOut(); setStep({ s: 'out' }); })}>Probar con otra cuenta</button>
     </div>
   );
 
   if (step.s === 'new') {
     const valid = pw.length >= MIN_PASSWORD && pw === pw2 && ok;
     return (
-      <div className="card">{head}
-        <p className="muted" style={{ fontSize: 13.5, margin: 0 }}>Entraste como {step.email || 'tu cuenta'}.</p>
-        <p style={{ fontSize: 14, margin: 0 }}>Elegí una <b>contraseña de copia</b>. Con ella se cifran tus datos antes de salir del celular.</p>
+      <div className="card">
+        <p className="step-caption">Paso 2 de 2 · Entraste como {step.email || 'tu cuenta'}</p>
+        <h2 className="serif-title" style={{ fontSize: 26 }}>Una contraseña solo para tu copia.</h2>
+        <p style={{ fontSize: 14, margin: 0 }}>Protege tus registros antes de guardarlos en la nube: se cifran en tu celular con esta contraseña. <b>Es distinta de la contraseña de tu cuenta</b>{' '}(la de {isIOS() ? 'Apple' : 'Google'} o la de tu email).</p>
         <label className="field">Contraseña de copia<input type="password" autoComplete="new-password" value={pw} onChange={e => { setPw(e.target.value); setErr(''); }} /></label>
         <label className="field">Repetila<input type="password" autoComplete="new-password" value={pw2} onChange={e => { setPw2(e.target.value); setErr(''); }} /></label>
         {pw.length > 0 && pw.length < MIN_PASSWORD && <small className="muted">Tiene que tener al menos {MIN_PASSWORD} caracteres.</small>}
         {pw2.length > 0 && pw !== pw2 && <small className="muted">No coinciden.</small>}
-        <div className="alert warn"><span className="dot" /><div><b>Si te olvidás esta contraseña, no podemos recuperar tu copia.</b> Nadie la conoce, ni Meneia. Anotala en un lugar seguro.</div></div>
+        <div className="alert warn"><span className="dot" /><div><b>Guardala en un lugar seguro: si la perdés, no podemos recuperar el contenido de tu copia.</b> Nadie más la conoce, ni Meneia. Recuperar la cuenta no recupera esta contraseña.</div></div>
         <label className="row" style={{ gap: 10, fontSize: 14 }}><input type="checkbox" checked={ok} onChange={e => setOk(e.target.checked)} style={{ width: 22, height: 22, margin: 0, flex: 'none', accentColor: 'var(--plum)' }} />Entiendo que si la olvido, pierdo la copia</label>
         {err && <p className="err" role="alert">{err}</p>}
         <button type="button" className="btn" disabled={!valid || busy} onClick={() => run(async () => { const c = await activate(pw, step.email); setPw(''); setPw2(''); setStep({ s: 'on', c }); toast('Copia en la nube activada'); })}>{busy ? 'Cifrando y subiendo…' : 'Activar copia'}</button>
@@ -89,13 +101,15 @@ export function CloudCard() {
   }
 
   if (step.s === 'found') return (
-    <div className="card">{head}
-      <p style={{ fontSize: 14, margin: 0 }}>Encontramos una copia de {step.email || 'tu cuenta'}. Escribí tu contraseña de copia para abrirla.</p>
+    <div className="card">
+      <p className="step-caption">Paso 2 de 2 · Encontramos tu copia</p>
+      <h2 className="serif-title" style={{ fontSize: 26 }}>Abrí tu copia.</h2>
+      <p style={{ fontSize: 14, margin: 0 }}>Hay una copia guardada con {step.email || 'tu cuenta'}. Escribí la <b>contraseña de la copia</b> que elegiste al activarla, no la de tu cuenta.</p>
       <label className="field">Contraseña de copia<input type="password" autoComplete="current-password" value={pw} onChange={e => { setPw(e.target.value); setErr(''); }} /></label>
       {err && <p className="err" role="alert">{err}</p>}
       <button type="button" className="btn" disabled={!pw || busy} onClick={() => run(async () => {
         const data = await unlockExisting(step.env, pw, step.email);
-        if (!data) { setErr('Esa no es la contraseña de esta copia.'); return; }
+        if (!data) { setErr('Esa no es la contraseña de esta copia. Acordate de que es distinta de la de tu cuenta.'); return; }
         setPw(''); setStep({ s: 'confirm', email: step.email, data });
       })}>{busy ? 'Abriendo…' : 'Abrir copia'}</button>
       <button type="button" className="btn link" onClick={() => run(async () => { await signOut(); setStep({ s: 'out' }); })}>Salir</button>
@@ -105,8 +119,8 @@ export function CloudCard() {
   if (step.s === 'confirm') return (
     <div className="card">{head}
       <p style={{ fontSize: 14, margin: 0 }}>La copia tiene {plural(step.data.periods.length, 'período', 'períodos')}{step.data.profiles?.length ? ` y ${plural(step.data.profiles.length, 'perfil', 'perfiles')}` : ''}.</p>
-      <button type="button" className="btn" disabled={busy} onClick={() => run(async () => { await restoreBackup(step.data); await refresh(); await load(); toast('Copia recuperada'); })}>Recuperar y reemplazar lo de este celular</button>
-      <button type="button" className="btn ghost" disabled={busy} onClick={() => run(async () => { const c = await uploadNow(); if (c) setStep({ s: 'on', c }); toast('Seguís con lo de este celular'); })}>Seguir con lo de este celular</button>
+      <button type="button" className="btn" disabled={busy} onClick={() => run(async () => { await restoreBackup(step.data); await refresh(); await load(); toast('Copia recuperada'); onRestored?.(); })}>Recuperar y reemplazar lo de este celular</button>
+      {!recuperar && <button type="button" className="btn ghost" disabled={busy} onClick={() => run(async () => { const c = await uploadNow(); if (c) setStep({ s: 'on', c }); toast('Seguís con lo de este celular'); })}>Seguir con lo de este celular</button>}
     </div>
   );
 

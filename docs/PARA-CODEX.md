@@ -2,6 +2,26 @@
 
 Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de cada una, sin claves ni contraseñas.
 
+
+## Identidad visual aprobada (2026-11-10)
+
+Hecho en el código (Android e iPhone, interfaz compartida). Nada publicado ni enviado a revisión.
+
+- Paleta nocturna en `src/styles.css`: noche `#120b23`, superficie `#211632`, marfil `#fff1d9`, lavanda `#c9b1e7`, texto secundario `#b6a9c6`. El botón principal ahora es marfil. El nombre "Meneia" usa Georgia, igual que la maqueta.
+- **Bienvenida** (`src/app/Bienvenida.tsx`): marca, "Meneia", "Tu ciclo, a tu ritmo.", "Comenzar" y "Ya uso Meneia". Solo la ve quien todavía no terminó Inicio. Quien ya usa la app no la ve, y no se tocan sus datos (probado: al recargar, una usuaria existente entra directo). No dice "Todas las funciones gratis. Sin tarjeta".
+- **"Ya uso Meneia"** abre la recuperación real: desde un archivo o desde la nube (misma cuenta + contraseña de la copia). Después de recuperar, sigue con los pasos de Inicio con los datos ya cargados.
+- **Copia de seguridad** (`src/app/Copia.tsx`, `src/app/Nube.tsx`): primero se elige "Guardar un archivo" o "Guardar en la nube". En la nube: paso 1 cuenta (Google o email en Android; Apple o email en iPhone) y paso 2 contraseña de la copia. Explica que es distinta de la contraseña de la cuenta y que si se pierde no podemos recuperar la copia. Usa las funciones reales; no hay nada simulado.
+- **Acerca de** (Perfil › Acerca de Meneia): marca, nombre, versión, textos de la maqueta, enlaces a Copia de seguridad, Política de privacidad y Ayuda y contacto, logo de UnbiraApps y "Creado por UnbiraApps".
+- Se sacó la afirmación general "Tus datos quedan en tu celular" de la app, de la política de privacidad y de `docs/tienda/textos.md`. Ahora dice "Tus registros se guardan en este dispositivo" y menciona la copia cifrada opcional.
+- Pruebas: 70/70 pasan y la compilación web está bien. Con Playwright, en 320×568 y 390×844, se probaron bienvenida, recuperar (archivo y nube), Inicio, Acerca de y Copia (archivo y nube). Sin desborde horizontal, todos los botones con nombre accesible y de al menos 40 px de alto. Se puede usar con teclado. El contraste del texto es de 6,9:1 o más.
+
+### Pendiente
+
+- [ ] **Ícono original de la M lunar.** La maqueta solo trae una captura de 97×82 px. Por ahora, en la app (bienvenida, Acerca de, bloqueo y fila de Perfil) se usa un recorte provisorio de esa captura (`src/assets/meneia/marca-provisoria.png`). Los íconos de Android e iPhone **no se cambiaron**: siguen los anteriores. Hace falta que la dueña pase el original (SVG, o PNG de 1024 px o más). Codex: si lo encontrás en `C:\Users\lenovo\Documents\ChatGPT\Codigo de estilo\mockups\meneia-identidad\` o en otra carpeta del proyecto, subilo al repo en `src/assets/meneia/` y avisale a Claude, que genera los recursos de las dos plataformas (`scripts/android-res.mjs`, `scripts/ios-res.mjs`).
+- [ ] Después del ícono nuevo: actualizar el ícono de Play Console (512×512), el gráfico destacado y las capturas de las dos tiendas (Claude las regenera).
+- [ ] Revisar en Play Console y App Store Connect los textos nuevos de `docs/tienda/textos.md` (subtítulo "Tu ciclo, a tu ritmo", descripción breve y texto promocional). Solo dejarlos cargados como borrador, sin enviar a revisión.
+- Sin conexiones nuevas: la copia en la nube sigue necesitando lo que ya estaba pendiente (SMTP, Google OAuth de producción, Apple en Supabase).
+
 ## Ahora
 
 - [x] **Firma de la app.** Generar un keystore de Android (alias `meneia`) y guardarlo en un lugar seguro de la dueña. Cargar en Settings › Secrets and variables › Actions del repo `unbiraapps/Meneia`:

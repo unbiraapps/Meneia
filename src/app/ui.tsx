@@ -97,7 +97,7 @@ export function MonthPicker({ value, max, onPick, fam }: { value: string; max: s
         {Array.from({ length: days }, (_, i) => {
           const d = isoOf(y, m, i + 1), future = d > max, sel = d === value;
           return <button key={d} type="button" className={'day' + (d === max ? ' today' : '')} disabled={future} aria-pressed={sel} aria-label={longDate(d) + (future ? ', todavía no llegó' : '')}
-            style={sel ? { background: on, color: '#17131F', fontWeight: 700 } : future ? { opacity: .3, cursor: 'default' } : undefined} onClick={() => onPick(d)}>{i + 1}</button>;
+            style={sel ? { background: on, color: '#120b23', fontWeight: 700 } : future ? { opacity: .3, cursor: 'default' } : undefined} onClick={() => onPick(d)}>{i + 1}</button>;
         })}
       </div>
     </div>

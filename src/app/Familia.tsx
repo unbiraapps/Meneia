@@ -57,7 +57,7 @@ export function Familia({ onBack }: { onBack: () => void }) {
           <li>Cuando le viene, tocás <b>Le vino</b> y elegís el día en el calendario.</li>
           <li>Unos días antes del próximo, te llega un aviso con la lista de compras.</li>
         </ol>
-        <span className="muted" style={{ fontSize: 12.5 }}>Todo queda solo en tu celular. El aviso nunca dice su nombre ni la palabra período.</span>
+        <span className="muted" style={{ fontSize: 12.5 }}>Se guarda en este dispositivo. El aviso nunca dice su nombre ni la palabra período.</span>
       </div>}
 
       {kids.map(k => {

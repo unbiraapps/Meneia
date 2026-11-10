@@ -1,6 +1,6 @@
+import { Marca } from './Marca';
 import { useEffect, useState } from 'react';
 import { biometricAvailable, hashPin, verifyBiometric, withBio, type BioName } from '../privacy';
-import { Icon } from './ui';
 
 /** Pantalla de bloqueo: huella o Face ID si hay, y PIN de respaldo. */
 export function Lock({ pinHash, onUnlock }: { pinHash: string; onUnlock: () => void }) {
@@ -24,7 +24,7 @@ export function Lock({ pinHash, onUnlock }: { pinHash: string; onUnlock: () => v
 
   return (
     <div className="lock" role="dialog" aria-modal="true" aria-label="Meneia bloqueada">
-      <span className="logo"><Icon.logo /></span>
+      <Marca size={64} />
       <div className="stack" style={{ alignItems: 'center' }}>
         <h1 style={{ fontSize: 22 }}>Ingresá tu PIN</h1>
         <span className="muted" style={{ fontSize: 13 }} role="status">{err || (bio ? `o usá ${withBio(bio)}` : ' ')}</span>

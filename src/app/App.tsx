@@ -14,6 +14,8 @@ import { Historial } from './Historial';
 import { Salud } from './Salud';
 import { Perfil } from './Perfil';
 import { Inicio } from './Inicio';
+import { Bienvenida } from './Bienvenida';
+import { Copia } from './Copia';
 import { Lock } from './Lock';
 import { Familia } from './Familia';
 
@@ -38,6 +40,9 @@ function Shell() {
   }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [tab]);
   const [famFirst, setFamFirst] = useState(false);
+  // Solo para quien todavía no terminó Inicio: bienvenida, recuperar una copia o los pasos.
+  const [pre, setPre] = useState<'bienvenida' | 'recuperar' | 'inicio'>('bienvenida');
+  const [restored, setRestored] = useState(false);
   const [covered, setCovered] = useState(false);
   const [locked, setLocked] = useState(true);
   const lockOn = useRef(false);
@@ -77,7 +82,11 @@ function Shell() {
   if (!ready) return <div className="screen" aria-busy="true" />;
   if (lockOn.current && locked) return <Lock pinHash={privacy.pinHash} onUnlock={unlock} />;
   if (covered) return <button type="button" className="cover" aria-label="Pantalla tapada. Tocá para seguir" onClick={() => { if (lockOn.current) setLocked(true); setCovered(false); }}><span className="dot" /><span style={{ fontSize: 12.5 }}>Tocá para seguir</span></button>;
-  if (!onboarded) return <Inicio onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
+  if (!onboarded) {
+    if (pre === 'bienvenida') return <Bienvenida onStart={() => setPre('inicio')} onRestore={() => setPre('recuperar')} />;
+    if (pre === 'recuperar') return <Copia recuperar onBack={() => setPre('bienvenida')} onRestored={() => { setRestored(true); setPre('inicio'); }} />;
+    return <Inicio restored={restored} onBack={() => setPre('bienvenida')} onDone={fam => { setFamFirst(fam); setTab(fam ? 'perfil' : 'hoy'); }} />;
+  }
 
   return (
     <div className={'app' + (banner ? ' with-ad' : '')}>

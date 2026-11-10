@@ -9,12 +9,14 @@ import { Avisos } from './Avisos';
 import { Copia } from './Copia';
 import { Pastillas } from './Pastillas';
 import { PlanSettings } from './Plan';
-import unbiraLogo from '../assets/unbiraapps/horizontal-color.png';
+import { Acerca } from './Acerca';
+import { Marca } from './Marca';
+import { isIOS } from '../platform';
 import { PinSheet } from './Pin';
 import { cloudAvailable, currentUser, signOut } from '../cloud';
 import { useEffect } from 'react';
 
-type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas';
+type Sub = null | 'familia' | 'privacidad' | 'avisos' | 'copia' | 'pastillas' | 'acerca';
 
 export function Perfil({ onLock }: { onLock: () => void }) {
   const { self, profiles, today, refresh, privacy } = useStore();
@@ -31,6 +33,7 @@ export function Perfil({ onLock }: { onLock: () => void }) {
   if (sub === 'avisos') return <Avisos onBack={() => setSub(null)} />;
   if (sub === 'copia') return <Copia onBack={() => setSub(null)} />;
   if (sub === 'pastillas') return <Pastillas onBack={() => setSub(null)} />;
+  if (sub === 'acerca') return <Acerca onBack={() => setSub(null)} onCopia={() => setSub('copia')} />;
 
   const me = self.profile;
   const age = ageOn(me.birthDate, today);
@@ -42,7 +45,7 @@ export function Perfil({ onLock }: { onLock: () => void }) {
 
   return (
     <div className="screen">
-      <div className="row"><Avatar name="Yo" color={me.color} lg /><div className="stack"><h1 style={{ fontSize: 22 }}>Mi perfil</h1><span className="muted" style={{ fontSize: 13 }}>Tus datos quedan solo en este celular</span></div></div>
+      <div className="row"><Avatar name="Yo" color={me.color} lg /><div className="stack"><h1 style={{ fontSize: 22 }}>Mi perfil</h1><span className="muted" style={{ fontSize: 13 }}>Tus registros se guardan en este dispositivo</span></div></div>
 
       <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Qué seguís</span>
@@ -95,20 +98,17 @@ export function Perfil({ onLock }: { onLock: () => void }) {
               <span style={{ color: 'var(--plum)', display: 'grid', width: 20, height: 20 }}><Icon.user /></span><span className="grow"><b>Salir de mi cuenta</b><small>{email || 'Copia en la nube'} · la copia queda guardada</small></span></button>
           ) : (
             <button type="button" className="list-item" onClick={() => setSub('copia')}>
-              <span style={{ color: 'var(--plum)', display: 'grid', width: 20, height: 20 }}><Icon.user /></span><span className="grow"><b>Mi cuenta</b><small>Opcional: entrar con Google o con email para la copia en la nube</small></span><Icon.chev /></button>
+              <span style={{ color: 'var(--plum)', display: 'grid', width: 20, height: 20 }}><Icon.user /></span><span className="grow"><b>Mi cuenta</b><small>{`Opcional: entrar con ${isIOS() ? 'Apple' : 'Google'} o con email para la copia en la nube`}</small></span><Icon.chev /></button>
           )}
           <button type="button" className="list-item" onClick={() => { if (privacy.lock && privacy.pinHash) onLock(); else setPin(true); }}>
             <span style={{ color: 'var(--plum)' }}><Icon.lock /></span><span className="grow"><b>Cerrar sesión</b><small>{privacy.lock && privacy.pinHash ? 'Bloquea Meneia: para volver a entrar te pide el PIN' : 'Primero elegí un PIN para poder cerrar sesión'}</small></span></button>
         </div>
       </div>
       {pin && <PinSheet onClose={() => setPin(false)} />}
-      <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
-      <div className="stack" style={{ alignItems: 'center', gap: 6, paddingTop: 8 }}>
-        {/* Firma de la desarrolladora. El logo a color es para fondos claros: va sobre una placa clara, sin recolorear */}
-        <span className="firma"><img src={unbiraLogo} alt="UnbiraApps" width={120} height={28} /></span>
-        <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>Creado por UnbiraApps</p>
-        {ver && <p className="muted" style={{ fontSize: 11.5, margin: 0, opacity: .8 }}>{ver}</p>}
+      <div className="list">
+        <button type="button" className="list-item" onClick={() => setSub('acerca')}><Marca size={28} /><span className="grow"><b>Acerca de Meneia</b><small>{ver || 'Versión, privacidad y ayuda'}</small></span><Icon.chev /></button>
       </div>
+      <p className="muted" style={{ fontSize: 12, textAlign: 'center' }}>Las fechas son estimaciones según tus ciclos anteriores. No sirven como método anticonceptivo.</p>
     </div>
   );
 }
