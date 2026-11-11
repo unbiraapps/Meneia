@@ -7,6 +7,27 @@ export type PillType = 'stop' | 'start';
 export interface Period { id?: number; profileId?: number; start: string; end: string; flow: Flow; note: string; trying?: boolean; atypical?: boolean }
 export interface PillEvent { id?: number; profileId?: number; date: string; type: PillType }
 
+/** Registros de un ciclo: "todavía no me vino", tests y embarazo (solo lo que ella anota). */
+export type TestResult = 'positivo' | 'negativo' | 'inconcluso';
+export type RegistroTipo = 'todavia-no' | 'test' | 'embarazo';
+export interface Registro {
+  id?: number; profileId?: number;
+  tipo: RegistroTipo;
+  fecha: string;              // día del registro; en 'embarazo', desde cuándo
+  resultado?: TestResult;     // solo 'test'
+  nota?: string;              // solo 'test', corta y opcional
+  fin?: string | null;        // solo 'embarazo': día en que volvió a seguir su ciclo (null = activo)
+  pausoPastillas?: boolean;   // solo 'embarazo': pausó el aviso de pastillas
+  buscabaAntes?: boolean;     // solo 'embarazo': cómo estaba "Buscar embarazo" al registrarlo
+}
+export const TEST_RESULTS: { value: TestResult; label: string }[] = [
+  { value: 'positivo', label: 'Positivo' }, { value: 'negativo', label: 'Negativo' }, { value: 'inconcluso', label: 'Inconcluso' },
+];
+export const NOTE_MAX = 80;
+export const isPregnancy = (r: Registro) => r.tipo === 'embarazo';
+/** Embarazo registrado y todavía activo (sin fecha de fin). */
+export const activePregnancy = (rs: Registro[]): Registro | null => rs.filter(r => r.tipo === 'embarazo' && !r.fin).sort((a, b) => (a.fecha < b.fecha ? 1 : -1))[0] ?? null;
+
 export type ProfileKind = 'self' | 'child';
 export interface Profile {
   id?: number;
@@ -44,6 +65,7 @@ export interface Row extends Period {
   flags: Flag[];
   adapt: boolean;       // ciclo de adaptación (los 3 primeros después de dejar las pastillas)
   counts: boolean;      // cuenta para las estimaciones (no es raro ni de adaptación)
+  preg: boolean;        // en este ciclo se registró un embarazo: no cuenta para estimar
 }
 
 export type Confidence = 'pocos' | 'media' | 'firme';
@@ -75,11 +97,14 @@ export interface Analysis {
   tryingSince: string | null; // primer día del primer ciclo de la búsqueda actual (seguida)
   lastPill: PillEvent | null;
   lastAccuracy: Accuracy | null; // qué tan cerca estuvo la estimación del último período
+  pregnantSince: string | null;  // embarazo registrado activo: no hay fechas estimadas
+  awaitingPeriod: boolean;       // volvió a seguir su ciclo y todavía no anotó el primer período
 }
 
 export interface AnalyzeOptions {
   minor?: boolean;        // menor de 18 o perfil de hija: sin alertas alarmantes
   margin?: number | null; // margen elegido a mano (2 a 7)
+  pregnancies?: { start: string; end: string | null }[]; // embarazos registrados (perfil propio)
 }
 
 export const DEFAULT_CYCLE = 28;
@@ -129,15 +154,25 @@ export function analyze(periods: Period[], events: PillEvent[], today: string, o
   evs.filter(e => e.type === 'stop').forEach(e => {
     ps.filter(p => p.start > e.date).slice(0, ADAPT_CYCLES).forEach(p => adaptSet.add(p.start));
   });
+  // Embarazos: el ciclo en que se registró no cuenta, y después de cerrarlo vuelven 3 ciclos de adaptación
+  const pregs = (opts.pregnancies ?? []).filter(x => x.start).sort((a, b) => (a.start < b.start ? -1 : 1));
+  const active = pregs.filter(x => !x.end).pop() ?? null;
+  const pregSet = new Set<string>();
+  pregs.forEach(x => {
+    const before = ps.filter(p => p.start <= x.start).pop();
+    if (before) pregSet.add(before.start);
+    if (x.end) ps.filter(p => p.start > x.end!).slice(0, ADAPT_CYCLES).forEach(p => adaptSet.add(p.start));
+  });
 
   const rows: Row[] = ps.map((p, i) => {
     const adapt = adaptSet.has(p.start);
+    const preg = pregSet.has(p.start);
     return {
       ...p,
       dur: p.end ? daysBetween(p.start, p.end) + 1 : null,
       cycle: i < ps.length - 1 ? daysBetween(p.start, ps[i + 1].start) : null,
-      flags: [], adapt,
-      counts: !p.atypical && !adapt,
+      flags: [], adapt, preg,
+      counts: !p.atypical && !adapt && !preg,
     };
   });
 
@@ -177,7 +212,9 @@ export function analyze(periods: Period[], events: PillEvent[], today: string, o
 
   let next: string | null = null, rangeStart: string | null = null, rangeEnd: string | null = null;
   let ovu: string | null = null, fertile: [string, string] | null = null, late = 0;
-  if (last) {
+  // Con un embarazo activo, o si todavía no anotó el primer período después de cerrarlo, no hay fechas estimadas
+  const awaitingPeriod = !active && !!last && pregs.some(x => x.end && x.start >= last.start);
+  if (last && !active && !awaitingPeriod) {
     next = addDays(last.start, est.avgCycle);
     rangeStart = addDays(next, -est.margin);
     rangeEnd = addDays(next, est.margin);
@@ -190,7 +227,7 @@ export function analyze(periods: Period[], events: PillEvent[], today: string, o
 
   // ¿Qué tan cerca estuvo la estimación del último período? (con lo que se sabía antes)
   let lastAccuracy: Accuracy | null = null;
-  if (rows.length >= 3) {
+  if (rows.length >= 3 && !rows[rows.length - 2].preg) {
     const before = rows.slice(0, -1).map((r, i, arr) => ({ ...r, cycle: i < arr.length - 1 ? r.cycle : null }));
     const e2 = estimate(before, opts.margin, !!before[before.length - 1]?.adapt);
     const predicted = addDays(before[before.length - 1].start, e2.avgCycle);
@@ -210,6 +247,7 @@ export function analyze(periods: Period[], events: PillEvent[], today: string, o
     maxC: cycles.length ? Math.max(...cycles) : null,
     last, next, rangeStart, rangeEnd, margin: est.margin, autoMargin: est.auto, confidence: est.confidence, irregular, adapting,
     ovu, fertile, late, onPill, lastPill, lastAccuracy,
+    pregnantSince: active?.start ?? null, awaitingPeriod,
   };
 }
 
@@ -227,7 +265,7 @@ export function dayKinds(A: Analysis, events: PillEvent[], predictCycles = 3): M
   // ovulación aproximada de ciclos ya terminados (solo si no estaba con pastillas)
   const markTry = (o: string) => { for (let i = -5; i <= 1; i++) mark(addDays(o, i), 'try'); };
   A.rows.forEach(r => {
-    if (r.cycle && !pillActiveOn(events, r.start)) {
+    if (r.cycle && !r.preg && !pillActiveOn(events, r.start)) {
       const o = addDays(r.start, r.cycle - LUTEAL);
       markOvu(o);
       if (r.trying) markTry(o);
@@ -272,7 +310,7 @@ export interface Reminder { id: number; date: string; hour: number; title: strin
 const ID_BASE = { period: 1000, periodDay: 2000, fertile: 3000, ovu: 4000, late: 5000 } as const;
 
 /** Avisos a programar a partir de hoy (incluido hoy si la hora no pasó), hasta `horizon` días. */
-export function upcomingReminders(A: Analysis, s: ReminderSettings, now: Date, horizon = 120): Reminder[] {
+export function upcomingReminders(A: Analysis, s: ReminderSettings, now: Date, horizon = 120, lastCheck?: string | null): Reminder[] {
   if (!A.next) return [];
   const today = localToday(now);
   const out: Reminder[] = [];
@@ -303,8 +341,11 @@ export function upcomingReminders(A: Analysis, s: ReminderSettings, now: Date, h
   }
   if (s.lateOn) {
     // El atraso se cuenta desde el último de los posibles días
+    // Texto neutro aun sin el modo discreto. Si anotó "todavía no me vino", ese día y el siguiente no hay aviso.
     for (const d of [2, 5, 10]) {
-      push(ID_BASE.late + d, addDays(A.rangeEnd ?? A.next, d), `Tu período tiene ${daysTxt(d)} de atraso`, 'Si ya te vino, anotalo en la app para actualizar las fechas.');
+      const date = addDays(A.rangeEnd ?? A.next, d);
+      if (lastCheck && (date === lastCheck || date === addDays(lastCheck, 1))) continue;
+      push(ID_BASE.late + d, date, 'Tenés un registro pendiente en Meneia', 'Abrí la app para actualizar tus fechas.');
     }
   }
   return out.sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -485,3 +526,23 @@ export function cycleSymptoms(logs: SymptomLog[], start: string, end: string | n
   });
   return [...c.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k).slice(0, 4);
 }
+
+// ---------- Período pendiente, tests y embarazo ----------
+
+/** Registros del ciclo actual (desde el último período), del más nuevo al más viejo. */
+export function cycleRegistros(rs: Registro[], A: Analysis): Registro[] {
+  const from = A.last?.start ?? '';
+  return rs.filter(r => r.tipo !== 'embarazo' && r.fecha >= from).sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : (b.id ?? 0) - (a.id ?? 0)));
+}
+
+/** Último "todavía no me vino" del ciclo actual. */
+export const lastCheck = (rs: Registro[], A: Analysis): string | null => cycleRegistros(rs, A).find(r => r.tipo === 'todavia-no')?.fecha ?? null;
+
+/** ¿Se muestra "Todavía no me vino"? Desde el día más probable, si no hay embarazo activo. */
+export const canSayNotYet = (A: Analysis, today: string) => !!A.next && !A.pregnantSince && today >= A.next;
+
+/** Pasaron los posibles días sin período anotado: "Período pendiente". Es una estimación, nunca cambia nada solo. */
+export const isPending = (A: Analysis) => !A.pregnantSince && A.late > 0;
+
+/** Tests y embarazo: solo el perfil propio, con 18 años o más y "Buscar embarazo" activo (o un embarazo ya registrado). */
+export const showsPregnancy = (p: Profile, today: string, rs: Registro[]) => canTry(p, today) && (p.trying || !!activePregnancy(rs));

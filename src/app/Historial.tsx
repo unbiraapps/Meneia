@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { cycleSymptoms, daysBetween, fmtLong, fmtShort, patterns, plural, type Period, type PillEvent, type Row } from '../calc';
+import { canTry, cycleSymptoms, daysBetween, fmtLong, fmtShort, patterns, plural, type Period, type PillEvent, type Registro, type Row } from '../calc';
+import { RESULT_LABEL, TestSheet } from './Embarazo';
 import { db } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
@@ -11,18 +12,22 @@ export function Historial() {
   const [editing, setEditing] = useState<Period | null>(null);
   const [adding, setAdding] = useState(false);
   const [sure, setSure] = useState<string | null>(null);
+  const [test, setTest] = useState<Registro | null>(null);
   if (!active) return null;
   const { profile, A, events } = active;
 
-  type Item = { d: string; r?: Row; e?: PillEvent };
-  const items: Item[] = [...A.rows.map((r): Item => ({ d: r.start, r })), ...events.map((e): Item => ({ d: e.date, e }))]
-    .sort((a, b) => (a.d === b.d ? (a.e ? -1 : 1) : a.d < b.d ? 1 : -1));
+  type Item = { d: string; r?: Row; e?: PillEvent; g?: Registro };
+  // Tests y embarazo: solo en el perfil propio con 18 años o más
+  const own = canTry(profile, today);
+  const regs = active.registros.filter(g => g.tipo === 'todavia-no' || own);
+  const items: Item[] = [...A.rows.map((r): Item => ({ d: r.start, r })), ...events.map((e): Item => ({ d: e.date, e })), ...regs.map((g): Item => ({ d: g.fecha, g }))]
+    .sort((a, b) => (a.d === b.d ? (a.r ? 1 : b.r ? -1 : 0) : a.d < b.d ? 1 : -1));
   const ongoing = (r: Row) => !r.end && A.last?.start === r.start && daysBetween(r.start, today) <= 10;
 
   async function del(key: string, id: number) {
     if (sure !== key) { setSure(key); return; }
     setSure(null);
-    if (key.startsWith('p')) await db.periods.delete(id); else await db.events.delete(id);
+    if (key.startsWith('p')) await db.periods.delete(id); else if (key.startsWith('g')) await db.registros.delete(id); else await db.events.delete(id);
     await refresh(); toast('Registro borrado');
   }
 
@@ -57,7 +62,20 @@ export function Historial() {
       )}
       {!items.length ? <div className="empty">Todavía no hay nada anotado{profile.kind === 'child' ? ` para ${profile.name}` : ''}.</div> : (
         <ul className="hist">
-          {items.map(({ r, e }) => e ? (
+          {items.map(({ r, e, g }) => g ? (
+            <li key={'g' + g.id} className={'ev reg ' + g.tipo}>
+              <span className="bar" />
+              <div className="grow">
+                {g.tipo === 'todavia-no' && <><div className="when num">{fmtShort(g.fecha)} · Todavía no {profile.kind === 'child' ? 'le' : 'me'} vino</div><div className="meta">Anotado desde Hoy o el calendario</div></>}
+                {g.tipo === 'test' && <><div className="when num">{fmtShort(g.fecha)} · Test <span className={'res ' + g.resultado}>{RESULT_LABEL[g.resultado!]}</span></div>{g.nota && <div className="note">{g.nota}</div>}</>}
+                {g.tipo === 'embarazo' && <><div className="when num">{fmtShort(g.fecha)} → {g.fin ? fmtShort(g.fin) : 'en curso'} · Embarazo registrado</div><div className="meta">{g.fin ? 'Volviste a seguir tu ciclo' : 'Las fechas estimadas y los avisos del ciclo están en pausa. Se maneja desde Hoy.'}</div></>}
+              </div>
+              {g.tipo !== 'embarazo' && <div className="ops">
+                {g.tipo === 'test' && <button type="button" className="op" onClick={() => setTest(g)}>Editar</button>}
+                <button type="button" className={'op' + (sure === 'g' + g.id ? ' sure' : '')} onClick={() => del('g' + g.id, g.id!)}>{sure === 'g' + g.id ? '¿Borrar?' : 'Borrar'}</button>
+              </div>}
+            </li>
+          ) : e ? (
             <li key={'e' + e.id} className="ev">
               <span className="bar" />
               <div className="grow"><div className="when num">{fmtShort(e.date)} · {e.type === 'stop' ? 'Dejaste las pastillas' : 'Empezaste las pastillas'}</div>
@@ -72,8 +90,8 @@ export function Historial() {
                 <div className="meta num">{r!.dur ? plural(r!.dur, 'día', 'días') : ongoing(r!) ? 'Todavía sin último día' : 'Falta el último día'} · {r!.flow}{r!.cycle ? ` · ciclo de ${r!.cycle} días` : ' · ciclo actual'}</div>
                 {r!.note && <div className="note">{r!.note}</div>}
                 {(() => { const sy = cycleSymptoms(active.symptoms, r!.start, nextStart(r!)); return sy.length ? <div className="meta" style={{ marginTop: 4 }}>Síntomas: {sy.join(', ').toLowerCase()}</div> : null; })()}
-                {(r!.flags.length > 0 || r!.trying || r!.adapt || r!.atypical) && profile.kind === 'self' && (
-                  <div className="flags">{r!.trying && <span className="flag try">♥ Buscando embarazo</span>}{r!.adapt && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--plum)' }}>Ciclo de adaptación</span>}{r!.atypical && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--muted)' }}>Ciclo raro · no cuenta</span>}{r!.flags.map((f, i) => <span key={i} className={'flag ' + f.level}>{f.text}</span>)}</div>
+                {(r!.flags.length > 0 || r!.trying || r!.adapt || r!.atypical || r!.preg) && profile.kind === 'self' && (
+                  <div className="flags">{r!.preg && <span className="flag" style={{ background: 'var(--ok-bg)', color: 'var(--ok-ink)' }}>Ciclo con embarazo · no cuenta para estimar</span>}{r!.trying && <span className="flag try">♥ Buscando embarazo</span>}{r!.adapt && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--plum)' }}>Ciclo de adaptación</span>}{r!.atypical && <span className="flag" style={{ background: 'var(--soft)', color: 'var(--muted)' }}>Ciclo raro · no cuenta</span>}{r!.flags.map((f, i) => <span key={i} className={'flag ' + f.level}>{f.text}</span>)}</div>
                 )}
               </div>
               <div className="ops">
@@ -87,6 +105,7 @@ export function Historial() {
       <button type="button" className="btn ghost" onClick={() => setAdding(true)}>Anotar un período anterior</button>
       {editing && <PeriodSheet editing={editing} onClose={() => setEditing(null)} />}
       {adding && <PeriodSheet onClose={() => setAdding(false)} />}
+      {test && <TestSheet d={active} editing={test} onClose={() => setTest(null)} />}
     </div>
   );
 }

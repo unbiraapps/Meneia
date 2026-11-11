@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, showsFertility, type DayKind } from '../calc';
+import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, showsFertility, showsPregnancy, canSayNotYet, type DayKind } from '../calc';
+import { RESULT_LABEL, TestSheet, useNotYet } from './Embarazo';
 import { savePeriod } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
@@ -15,12 +16,17 @@ export function Calendario() {
   const [y, setY] = useState(now.getFullYear());
   const [m, setM] = useState(now.getMonth());
   const [sel, setSel] = useState(today);
-  const [sheet, setSheet] = useState<false | 'edit' | 'sym'>(false);
+  const [sheet, setSheet] = useState<false | 'edit' | 'sym' | 'test'>(false);
+  const notYet = useNotYet(active);
   if (!active) return null;
   const { profile, A, events } = active;
   const fert = showsFertility(profile);
   const kinds = dayKinds(A, events);
   const symDays = new Set(active.symptoms.map(s => s.date));
+  const preg = showsPregnancy(profile, today, active.registros);
+  const checkDays = new Set(active.registros.filter(r => r.tipo === 'todavia-no').map(r => r.fecha));
+  const testDays = new Map(active.registros.filter(r => r.tipo === 'test').map(r => [r.fecha, r]));
+  const pregOn = (d: string) => active.registros.some(r => r.tipo === 'embarazo' && d >= r.fecha && (!r.fin || d <= r.fin));
 
   const first = new Date(Date.UTC(y, m, 1));
   const start = iso(new Date(first.getTime() - ((first.getUTCDay() + 6) % 7) * 864e5));
@@ -44,7 +50,7 @@ export function Calendario() {
 
   return (
     <div className="screen">
-      <div className="top">
+      <div className="top" style={{ flexWrap: 'wrap', rowGap: 8 }}>
         <h1>Calendario</h1>
         <div className="row" style={{ gap: 6 }}>
           <button type="button" className="icon-btn" aria-label="Mes anterior" onClick={() => move(-1)}>‹</button>
@@ -65,10 +71,12 @@ export function Calendario() {
           else if (fert && k.has('fertile')) c += ' fertile';
           if (k.has('pill')) c += ' pill';
           if (symDays.has(s)) c += ' sym';
+          if (preg && testDays.has(s)) c += ' test';
+          else if (checkDays.has(s)) c += ' check';
           if (fert && k.has('try') && (k.has('fertile') || k.has('ovu'))) c += ' try';
           if (s === today) c += ' today';
           if (s === sel) c += ' sel';
-          const lab = [...k].filter(x => fert || (x !== 'ovu' && x !== 'fertile' && x !== 'try')).map(x => NAMES[x]).join(', ');
+          const lab = [...k].filter(x => fert || (x !== 'ovu' && x !== 'fertile' && x !== 'try')).map(x => NAMES[x]).concat(preg && testDays.has(s) ? ['test anotado'] : checkDays.has(s) ? ['todavía no'] : []).join(', ');
           return <button key={s} type="button" className={c} aria-label={fmtLong(s) + (lab ? ', ' + lab : '')} aria-pressed={s === sel} onClick={() => setSel(s)}>{toDate(s).getUTCDate()}</button>;
         })}
       </div>
@@ -78,23 +86,28 @@ export function Calendario() {
         <span><i style={{ border: '2px dotted var(--line)', width: 10, height: 10 }} />Posible</span>
         {fert && <><span><i style={{ background: 'var(--fertile)' }} />Fértil</span><span><i style={{ background: 'var(--ovu)' }} />Ovulación</span></>}
         {profile.kind === 'self' && <span><i style={{ background: 'var(--plum)', borderRadius: '50%', width: 9, height: 9 }} />Pastillas</span>}
+        {checkDays.size > 0 && <span><i style={{ background: 'var(--lavender)', borderRadius: '50%', width: 9, height: 9 }} />Todavía no</span>}
+        {preg && testDays.size > 0 && <span><i style={{ background: 'var(--try)', borderRadius: '50%', width: 9, height: 9 }} />Test</span>}
       </div>
       <div className="card">
         <div className="top">
           <h2>{fmtLong(sel).charAt(0).toUpperCase() + fmtLong(sel).slice(1)}</h2>
-          <span className="muted" style={{ fontSize: 12.5 }}>{[...selKinds].filter(x => fert || (x !== 'ovu' && x !== 'fertile' && x !== 'try')).map(x => NAMES[x]).join(' · ')}</span>
+          <span className="muted" style={{ fontSize: 12.5 }}>{[...selKinds].filter(x => fert || (x !== 'ovu' && x !== 'fertile' && x !== 'try')).map(x => NAMES[x]).concat(preg && testDays.has(sel) ? [`test ${RESULT_LABEL[testDays.get(sel)!.resultado!].toLowerCase()}`] : [], checkDays.has(sel) ? ['todavía no'] : [], pregOn(sel) ? ['embarazo registrado'] : []).join(' · ')}</span>
         </div>
         {sel > today ? <p className="muted" style={{ fontSize: 14 }}>Es un día futuro: se puede anotar cuando llegue.</p> : (
           <div className="btns">
             {!inPeriod && <button type="button" className="btn period small" onClick={startHere}>Empezó este día</button>}
             {prevStart && !prevStart.end && daysBetween(prevStart.start, sel) <= 20 && <button type="button" className="btn ghost small" onClick={endHere}>Terminó este día</button>}
             {inPeriod && <button type="button" className="btn ghost small" onClick={() => setSheet('edit')}>Editar período</button>}
+            {sel === today && canSayNotYet(A, today) && !checkDays.has(today) && !inPeriod && <button type="button" className="btn ghost small" onClick={notYet}>Todavía no {profile.kind === 'child' ? 'le' : 'me'} vino</button>}
+            {preg && <button type="button" className="btn ghost small" onClick={() => setSheet('test')}>{testDays.has(sel) ? 'Ver test' : 'Registrar un test'}</button>}
             <button type="button" className="btn ghost small" onClick={() => setSheet('sym')}>{symDays.has(sel) ? 'Ver síntomas' : 'Cómo estaba'}</button>
           </div>
         )}
       </div>
       {sheet === 'edit' && inPeriod && <PeriodSheet editing={inPeriod} onClose={() => setSheet(false)} />}
       {sheet === 'sym' && <SymptomSheet date={sel} onClose={() => setSheet(false)} />}
+      {sheet === 'test' && <TestSheet d={active} date={sel} editing={testDays.get(sel)} onClose={() => setSheet(false)} />}
     </div>
   );
 }

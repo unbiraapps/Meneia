@@ -13,7 +13,8 @@ type View = 'elegir' | 'archivo' | 'nube';
  * Con `recuperar` (desde "Ya uso Meneia" en la bienvenida) solo ofrece traer una copia existente.
  */
 export function Copia({ onBack, recuperar, onRestored }: { onBack: () => void; recuperar?: boolean; onRestored?: () => void }) {
-  const { refresh, today } = useStore();
+  const { refresh, today, self } = useStore();
+  const hasPreg = !!self?.registros.some(r => r.tipo !== 'todavia-no');
   const toast = useToast();
   const [view, setView] = useState<View>('elegir');
   const [text, setText] = useState('');
@@ -77,6 +78,7 @@ export function Copia({ onBack, recuperar, onRestored }: { onBack: () => void; r
       {!recuperar && <>
         <h2 className="serif-title">Una copia en un archivo</h2>
         <p className="muted" style={{ fontSize: 14 }}>Sin cuenta: guardás vos el archivo donde quieras. El archivo no lleva contraseña, así que conservalo en un lugar privado.</p>
+        {hasPreg && <div className="alert warn"><span className="dot" /><div>Este archivo incluye tus tests y registros de embarazo. Guardalo en un lugar privado.</div></div>}
         <div className="btns">
           <button type="button" className="btn" onClick={share}>{isNative() ? 'Guardar o compartir copia' : 'Copiar mis datos'}</button>
         </div>

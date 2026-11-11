@@ -6,7 +6,7 @@ import { useStore } from './store';
 import { DateField, Sheet, useToast } from './ui';
 
 /** Anotar o editar un período del perfil activo (o de otro perfil, con profileId: por ejemplo una hija desde Hoy). */
-export function PeriodSheet({ editing, defaultStart, profileId, onClose }: { editing?: Period; defaultStart?: string; profileId?: number; onClose: () => void }) {
+export function PeriodSheet({ editing, defaultStart, profileId, startOpen, onClose }: { editing?: Period; defaultStart?: string; profileId?: number; startOpen?: boolean; onClose: () => void }) {
   const { active: current, data, today, refresh, privacy, afterSave } = useStore();
   const active = profileId != null ? data.get(profileId) ?? current : current;
   const toast = useToast();
@@ -49,8 +49,8 @@ export function PeriodSheet({ editing, defaultStart, profileId, onClose }: { edi
   }
 
   return (
-    <Sheet title={editing ? 'Editar período' : isSelf ? 'Anotar período' : '¿Cuándo le vino a ' + profile.name + '?'} onClose={onClose}>
-      <DateField label={isSelf ? 'Primer día' : '¿Qué día empezó?'} value={start} max={today} fam={!isSelf} startOpen={!editing && !isSelf} onChange={d => { setStart(d); setErr(''); }} />
+    <Sheet title={editing ? 'Editar período' : isSelf ? (startOpen ? '¿Qué día empezó?' : 'Anotar período') : '¿Cuándo le vino a ' + profile.name + '?'} onClose={onClose}>
+      <DateField label={isSelf ? 'Primer día' : '¿Qué día empezó?'} value={start} max={today} fam={!isSelf} startOpen={!editing && (!isSelf || !!startOpen)} onChange={d => { setStart(d); setErr(''); }} />
       <DateField label="Último día (si ya terminó)" value={end} max={today} fam={!isSelf} optional onChange={d => { setEnd(d); setErr(''); }} />
       <div className="stack" style={{ gap: 6 }}>
         <span className="eyebrow">Cantidad de flujo</span>

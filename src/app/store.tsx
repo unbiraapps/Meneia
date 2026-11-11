@@ -1,8 +1,8 @@
 // Estado de la app: lee todo de la base local y vuelve a programar los avisos después de cada cambio.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders,
-  type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder, type PillSettings, type SymptomLog,
+  analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders, activePregnancy, lastCheck,
+  type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder, type PillSettings, type SymptomLog, type Registro,
 } from '../calc';
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
 import { syncReminders } from '../notify';
@@ -19,7 +19,7 @@ export const withLast = (h: Health): Health => {
   return { ...h, lastConsult: dates[dates.length - 1] ?? '' };
 };
 
-export interface ProfileData { profile: Profile; periods: Period[]; events: PillEvent[]; symptoms: SymptomLog[]; A: Analysis }
+export interface ProfileData { profile: Profile; periods: Period[]; events: PillEvent[]; symptoms: SymptomLog[]; registros: Registro[]; A: Analysis }
 
 interface Store {
   ready: boolean;
@@ -54,10 +54,11 @@ export const useStore = () => { const s = useContext(Ctx); if (!s) throw new Err
 export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettings, pr: PrivacySettings, health: Health, now: Date, pills?: PillSettings): Reminder[] {
   const list: Reminder[] = [];
   const self = data.get(SELF_ID);
-  if (pills && self?.A.onPill) list.push(...pillReminders(pills, now));
+  const preg = self ? activePregnancy(self.registros ?? []) : null;
+  if (pills && self?.A.onPill && !preg?.pausoPastillas) list.push(...pillReminders(pills, now));
   for (const d of data.values()) {
     if (d.profile.kind === 'self') {
-      const own = upcomingReminders(d.A, r, now);
+      const own = upcomingReminders(d.A, r, now, 120, lastCheck(d.registros ?? [], d.A));
       list.push(...(showsFertility(d.profile) ? own : own.filter(x => x.id < 3000 || x.id >= 5000)));
     } else {
       list.push(...childReminders(d.profile, d.A, r.hour, now));
@@ -80,6 +81,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     await ensureSelf();
     const migrated = await migrateFromPrototype().catch(() => false);
     const today = localToday();
+    const registros = await db.registros.toArray();
     const [profiles, periods, events, symptoms, reminders, privacy, shopping, pills, health, onboarded, activeId] = await Promise.all([
       db.profiles.toArray(), db.periods.toArray(), db.events.toArray(), db.symptoms.toArray(), getReminders(), getPrivacy(), getShopping(), getPills(),
       getSetting<Health>('health', DEFAULT_HEALTH), getSetting('onboarded', false), Promise.resolve(SELF_ID),
@@ -92,7 +94,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const ps = periods.filter(x => (x.profileId ?? SELF_ID) === p.id);
       const es = p.kind === 'self' ? events.filter(x => (x.profileId ?? SELF_ID) === p.id) : [];
       const sy = symptoms.filter(x => (x.profileId ?? SELF_ID) === p.id);
-      data.set(p.id!, { profile: p, periods: ps, events: es, symptoms: sy, A: analyze(ps, es, today, optsFor(p, today)) });
+      const rg = registros.filter(x => (x.profileId ?? SELF_ID) === p.id);
+      const pregnancies = p.kind === 'self' ? rg.filter(x => x.tipo === 'embarazo').map(x => ({ start: x.fecha, end: x.fin ?? null })) : [];
+      data.set(p.id!, { profile: p, periods: ps, events: es, symptoms: sy, registros: rg, A: analyze(ps, es, today, { ...optsFor(p, today), pregnancies }) });
     }
     const h = withLast({ ...DEFAULT_HEALTH, ...health, consults: Array.isArray(health.consults) ? health.consults : [] });
     setState(s => ({

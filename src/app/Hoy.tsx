@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, CONFIDENCE_TEXT } from '../calc';
+import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, canSayNotYet, isPending, CONFIDENCE_TEXT } from '../calc';
+import { AwaitingCard, PendingCard, PregnancyCard, TestsCard, useNotYet } from './Embarazo';
 import { savePeriod, saveProfile } from '../db';
 import { useStore } from './store';
 import { Avatar, Icon, useToast } from './ui';
@@ -22,13 +23,18 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
   const { privacy, setActive } = useStore();
   const [pinNag, setPinNag] = useState(false);
   useEffect(() => { if (!privacy.lock) getSetting('pinPromptDismissed', false).then(d => setPinNag(!d)); else setPinNag(false); }, [privacy.lock]);
+  const notYet = useNotYet(active);
   if (!active) return null;
   const { profile, A } = active;
+  const pending = isPending(A);
+  // Con período pendiente o después de un embarazo, "Me vino" pregunta la fecha real
+  const askDate = pending || A.awaitingPeriod;
   const fertility = showsFertility(profile) && !A.onPill;
   const last = A.last;
   const ongoing = !!last && !last.end && daysBetween(last.start, today) <= 10;
 
   async function meVino() {
+    if (askDate && !ongoing) { setSheet('period'); return; }
     if (ongoing && last) {
       await savePeriod({ ...last, end: today });
       await refresh(); toast('Listo, anotado que terminó hoy');
@@ -56,7 +62,6 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
     prev?.flags.filter(f => !f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Cambio en tu último ciclo: ${f.text} (${prev.cycle} días).` }));
     last.flags.filter(f => f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Último período: ${f.text}.` }));
   }
-  if (A.late > 0 && A.rangeEnd) alerts.push({ kind: profile.kind === 'self' ? 'bad' : 'info', text: `${plural(A.late, 'día', 'días')} de atraso: los posibles días terminaban el ${fmtShort(A.rangeEnd)}.` });
   if (A.adapting && profile.kind === 'self') alerts.push({ kind: 'info', text: 'Estás en los primeros ciclos después de dejar las pastillas: es normal que varíen. El rango es más amplio y no te marco alertas de cambio.' });
   const reps = profile.kind === 'self' ? patterns(active.symptoms, A.rows) : [];
 
@@ -95,7 +100,17 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       )}
       {alerts.length > 0 && <div className="alerts">{alerts.map((a, i) => <div key={i} className={'alert ' + a.kind}><span className="dot" /><div>{a.text}</div></div>)}</div>}
 
-      {profile.notYet ? (
+      {A.pregnantSince ? (
+        <>
+          <PregnancyCard d={active} />
+          <button type="button" className="btn ghost" onClick={() => setSheet('sym')}>Cómo estoy</button>
+        </>
+      ) : A.awaitingPeriod && !ongoing ? (
+        <>
+          <AwaitingCard onCameIn={() => setSheet('period')} />
+          <button type="button" className="btn ghost" onClick={() => setSheet('sym')}>Cómo estoy</button>
+        </>
+      ) : profile.notYet ? (
         <div className="card fam">
           <span className="eyebrow">{profile.name}{age != null ? ` · ${age} años` : ''}</span>
           <h2>Todavía no le vino</h2>
@@ -116,12 +131,13 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
                 <>
                   <span className="eyebrow">Día {cycleDay} del ciclo</span>
                   <span className="ring-big num">{daysLeft != null && daysLeft > 0 ? daysLeft : A.late > 0 ? A.late : (A.rangeEnd ? Math.max(0, daysBetween(today, A.rangeEnd)) : 0)}</span>
-                  <span className="muted" style={{ fontSize: 14 }}>{daysLeft != null && daysLeft > 0 ? 'días para el período' : A.late > 0 ? (A.late === 1 ? 'día de atraso' : 'días de atraso') : daysLeft === 0 ? 'hoy es el día más probable' : 'posibles días que quedan'}</span>
+                  <span className="muted" style={{ fontSize: 14 }}>{daysLeft != null && daysLeft > 0 ? 'días para el período' : A.late > 0 ? (A.late === 1 ? 'día después de lo estimado' : 'días después de lo estimado') : daysLeft === 0 ? 'hoy es el día más probable' : 'posibles días que quedan'}</span>
                 </>
               ) : <span className="muted" style={{ fontSize: 14, maxWidth: 150 }}>{profile.kind === 'child' ? 'Anotá su último período para empezar' : 'Anotá tu último período para empezar'}</span>}
             </div>
           </div>
-          {A.next && A.rangeStart && A.rangeEnd && (
+          {pending && <PendingCard d={active} onCameIn={() => setSheet('period')} />}
+          {A.next && A.rangeStart && A.rangeEnd && !pending && (
             <div className="next">
               {A.irregular || A.margin >= 4 ? <><span className="eyebrow">Posibles días</span><b>Del {fmtShort(A.rangeStart)} al {fmtShort(A.rangeEnd)}</b><span className="muted" style={{ fontSize: 13.5 }}>Lo más probable: alrededor del {fmtShort(A.next)}</span></>
                 : <><b>{cap(fmtLong(A.next))}</b><span className="muted" style={{ fontSize: 13.5 }}>Entre el {fmtShort(A.rangeStart)} y el {fmtShort(A.rangeEnd)}</span></>}
@@ -132,19 +148,23 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
               </div>
             </div>
           )}
-          {fertility && A.ovu && A.fertile && (
+          {fertility && A.ovu && A.fertile && !pending && (
             <div className="grid2">
               <div className="mini"><span>Ovulación estimada</span><b>{fmtShort(A.ovu)}</b></div>
               <div className={'mini' + (profile.trying ? ' try' : '')}><span>{profile.trying ? '♥ Mejores días para buscar' : 'Días fértiles'}</span><b>{fmtShort(A.fertile[0])} – {fmtShort(A.fertile[1])}</b></div>
             </div>
           )}
           {A.onPill && profile.kind === 'self' && <p className="muted" style={{ fontSize: 13, textAlign: 'center' }}>Con pastillas la ovulación estimada no aplica.</p>}
-          <div className="btns">
+          {!pending && <div className="btns">
             {profile.kind === 'child' && !ongoing
               ? <button type="button" className="btn fam" onClick={() => setSheet('period')}>Le vino a {profile.name}</button>
               : <button type="button" className="btn period" onClick={meVino}>{ongoing ? 'Terminó hoy' : 'Me vino'}</button>}
-            <button type="button" className="btn ghost" style={{ flex: 'none' }} onClick={() => setSheet('sym')}>Cómo estoy</button>
-          </div>
+            {canSayNotYet(A, today) && !ongoing
+              ? <button type="button" className="btn ghost" onClick={notYet}>Todavía no {profile.kind === 'child' ? 'le' : 'me'} vino</button>
+              : <button type="button" className="btn ghost" style={{ flex: 'none' }} onClick={() => setSheet('sym')}>Cómo estoy</button>}
+          </div>}
+          {(pending || (canSayNotYet(A, today) && !ongoing)) && <button type="button" className="btn link" onClick={() => setSheet('sym')}>Cómo estoy</button>}
+          <TestsCard d={active} />
         </>
       )}
 
@@ -163,7 +183,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       {sheet === 'sym' && <SymptomSheet date={today} onClose={() => setSheet(false)} />}
       {sheet === 'margin' && <MarginSheet onClose={() => setSheet(false)} />}
       {sheet === 'pin' && <PinSheet onClose={() => setSheet(false)} />}
-      {sheet === 'period' && <PeriodSheet defaultStart={today} onClose={() => setSheet(false)} />}
+      {sheet === 'period' && <PeriodSheet defaultStart={today} startOpen={askDate} onClose={() => setSheet(false)} />}
     </div>
   );
 }

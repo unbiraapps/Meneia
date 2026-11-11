@@ -3,6 +3,14 @@
 Tareas fuera del repositorio. Marcá con `[x]` y anotá el resultado debajo de cada una, sin claves ni contraseñas.
 
 
+
+## Período pendiente, tests y embarazo (2026-11-11)
+
+Hecho en el código, igual en Android y en iPhone. No hay conexiones nuevas: los datos nuevos quedan en el celular y, si la copia en la nube está activa, viajan dentro del mismo sobre cifrado. Nada publicado ni enviado a revisión.
+
+- [ ] **Play Console › Seguridad de los datos y App Store Connect › Privacidad de la app:** revisar que la categoría "Salud" (información de salud) ya cubra los tests y el embarazo registrado. No cambia nada de lo que se recopila ni se comparte: queda en el dispositivo y no hay seguimiento. Solo dejarlo en borrador si hace falta tocarlo, sin enviar a revisión.
+- La política de privacidad (`public/privacidad/`) ya menciona los tests y los registros de embarazo. Se publica con el próximo deploy de la web.
+
 ## Identidad visual aprobada (2026-11-10)
 
 Hecho en el código (Android e iPhone, interfaz compartida). Nada publicado ni enviado a revisión.

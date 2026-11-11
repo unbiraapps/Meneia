@@ -1,6 +1,7 @@
 // Datos guardados en el celular (IndexedDB vía Dexie). Nada sale del dispositivo.
 import Dexie, { type Table } from 'dexie';
-import type { Period, PillEvent, ReminderSettings, Flow, PillType, Profile, PrivacySettings, PillSettings, SymptomLog } from './calc';
+import type { Period, PillEvent, ReminderSettings, Flow, PillType, Profile, PrivacySettings, PillSettings, SymptomLog, Registro, TestResult } from './calc';
+import { NOTE_MAX } from './calc';
 import { DEFAULT_REMINDERS, DEFAULT_PRIVACY, DEFAULT_SHOPPING, DEFAULT_PILLS } from './calc';
 
 interface Setting { key: string; value: unknown }
@@ -13,6 +14,7 @@ class CicloDB extends Dexie {
   settings!: Table<Setting, string>;
   profiles!: Table<Profile, number>;
   symptoms!: Table<SymptomLog, number>;
+  registros!: Table<Registro, number>;
   constructor() {
     super('mi-ciclo-lila');
     this.version(1).stores({
@@ -33,6 +35,8 @@ class CicloDB extends Dexie {
     });
     // v3: síntomas por día y por perfil
     this.version(3).stores({ symptoms: '++id, profileId, date, [profileId+date]' });
+    // v4: "todavía no me vino", tests y embarazo. Tabla nueva: no toca lo que ya existe.
+    this.version(4).stores({ registros: '++id, profileId, tipo, [profileId+fecha]' });
   }
 }
 
@@ -100,7 +104,8 @@ export async function saveProfile(p: Profile): Promise<number> {
 /** Borra un perfil de hija y todos sus registros. El perfil "Yo" no se puede borrar. */
 export async function deleteProfile(id: number): Promise<void> {
   if (id === SELF_ID) return;
-  await db.transaction('rw', [db.profiles, db.periods, db.events, db.symptoms], async () => {
+  await db.transaction('rw', [db.profiles, db.periods, db.events, db.symptoms, db.registros], async () => {
+    await db.registros.where('profileId').equals(id).delete();
     await db.periods.where('profileId').equals(id).delete();
     await db.symptoms.where('profileId').equals(id).delete();
     await db.events.where('profileId').equals(id).delete();
@@ -111,7 +116,8 @@ export async function deleteProfile(id: number): Promise<void> {
 // ---------- Copia de seguridad ----------
 
 export interface Backup {
-  app: 'mi-ciclo-lila'; version: 1 | 2; exportedAt: string;
+  app: 'mi-ciclo-lila'; version: 1 | 2 | 3; exportedAt: string;
+  registros?: Registro[];
   periods: Period[]; events: PillEvent[];
   profiles?: Profile[];
   reminders?: Partial<ReminderSettings>;
@@ -122,11 +128,12 @@ export interface Backup {
 }
 
 export async function exportBackup(): Promise<Backup> {
-  const [periods, events, profiles, reminders, shopping, symptoms, pills, health] = await Promise.all([
-    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(), db.symptoms.toArray(), getPills(), getSetting('health', null),
+  const [periods, events, profiles, reminders, shopping, symptoms, pills, health, registros] = await Promise.all([
+    db.periods.toArray(), db.events.toArray(), db.profiles.toArray(), getSetting('reminders', {}), getShopping(), db.symptoms.toArray(), getPills(), getSetting('health', null), db.registros.toArray(),
   ]);
   return {
-    app: 'mi-ciclo-lila', version: 2, exportedAt: new Date().toISOString(),
+    app: 'mi-ciclo-lila', version: 3, exportedAt: new Date().toISOString(),
+    registros: registros.map(({ id: _id, ...r }) => r),
     profiles: profiles.map(p => ({ ...p })),
     periods: periods.map(({ profileId, start, end, flow, note, trying, atypical }) => ({ profileId, start, end, flow, note, ...(trying ? { trying: true } : {}), ...(atypical ? { atypical: true } : {}) })),
     symptoms: symptoms.map(({ profileId, date, pain, body, mood, note }) => ({ profileId, date, pain, body, mood, note })),
@@ -189,7 +196,22 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
   const pills = r.pills && typeof r.pills === 'object' ? sanitizePills(r.pills as Record<string, unknown>) : undefined;
   const health = r.health && typeof r.health === 'object' ? sanitizeHealth(r.health as Record<string, unknown>) : undefined;
   const shopping = Array.isArray(r.shopping) ? (r.shopping as unknown[]).filter((s): s is string => typeof s === 'string').map(s => s.slice(0, 60)).slice(0, 30) : undefined;
-  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 2 ? 2 : 1, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping, symptoms, pills, health } };
+  const registros = sanitizeRegistros(r.registros, pid);
+  return { ok: true, data: { app: 'mi-ciclo-lila', version: r.version === 3 ? 3 : r.version === 2 ? 2 : 1, registros, exportedAt: String(r.exportedAt ?? ''), periods, events, profiles: profiles.length ? profiles : undefined, reminders: (r.reminders as Partial<ReminderSettings>) ?? undefined, shopping, symptoms, pills, health } };
+}
+
+const RESULTS: TestResult[] = ['positivo', 'negativo', 'inconcluso'];
+/** Registros de una copia: solo los tipos conocidos, con fechas válidas y textos recortados. */
+function sanitizeRegistros(v: unknown, pid: (x: unknown) => number): Registro[] {
+  const out: Registro[] = [];
+  for (const x of (Array.isArray(v) ? v : []) as Record<string, unknown>[]) {
+    if (!x || typeof x.fecha !== 'string' || !DATE_RE.test(x.fecha)) continue;
+    const profileId = pid(x.profileId);
+    if (x.tipo === 'todavia-no') out.push({ profileId, tipo: 'todavia-no', fecha: x.fecha });
+    else if (x.tipo === 'test' && RESULTS.includes(x.resultado as TestResult)) out.push({ profileId, tipo: 'test', fecha: x.fecha, resultado: x.resultado as TestResult, nota: typeof x.nota === 'string' ? x.nota.slice(0, NOTE_MAX) : '' });
+    else if (x.tipo === 'embarazo' && profileId === SELF_ID) out.push({ profileId, tipo: 'embarazo', fecha: x.fecha, fin: typeof x.fin === 'string' && DATE_RE.test(x.fin) && x.fin >= x.fecha ? x.fin : null, pausoPastillas: x.pausoPastillas === true, buscabaAntes: x.buscabaAntes === true });
+  }
+  return out.slice(0, 2000);
 }
 
 function sanitizeHealth(x: Record<string, unknown>) {
@@ -215,7 +237,9 @@ function sanitizePills(x: Record<string, unknown>): Partial<PillSettings> {
 }
 
 export async function restoreBackup(b: Backup): Promise<void> {
-  await db.transaction('rw', [db.periods, db.events, db.settings, db.profiles, db.symptoms], async () => {
+  await db.transaction('rw', [db.periods, db.events, db.settings, db.profiles, db.symptoms, db.registros], async () => {
+    await db.registros.clear();
+    for (const r of b.registros ?? []) await db.registros.add({ ...r, profileId: r.profileId ?? SELF_ID });
     await db.periods.clear();
     await db.events.clear();
     await db.symptoms.clear();
@@ -256,3 +280,9 @@ export async function migrateFromPrototype(): Promise<boolean> {
     return true;
   } catch { return false; }
 }
+
+// ---------- Registros: "todavía no me vino", tests y embarazo ----------
+
+export const addRegistro = (r: Registro) => db.registros.add({ ...r, profileId: r.profileId ?? SELF_ID, ...(r.nota != null ? { nota: r.nota.trim().slice(0, NOTE_MAX) } : {}) });
+export const updateRegistro = (id: number, ch: Partial<Registro>) => db.registros.update(id, { ...ch, ...(ch.nota != null ? { nota: ch.nota.trim().slice(0, NOTE_MAX) } : {}) });
+export const deleteRegistro = (id: number) => db.registros.delete(id);

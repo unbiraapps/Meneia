@@ -5,6 +5,8 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 
 ## Decisiones tomadas
 
+- 2026-11-11: período pendiente, tests y embarazo (aprobado por la dueña). "Todavía no me vino" desde el día más probable; "Período pendiente" cuando pasaron los posibles días (se calcula, no se guarda). Tests y "Registrar embarazo confirmado" solo con "Buscar embarazo" activo (perfil propio, 18+). Con un embarazo registrado: sin fechas estimadas, ventana fértil ni avisos del ciclo, y sin contador de semanas. Al registrarlo se ofrece desactivar "Buscar embarazo" (marcado) y pausar el aviso de pastillas; "Deshacer" lo borra y vuelve "Buscar embarazo" a como estaba. Al volver al ciclo se espera el primer período y siguen 3 ciclos de adaptación. El aviso de pendiente dice "Tenés un registro pendiente en Meneia". Datos en la tabla `registros` (Dexie v4); copia versión 3.
+
 - 2026-11-10: identidad aprobada. La bienvenida solo aparece antes de Inicio (instalación nueva). "Ya uso Meneia" lleva a recuperar una copia (archivo o nube) y después a Inicio con los datos cargados. Mientras no esté el original, la marca dentro de la app es un recorte provisorio de la maqueta; los íconos del sistema no se tocan.
 
 - La app se llama **Meneia**. Es siempre oscura, con la paleta lila de `src/styles.css`, y el texto va en español rioplatense (vos).
