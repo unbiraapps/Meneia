@@ -139,8 +139,9 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
           {pending && <PendingCard d={active} onCameIn={() => setSheet('period')} />}
           {A.next && A.rangeStart && A.rangeEnd && !pending && (
             <div className="next">
-              {A.irregular || A.margin >= 4 ? <><span className="eyebrow">Posibles días</span><b>Del {fmtShort(A.rangeStart)} al {fmtShort(A.rangeEnd)}</b><span className="muted" style={{ fontSize: 13.5 }}>Lo más probable: alrededor del {fmtShort(A.next)}</span></>
-                : <><b>{cap(fmtLong(A.next))}</b><span className="muted" style={{ fontSize: 13.5 }}>Entre el {fmtShort(A.rangeStart)} y el {fmtShort(A.rangeEnd)}</span></>}
+              <span className="eyebrow">{A.next < today ? 'Tu próximo período' : profile.kind === 'child' ? `Cuándo le viene a ${profile.name}` : 'Cuándo te viene'}</span>
+              {A.irregular || A.margin >= 4 ? <><b>Entre el {fmtShort(A.rangeStart)} y el {fmtShort(A.rangeEnd)}</b><span className="muted" style={{ fontSize: 13.5 }}>Lo más probable: alrededor del {fmtLong(A.next)}</span></>
+                : <><b>{A.next === today ? 'Hoy' : `Alrededor del ${fmtLong(A.next)}`}</b><span className="muted" style={{ fontSize: 13.5 }}>Puede venir entre el {fmtShort(A.rangeStart)} y el {fmtShort(A.rangeEnd)}</span></>}
               <div className="row" style={{ justifyContent: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                 <span className="flag" style={{ background: 'var(--soft)', color: 'var(--plum)' }}>{CONFIDENCE_TEXT[A.confidence]}{A.valid.length ? ` · ${plural(A.valid.length, 'ciclo', 'ciclos')}` : ''}</span>
                 {A.irregular && <span className="flag warn">Ciclos irregulares</span>}
