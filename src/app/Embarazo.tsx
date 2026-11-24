@@ -2,7 +2,7 @@
 // Nada cambia solo: ni un atraso ni un test cambian el estado. El embarazo se registra con una acción explícita y se puede deshacer.
 import { useState } from 'react';
 import {
-  activePregnancy, cycleRegistros, fmtLong, fmtShort, isPending, plural, showsPregnancy, NOTE_MAX, TEST_RESULTS,
+  activePregnancy, cycleRegistros, fmtLong, usesPills, fmtShort, isPending, plural, showsPregnancy, NOTE_MAX, TEST_RESULTS,
   type Registro, type TestResult,
 } from '../calc';
 import { addRegistro, deleteRegistro, saveProfile, updateRegistro } from '../db';
@@ -132,7 +132,7 @@ export function ConfirmPregnancySheet({ d, onClose }: { d: ProfileData; onClose:
   const { A, profile, registros } = d;
   const lastPositive = cycleRegistros(registros, A).find(r => r.tipo === 'test' && r.resultado === 'positivo')?.fecha;
   const [fecha, setFecha] = useState(lastPositive ?? today);
-  const pillAsk = A.onPill && pills.remind;
+  const pillAsk = A.onPill && pills.remind && usesPills(profile, A);
   const [pausePills, setPausePills] = useState(true);
   const [stopTrying, setStopTrying] = useState(true);
   const [err, setErr] = useState('');

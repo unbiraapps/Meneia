@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, canSayNotYet, isPending, CONFIDENCE_TEXT } from '../calc';
+import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, canSayNotYet, isPending, usesPills, CONFIDENCE_TEXT } from '../calc';
 import { AwaitingCard, PendingCard, PregnancyCard, TestsCard, useNotYet } from './Embarazo';
 import { savePeriod, saveProfile } from '../db';
 import { useStore } from './store';
@@ -155,7 +155,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
               <div className={'mini' + (profile.trying ? ' try' : '')}><span>{profile.trying ? '♥ Mejores días para buscar' : 'Días fértiles'}</span><b>{fmtShort(A.fertile[0])} – {fmtShort(A.fertile[1])}</b></div>
             </div>
           )}
-          {A.onPill && profile.kind === 'self' && <p className="muted" style={{ fontSize: 13, textAlign: 'center' }}>Con pastillas la ovulación estimada no aplica.</p>}
+          {A.onPill && usesPills(profile, A) && <p className="muted" style={{ fontSize: 13, textAlign: 'center' }}>Con pastillas la ovulación estimada no aplica.</p>}
           {!pending && <div className="btns">
             {profile.kind === 'child' && !ongoing
               ? <button type="button" className="btn fam" onClick={() => setSheet('period')}>Le vino a {profile.name}</button>
@@ -169,7 +169,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
         </>
       )}
 
-      {profile.kind === 'self' && <PillToday />}
+      {profile.kind === 'self' && usesPills(profile, A) && <PillToday />}
       {reps.length > 0 && (
         <div className="card soft" style={{ gap: 4 }}>
           <span className="muted" style={{ fontSize: 12 }}>Lo que se repite</span>

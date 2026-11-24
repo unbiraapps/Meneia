@@ -171,6 +171,7 @@ export function parseBackup(text: string): { ok: true; data: Backup } | { ok: fa
         notYet: kind === 'child' && x.notYet === true,
         alertDays: typeof x.alertDays === 'number' && [0, 1, 2, 3].includes(x.alertDays) ? x.alertDays : 0,
         margin: typeof x.margin === 'number' && x.margin >= 2 && x.margin <= 7 ? x.margin : null,
+        ...(kind === 'self' && typeof x.pills === 'boolean' ? { pills: x.pills } : {}),
       });
       ids.add(x.id);
     }

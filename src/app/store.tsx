@@ -1,7 +1,7 @@
 // Estado de la app: lee todo de la base local y vuelve a programar los avisos después de cada cambio.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  analyze, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders, activePregnancy, lastCheck,
+  analyze, usesPills, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders, activePregnancy, lastCheck,
   type Analysis, type Period, type PillEvent, type Profile, type ReminderSettings, type PrivacySettings, type Reminder, type PillSettings, type SymptomLog, type Registro,
 } from '../calc';
 import { db, ensureSelf, getReminders, getPrivacy, getShopping, getPills, getSetting, setSetting, migrateFromPrototype, SELF_ID } from '../db';
@@ -55,7 +55,7 @@ export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettin
   const list: Reminder[] = [];
   const self = data.get(SELF_ID);
   const preg = self ? activePregnancy(self.registros ?? []) : null;
-  if (pills && self?.A.onPill && !preg?.pausoPastillas) list.push(...pillReminders(pills, now));
+  if (pills && self?.A.onPill && usesPills(self.profile, self.A) && !preg?.pausoPastillas) list.push(...pillReminders(pills, now));
   for (const d of data.values()) {
     if (d.profile.kind === 'self') {
       const own = upcomingReminders(d.A, r, now, 120, lastCheck(d.registros ?? [], d.A));

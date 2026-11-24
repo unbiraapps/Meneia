@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { analyze, daysBetween, type Flow, type Period, type PillType } from '../calc';
+import { analyze, daysBetween, usesPills, type Flow, type Period, type PillType } from '../calc';
 import { db, savePeriod, savePillEvent, saveProfile } from '../db';
 import { notifyNow } from '../notify';
 import { useStore } from './store';
@@ -58,7 +58,7 @@ export function PeriodSheet({ editing, defaultStart, profileId, startOpen, onClo
           {(['Leve', 'Normal', 'Abundante'] as Flow[]).map(f => <button key={f} type="button" role="radio" aria-checked={flow === f} className={'chip' + (flow === f ? ' on' : '')} onClick={() => setFlow(f)}>{f}</button>)}
         </div>
       </div>
-      {isSelf && !editing && (
+      {isSelf && !editing && usesPills(profile, active!.A) && (
         <div className="stack" style={{ gap: 6 }}>
           <span className="eyebrow">Pastillas anticonceptivas</span>
           <div className="chips" role="radiogroup" aria-label="Pastillas anticonceptivas">

@@ -156,3 +156,16 @@ describe('registros guardados y copia', () => {
     expect(await db.registros.count()).toBe(0);
   });
 });
+
+describe('interruptor de pastillas', () => {
+  it('sin definir: se muestra solo si alguna vez anotó pastillas', async () => {
+    const { usesPills } = await import('../src/calc');
+    const A = analyze(PS, [], '2026-11-20');
+    expect(usesPills({ ...me }, A)).toBe(false);
+    const B = analyze(PS, [{ date: '2026-09-01', type: 'start' }], '2026-11-20');
+    expect(usesPills({ ...me }, B)).toBe(true);
+    expect(usesPills({ ...me, pills: false }, B)).toBe(false);
+    expect(usesPills({ ...me, pills: true }, A)).toBe(true);
+    expect(usesPills({ ...me, id: 2, kind: 'child', pills: true }, A)).toBe(false);
+  });
+});

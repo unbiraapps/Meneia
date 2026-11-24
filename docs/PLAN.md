@@ -5,6 +5,8 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 
 ## Decisiones tomadas
 
+- 2026-11-24: interruptor "Tomo pastillas anticonceptivas" en Perfil (campo `pills` del perfil propio). Apagado: no aparecen las pastillas al anotar un período, ni la toma del día en Hoy, ni la leyenda del calendario, ni los avisos de pastillas. Sin definir (usuarias actuales): prendido solo si alguna vez anotó pastillas. El historial de pastillas no se borra.
+
 - 2026-11-24: el service worker de la PWA se registra solo en la web. Dentro de la app de Android o iPhone se borra (con su caché) si quedó de una versión anterior, porque después de actualizar seguía sirviendo la versión vieja y pedía la marca provisoria, que ya no existe (imagen rota en el bloqueo).
 
 - 2026-11-11: período pendiente, tests y embarazo (aprobado por la dueña). "Todavía no me vino" desde el día más probable; "Período pendiente" cuando pasaron los posibles días (se calcula, no se guarda). Tests y "Registrar embarazo confirmado" solo con "Buscar embarazo" activo (perfil propio, 18+). Con un embarazo registrado: sin fechas estimadas, ventana fértil ni avisos del ciclo, y sin contador de semanas. Al registrarlo se ofrece desactivar "Buscar embarazo" (marcado) y pausar el aviso de pastillas; "Deshacer" lo borra y vuelve "Buscar embarazo" a como estaba. Al volver al ciclo se espera el primer período y siguen 3 ciclos de adaptación. El aviso de pendiente dice "Tenés un registro pendiente en Meneia". Datos en la tabla `registros` (Dexie v4); copia versión 3.

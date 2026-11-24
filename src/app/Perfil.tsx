@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ageOn, canTry, fmtLong } from '../calc';
+import { ageOn, canTry, fmtLong, usesPills } from '../calc';
 import { saveProfile } from '../db';
 import { useStore } from './store';
 import { Avatar, Icon, Switch, useToast } from './ui';
@@ -41,6 +41,8 @@ export function Perfil({ onLock }: { onLock: () => void }) {
   const kids = profiles.filter(p => p.kind === 'child');
   const ev = self.A.lastPill;
 
+  const pillsOn = usesPills(me, self.A);
+  async function setPills(v: boolean) { await saveProfile({ ...me, pills: v }); await refresh(); toast(v ? 'Pastillas activadas' : 'Pastillas apagadas: no se muestran ni avisan'); }
   async function setTrying(v: boolean) { await saveProfile({ ...me, trying: v }); await refresh(); toast(v ? 'Buscar embarazo activado' : 'Buscar embarazo apagado'); }
 
   return (
@@ -70,11 +72,18 @@ export function Perfil({ onLock }: { onLock: () => void }) {
       </div>
 
       <div className="stack" style={{ gap: 6 }}>
-        <span className="eyebrow">Pastillas anticonceptivas</span>
-        <button type="button" className="list" style={{ padding: 0 }} onClick={() => setSub('pastillas')}>
-          <span className="list-item"><span style={{ color: 'var(--plum)' }}><Icon.pill /></span>
-            <span className="grow"><b>{self.A.onPill ? 'Las estás tomando' : 'Pastillas'}</b><small>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Desde el ${fmtLong(ev.date)} · toma diaria y aviso para comprar`) : 'Toma diaria y aviso para comprar'}</small></span><Icon.chev /></span>
-        </button>
+        <span className="eyebrow">Anticonceptivos</span>
+        <div className="list">
+          <div className="setting">
+            <div className="stack grow"><b>Tomo pastillas anticonceptivas</b>
+              <small>{pillsOn ? 'Activo: toma diaria, aviso para comprar y cambios al anotar' : 'Apagado: no se muestra ni avisa nada de pastillas'}</small></div>
+            <Switch on={pillsOn} label="Tomo pastillas anticonceptivas" onChange={setPills} />
+          </div>
+          {pillsOn && (
+            <button type="button" className="list-item" onClick={() => setSub('pastillas')}><span style={{ color: 'var(--plum)' }}><Icon.pill /></span>
+              <span className="grow"><b>{self.A.onPill ? 'Las estás tomando' : 'Pastillas'}</b><small>{ev ? (ev.type === 'stop' ? `Las dejaste el ${fmtLong(ev.date)}` : `Desde el ${fmtLong(ev.date)} · toma diaria y aviso para comprar`) : 'Toma diaria y aviso para comprar'}</small></span><Icon.chev /></button>
+          )}
+        </div>
       </div>
 
       <div className="stack" style={{ gap: 6 }}>

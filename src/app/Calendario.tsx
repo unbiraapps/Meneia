@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, showsFertility, showsPregnancy, canSayNotYet, type DayKind } from '../calc';
+import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, showsFertility, showsPregnancy, canSayNotYet, usesPills, type DayKind } from '../calc';
 import { RESULT_LABEL, TestSheet, useNotYet } from './Embarazo';
 import { savePeriod } from '../db';
 import { useStore } from './store';
@@ -85,7 +85,7 @@ export function Calendario() {
         <span><i style={{ border: '2px dashed var(--period)', width: 10, height: 10 }} />Más probable</span>
         <span><i style={{ border: '2px dotted var(--line)', width: 10, height: 10 }} />Posible</span>
         {fert && <><span><i style={{ background: 'var(--fertile)' }} />Fértil</span><span><i style={{ background: 'var(--ovu)' }} />Ovulación</span></>}
-        {profile.kind === 'self' && <span><i style={{ background: 'var(--plum)', borderRadius: '50%', width: 9, height: 9 }} />Pastillas</span>}
+        {usesPills(profile, A) && <span><i style={{ background: 'var(--plum)', borderRadius: '50%', width: 9, height: 9 }} />Pastillas</span>}
         {checkDays.size > 0 && <span><i style={{ background: 'var(--lavender)', borderRadius: '50%', width: 9, height: 9 }} />Todavía no</span>}
         {preg && testDays.size > 0 && <span><i style={{ background: 'var(--try)', borderRadius: '50%', width: 9, height: 9 }} />Test</span>}
       </div>

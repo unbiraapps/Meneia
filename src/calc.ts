@@ -39,6 +39,7 @@ export interface Profile {
   notYet: boolean;     // hija a la que todavía no le vino
   alertDays: number;   // hijas: días antes del período para avisar (0 = apagado)
   margin?: number | null; // margen de los posibles días elegido a mano (2 a 7); null = automático
+  pills?: boolean;     // "Tomo pastillas anticonceptivas" (solo 'self'). Sin definir: según si anotó pastillas
 }
 
 export interface PrivacySettings {
@@ -545,4 +546,7 @@ export const canSayNotYet = (A: Analysis, today: string) => !!A.next && !A.pregn
 export const isPending = (A: Analysis) => !A.pregnantSince && A.late > 0;
 
 /** Tests y embarazo: solo el perfil propio, con 18 años o más y "Buscar embarazo" activo (o un embarazo ya registrado). */
+/** ¿Se muestra lo de pastillas (perfil, anotar período, Hoy y avisos)? Lo decide el interruptor del perfil. */
+export const usesPills = (p: Profile, A: Analysis) => p.kind === 'self' && (p.pills ?? (A.onPill || !!A.lastPill));
+
 export const showsPregnancy = (p: Profile, today: string, rs: Registro[]) => canTry(p, today) && (p.trying || !!activePregnancy(rs));
