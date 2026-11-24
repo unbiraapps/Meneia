@@ -222,7 +222,7 @@ input[type=date]{-webkit-appearance:none;appearance:none;display:block;width:100
 input[type=date]::-webkit-date-and-time-value{text-align:left}
 
 /* Marca: bienvenida y Acerca de */
-.marca{display:block;border-radius:23%;flex:none}
+.marca{display:block;border-radius:23%;flex:none;background:#140334}
 .brand{font-family:var(--brand);font-weight:400;color:var(--ivory);letter-spacing:-.03em;line-height:1;margin:0}
 .tagline{color:var(--lavender);font-size:16px;margin:0}
 .welcome{min-height:100vh;min-height:100dvh;align-items:center;text-align:center;justify-content:space-between;gap:24px}

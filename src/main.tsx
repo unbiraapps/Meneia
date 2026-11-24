@@ -1,6 +1,7 @@
 import './styles.css';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
+import { setupServiceWorker } from './sw';
 
 async function start() {
   // Compilación para capturas: carga datos inventados antes de abrir la app
@@ -8,3 +9,4 @@ async function start() {
   createRoot(document.getElementById('root')!).render(<App />);
 }
 start();
+setupServiceWorker();

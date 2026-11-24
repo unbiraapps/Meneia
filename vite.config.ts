@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => mode === 'artifact'
       build: { outDir: 'dist', emptyOutDir: true, rollupOptions: { input: { main: 'index.html', clave: 'nueva-clave/index.html' } } },
       plugins: [VitePWA({
         registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        // Se registra a mano en src/sw.ts: solo en la web, nunca dentro de la app de Android o iPhone
+        injectRegister: false,
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'Meneia',
