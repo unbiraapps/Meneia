@@ -37,3 +37,7 @@ npx cap sync
 - **Adaptable de Android:** círculo, squircle, cuadrado redondeado y gota. La M, las lunas y la órbita quedan dentro de la zona segura en las cuatro máscaras.
 - **iPhone:** con la máscara de esquinas continuas no se recorta nada. El ícono de 1024 no tiene canal alfa.
 - **Tamaños chicos:** la M y las lunas se leen a 28 y 48 px, y a 16 y 32 px en la pestaña del navegador. La órbita fina se aclara en los tamaños más chicos, como en el diseño original.
+
+## Compilaciones
+
+- Commit `e43c742`: Android #60 correcta (Drive: `Meneia/APK/Meneia 1.2 (60).apk`) e iPhone (simulador) #22 correcta.
