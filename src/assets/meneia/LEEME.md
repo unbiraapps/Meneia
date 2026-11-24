@@ -1,10 +1,19 @@
 # Marca de Meneia (M lunar)
 
-`marca-provisoria.png` es un recorte de 77×77 px de la captura que trae la maqueta aprobada
-(`meneia-identidad/index.html`). Se usa **solo de forma provisoria** en Bienvenida y Acerca de,
-a 72–88 px, hasta tener el archivo original.
+El ícono aprobado (M marfil con fases lunares sobre violeta oscuro) sale de un único archivo maestro:
 
-Cuando llegue el original (SVG o PNG de 1024 px o más):
-1. Guardarlo acá como `marca.svg` (o `marca.png`) y cambiar el import en `src/app/Marca.tsx`.
-2. Regenerar los íconos de Android (`node scripts/android-res.mjs`) y de iPhone (`npm run ios:res`)
-   a partir de ese original. No usar esta captura ampliada como ícono final.
+- `branding/meneia-icono-maestro.png`: 1254 × 1254 px, RGB opaco, cuadrado sin bordes redondeados.
+  Original de la dueña: `meneia-icono-lunar-alta-resolucion.png` (carpeta `mockups/meneia-identidad`).
+
+`marca.png` (384 px) es la marca dentro de la app: bienvenida, Acerca de, bloqueo y Perfil. El CSS la redondea.
+
+Para regenerar todo después de cambiar el maestro:
+
+```
+npm run icons        # web, PWA, marca de la app e ícono de Google Play
+npm run android:res  # íconos, notificación y pantalla de inicio de Android
+npm run ios:res      # AppIcon y pantalla de inicio de iPhone
+npx cap sync
+```
+
+La lista completa de archivos generados está en `docs/ICONOS.md`.

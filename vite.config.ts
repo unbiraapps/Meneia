@@ -26,8 +26,8 @@ export default defineConfig(({ mode }) => mode === 'artifact'
           scope: './',
           display: 'standalone',
           orientation: 'portrait',
-          background_color: '#17131F',
-          theme_color: '#17131F',
+          background_color: '#120b23',
+          theme_color: '#120b23',
           icons: [
             { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
             { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },

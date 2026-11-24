@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "icons": "node scripts/icons.mjs",
+    "android:res": "node scripts/android-res.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "postinstall": "patch-package",

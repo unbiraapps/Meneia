@@ -27,8 +27,10 @@ Hecho en el código (Android e iPhone, interfaz compartida). Nada publicado ni e
 
 ### Pendiente
 
-- [ ] **Ícono original de la M lunar.** La maqueta solo trae una captura de 97×82 px. Por ahora, en la app (bienvenida, Acerca de, bloqueo y fila de Perfil) se usa un recorte provisorio de esa captura (`src/assets/meneia/marca-provisoria.png`). Los íconos de Android e iPhone **no se cambiaron**: siguen los anteriores. Hace falta que la dueña pase el original (SVG, o PNG de 1024 px o más). Codex: si lo encontrás en `C:\Users\lenovo\Documents\ChatGPT\Codigo de estilo\mockups\meneia-identidad\` o en otra carpeta del proyecto, subilo al repo en `src/assets/meneia/` y avisale a Claude, que genera los recursos de las dos plataformas (`scripts/android-res.mjs`, `scripts/ios-res.mjs`).
-- [ ] Después del ícono nuevo: actualizar el ícono de Play Console (512×512), el gráfico destacado y las capturas de las dos tiendas (Claude las regenera).
+- [x] **Ícono original de la M lunar.** Listo el 2026-11-24, a partir de `meneia-icono-lunar-alta-resolucion.png`. Se guardó en el repo como `branding/meneia-icono-maestro.png` y desde ahí se generaron Android, iPhone, web, PWA y la marca dentro de la app. Lista de archivos en `docs/ICONOS.md`.
+- [ ] **Play Console › Ficha de Play Store (borrador):** subir `store-assets/android/icono-play-512.png` como ícono de la app. No enviar a revisión.
+- [ ] **App Store Connect:** no hace falta subir nada. El ícono viaja dentro de la próxima compilación de TestFlight.
+- [ ] El gráfico destacado de Play y las capturas de las tiendas todavía muestran el ícono anterior. Claude las regenera cuando la dueña lo pida.
 - [ ] Revisar en Play Console y App Store Connect los textos nuevos de `docs/tienda/textos.md` (subtítulo "Tu ciclo, a tu ritmo", descripción breve y texto promocional). Solo dejarlos cargados como borrador, sin enviar a revisión.
 - Sin conexiones nuevas: la copia en la nube sigue necesitando lo que ya estaba pendiente (SMTP, Google OAuth de producción, Apple en Supabase).
 

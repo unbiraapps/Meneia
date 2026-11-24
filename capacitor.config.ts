@@ -38,7 +38,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SocialLogin: { providers: { google: true, facebook: false, apple: false, twitter: false } },
-    LocalNotifications: { smallIcon: 'ic_stat_ciclo', iconColor: '#816BB4' },
+    LocalNotifications: { smallIcon: 'ic_stat_ciclo', iconColor: '#c9b1e7' },
   },
 };
 
