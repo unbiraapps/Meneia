@@ -57,3 +57,11 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - Las notas locales previas de conexiones iPhone quedaron preservadas en el stash «Notas de conexiones iPhone pendientes 2026-11-08» para permitir el pull; no se descartaron ni se aplicaron encima de los cambios nuevos de Claude.
 
   Resultado (Claude, 2026-11-08): la corrida 18 terminó bien. Meneia 1.0 (18) firmada y subida a App Store Connect sin errores. Siguiente: etapa 3 en PARA-CODEX.
+
+
+## Prueba interna Android (Codex, 2026-11-25)
+
+- AAB **63 (1.2)** publicado en canal interno. Play muestra «Disponible para verificadores internos» y «Sin revisar». Invitación: https://play.google.com/apps/internaltest/4700723054209566308
+- Lista Amigas pendiente por decisión de la dueña después de explicar que Google la crea a nivel de cuenta. Todavía no hay verificadores seleccionados para Meneia. No guardar su Gmail en el repo.
+- Play advirtió: «No hay un archivo de desofuscación de asociado con este App Bundle». Revisar si el build usa R8/Proguard y, en ese caso, conservar/publicar su mapping para depuración. La advertencia no bloqueó la prueba interna.
+- Cuenta de servicio propia creada, sin claves ni roles IAM: `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com`. Configuración de Play y secreto pendiente. El futuro workflow debe usar exclusivamente `internal`.
