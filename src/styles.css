@@ -263,3 +263,46 @@ ul.plain-list{margin:0;padding-left:1.2em;color:var(--muted);font-size:14px;disp
 .hist li.reg.embarazo .bar{background:var(--ok-ink);opacity:.6}
 .hist li.reg .when{color:var(--fg)}
 .hist li.reg .res{margin-left:4px}
+/* Embarazo, posparto y pausa */
+.preg-card{border-color:#4E6B5E;background:linear-gradient(180deg,#1E2F2A,var(--surface));gap:10px}
+.preg-week{font:700 34px/1.05 var(--display);color:var(--ivory)}
+.tri-bar{height:7px;border-radius:4px;background:var(--soft);overflow:hidden}
+.tri-bar i{display:block;height:100%;background:var(--ok-ink);border-radius:4px}
+.tri-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-4px}
+.kvs{display:flex;flex-direction:column}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border:none;border-top:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:14.5px;text-align:left;width:100%}
+.kvs>.kv:first-child{border-top:none}
+.kv>span:first-child{color:var(--muted)}
+.kv b{color:var(--ivory)}
+button.kv{cursor:pointer;min-height:44px}
+.kv.size>span:first-child{color:inherit}
+.kv.size .grow{display:flex;flex-direction:column;gap:1px}
+.kv.size small{color:var(--muted);font-size:13px}
+.kv.add{color:var(--lavender);font-weight:600}
+.fruit-box{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--soft);flex:none}
+.fruit-box.big{width:116px;height:116px;border-radius:30px;background:var(--surface);border:1px solid var(--line)}
+.btn.link.quiet{color:var(--muted);font-size:13.5px;font-weight:500}
+.size-hero{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.size-name{font:700 22px var(--display);color:var(--ivory)}
+.setting.ctrl{gap:12px;align-items:center;font-size:14.5px}
+.setting.ctrl input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--ok-ink)}
+ul.list.signs{list-style:none;margin:0;padding:0}
+ul.list.signs li{font-size:15px}
+.calm{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:32px 8px}
+.calm .btn{width:100%}
+/* Tus síntomas */
+.rep-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border:none;border-top:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:14.5px;width:100%;text-align:left;cursor:pointer;min-height:44px}
+.rep-row.static{cursor:default}
+.card>.rep-row:first-of-type,.card>span+.rep-row{border-top:none}
+.rep-row b{color:var(--ivory)}
+.rep-row>span{color:var(--muted);font-size:13px;text-align:right}
+.sgrid{display:grid;gap:10px 4px;align-items:center}
+.sg-h{font-size:11px;color:var(--muted);text-align:center}
+.sg-n{background:none;border:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;padding:4px 0;cursor:pointer;line-height:1.2;min-height:32px}
+.sdot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);justify-self:center;display:block}
+.sdot.on{background:var(--period);border-color:var(--period)}
+.sdot.mood{background:var(--lavender);border-color:var(--lavender)}
+.sdot.preg{background:var(--ok-ink);border-color:var(--ok-ink)}
+.sbars{display:grid;grid-template-columns:repeat(28,1fr);gap:2px;align-items:end;height:64px}
+.sbars i{display:block;background:var(--period);border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
+.sbars-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}

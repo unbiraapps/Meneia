@@ -6,6 +6,7 @@ import {
   type Registro, type TestResult,
 } from '../calc';
 import { addRegistro, deleteRegistro, saveProfile, updateRegistro } from '../db';
+import { defaultControls } from '../embarazo';
 import { useStore, type ProfileData } from './store';
 import { DateField, Sheet, useToast } from './ui';
 
@@ -140,7 +141,7 @@ export function ConfirmPregnancySheet({ d, onClose }: { d: ProfileData; onClose:
     if (!fecha) return setErr('Elegí desde cuándo.');
     if (fecha > today) return setErr('La fecha no puede ser futura.');
     if (A.last && fecha < A.last.start) return setErr(`La fecha no puede ser anterior a tu último período (${fmtShort(A.last.start)}).`);
-    await addRegistro({ profileId: profile.id, tipo: 'embarazo', fecha, fin: null, pausoPastillas: pillAsk && pausePills, buscabaAntes: profile.trying });
+    await addRegistro({ profileId: profile.id, tipo: 'embarazo', fecha, fin: null, pausoPastillas: pillAsk && pausePills, buscabaAntes: profile.trying, ...(A.last ? { fum: A.last.start } : {}), controles: defaultControls() });
     if (profile.trying && stopTrying) await saveProfile({ ...profile, trying: false });
     onClose(); await refresh(); toast('Embarazo registrado');
   }
@@ -159,71 +160,6 @@ export function ConfirmPregnancySheet({ d, onClose }: { d: ProfileData; onClose:
       <button type="button" className="btn" onClick={save}>Sí, registrar</button>
       <button type="button" className="btn link" onClick={onClose}>Ahora no</button>
       <p className="muted" style={{ fontSize: 12.5, textAlign: 'center', margin: 0 }}>Lo podés deshacer cuando quieras.</p>
-    </Sheet>
-  );
-}
-
-/** Tarjeta de Hoy mientras hay un embarazo registrado. */
-export function PregnancyCard({ d }: { d: ProfileData }) {
-  const [sheet, setSheet] = useState<false | 'back' | 'undo'>(false);
-  const preg = activePregnancy(d.registros);
-  if (!preg) return null;
-  return (
-    <>
-      <div className="card preg" role="status">
-        <span className="pill-tag ok">Embarazo registrado</span>
-        <h2>Desde el {fmtLong(preg.fecha).replace(/^\S+ /, '')}</h2>
-        <p className="muted" style={{ fontSize: 14, margin: 0 }}>Pausamos las fechas estimadas y los avisos del ciclo. Tus consultas y recordatorios de Salud siguen igual.</p>
-      </div>
-      <div className="stack" style={{ gap: 6 }}>
-        <button type="button" className="btn ghost" onClick={() => setSheet('back')}>Volver a seguir mi ciclo</button>
-        <button type="button" className="btn link" onClick={() => setSheet('undo')}>Deshacer este registro</button>
-      </div>
-      {sheet === 'back' && <BackToCycleSheet d={d} preg={preg} onClose={() => setSheet(false)} />}
-      {sheet === 'undo' && <UndoPregnancySheet d={d} preg={preg} onClose={() => setSheet(false)} />}
-    </>
-  );
-}
-
-function BackToCycleSheet({ d, preg, onClose }: { d: ProfileData; preg: Registro; onClose: () => void }) {
-  const { today, refresh } = useStore();
-  const toast = useToast();
-  const [fin, setFin] = useState(today);
-  const [retry, setRetry] = useState(false);
-  const [err, setErr] = useState('');
-  async function save() {
-    if (!fin) return setErr('Elegí desde cuándo.');
-    if (fin > today) return setErr('La fecha no puede ser futura.');
-    if (fin < preg.fecha) return setErr(`No puede ser antes del ${fmtShort(preg.fecha)}, cuando lo registraste.`);
-    await updateRegistro(preg.id!, { fin });
-    if (retry && !d.profile.trying) await saveProfile({ ...d.profile, trying: true });
-    onClose(); await refresh(); toast('Listo. Cuando te venga, anotalo');
-  }
-  return (
-    <Sheet title="Volver a seguir tu ciclo" onClose={onClose}>
-      <DateField label="¿Desde cuándo?" value={fin} max={today} onChange={v => { setFin(v); setErr(''); }} />
-      <p className="muted" style={{ fontSize: 13.5, margin: 0 }}>Cuando anotes tu próximo período, las fechas se calculan de nuevo. Los primeros 3 ciclos tienen un rango más amplio, porque pueden variar.</p>
-      {!d.profile.trying && <label className="row check-row"><input type="checkbox" checked={retry} onChange={e => setRetry(e.target.checked)} />Volver a activar "Buscar embarazo"</label>}
-      {err && <p className="err" role="alert">{err}</p>}
-      <button type="button" className="btn" onClick={save}>Guardar</button>
-      <button type="button" className="btn link" onClick={onClose}>Cancelar</button>
-    </Sheet>
-  );
-}
-
-function UndoPregnancySheet({ d, preg, onClose }: { d: ProfileData; preg: Registro; onClose: () => void }) {
-  const { refresh } = useStore();
-  const toast = useToast();
-  async function undo() {
-    await deleteRegistro(preg.id!);
-    if (!!preg.buscabaAntes !== d.profile.trying) await saveProfile({ ...d.profile, trying: !!preg.buscabaAntes });
-    onClose(); await refresh(); toast('Registro deshecho');
-  }
-  return (
-    <Sheet title="Deshacer el registro" onClose={onClose}>
-      <p style={{ fontSize: 14.5, margin: 0 }}>Se borra el registro de embarazo del {fmtShort(preg.fecha)}, como si no lo hubieras anotado. Vuelven las fechas estimadas y los avisos. Tus tests y períodos quedan como estaban.</p>
-      <button type="button" className="btn" onClick={undo}>Sí, deshacer</button>
-      <button type="button" className="btn link" onClick={onClose}>Cancelar</button>
     </Sheet>
   );
 }

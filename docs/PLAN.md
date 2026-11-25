@@ -5,6 +5,8 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 
 ## Decisiones tomadas
 
+- 2026-11-25: embarazo y posparto, versión sencilla aprobada por la dueña (reemplaza "sin contador de semanas"). Incluye Hoy con semana, barra por trimestres, fecha probable calculada (FUM + 280) y fecha del médico (estimada o programada) que no la reemplaza, tamaño con cm y g y una fruta opcional por mes, "Esta semana", controles por trimestre (los que tienen fecha avisan), síntomas propios del embarazo con aviso suave a los 5 días seguidos y "Cuándo consultar". "Terminar el embarazo" ofrece "Nació" (posparto hasta el primer período), "El embarazo terminó" (pausa sin anuncios de pantalla completa) y "Lo registré por error". Además, "Tus síntomas" en Historial: lo que se repite en 3 de los últimos 6 ciclos, una grilla por ciclo y el detalle por día; durante el embarazo, por trimestre. Los textos de salud son borrador: ver docs/EMBARAZO-CONTENIDO.md.
+
 - 2026-11-25: el último día del período se sigue cargando desde Historial › Editar (decisión de la dueña). No se agregan tarjeta en Hoy, botón "¿Cuándo terminó?" ni edición desde el círculo.
 
 - 2026-11-24: interruptor "Tomo pastillas anticonceptivas" en Perfil (campo `pills` del perfil propio). Apagado: no aparecen las pastillas al anotar un período, ni la toma del día en Hoy, ni la leyenda del calendario, ni los avisos de pastillas. Sin definir (usuarias actuales): prendido solo si alguna vez anotó pastillas. El historial de pastillas no se borra.

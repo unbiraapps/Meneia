@@ -210,7 +210,23 @@ function sanitizeRegistros(v: unknown, pid: (x: unknown) => number): Registro[] 
     const profileId = pid(x.profileId);
     if (x.tipo === 'todavia-no') out.push({ profileId, tipo: 'todavia-no', fecha: x.fecha });
     else if (x.tipo === 'test' && RESULTS.includes(x.resultado as TestResult)) out.push({ profileId, tipo: 'test', fecha: x.fecha, resultado: x.resultado as TestResult, nota: typeof x.nota === 'string' ? x.nota.slice(0, NOTE_MAX) : '' });
-    else if (x.tipo === 'embarazo' && profileId === SELF_ID) out.push({ profileId, tipo: 'embarazo', fecha: x.fecha, fin: typeof x.fin === 'string' && DATE_RE.test(x.fin) && x.fin >= x.fecha ? x.fin : null, pausoPastillas: x.pausoPastillas === true, buscabaAntes: x.buscabaAntes === true });
+    else if (x.tipo === 'embarazo' && profileId === SELF_ID) {
+      const fin = typeof x.fin === 'string' && DATE_RE.test(x.fin) && x.fin >= x.fecha ? x.fin : null;
+      const okDate = (v: unknown) => typeof v === 'string' && DATE_RE.test(v);
+      const strList = (v: unknown, max: number) => (Array.isArray(v) ? v.filter((y): y is string => typeof y === 'string').map(y => y.slice(0, 60)).slice(0, max) : undefined);
+      const controles = Array.isArray(x.controles) ? (x.controles as Record<string, unknown>[]).filter(c => c && typeof c.texto === 'string' && [1, 2, 3].includes(c.trimestre as number)).slice(0, 40).map((c, i) => ({
+        id: typeof c.id === 'string' ? c.id.slice(0, 20) : 'r' + i, trimestre: c.trimestre as 1 | 2 | 3, texto: (c.texto as string).slice(0, 80), hecho: c.hecho === true, ...(okDate(c.fecha) ? { fecha: c.fecha as string } : {}),
+      })) : undefined;
+      out.push({
+        profileId, tipo: 'embarazo', fecha: x.fecha, fin, pausoPastillas: x.pausoPastillas === true, buscabaAntes: x.buscabaAntes === true,
+        ...(okDate(x.fum) ? { fum: x.fum as string } : {}),
+        ...(okDate(x.fppMedico) ? { fppMedico: x.fppMedico as string, fppTipo: x.fppTipo === 'programada' ? 'programada' as const : 'estimada' as const } : {}),
+        ...(controles ? { controles } : {}),
+        ...(fin && (x.cierre === 'nacimiento' || x.cierre === 'terminado') ? { cierre: x.cierre } : {}),
+        ...(strList(x.postChecks, 10) ? { postChecks: strList(x.postChecks, 10) } : {}),
+        ...(strList(x.avisosVistos, 50) ? { avisosVistos: strList(x.avisosVistos, 50) } : {}),
+      });
+    }
   }
   return out.slice(0, 2000);
 }

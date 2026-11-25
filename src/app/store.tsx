@@ -1,4 +1,5 @@
 // Estado de la app: lee todo de la base local y vuelve a programar los avisos después de cada cambio.
+import { afterStage } from '../embarazo';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   analyze, usesPills, upcomingReminders, childReminders, finalizeReminders, localToday, addDays, showsFertility, optsFor, pillReminders, activePregnancy, lastCheck,
@@ -64,6 +65,9 @@ export function buildReminders(data: Map<number, ProfileData>, r: ReminderSettin
       list.push(...childReminders(d.profile, d.A, r.hour, now));
     }
   }
+  // Controles del embarazo con fecha: aviso neutro ese día
+  (preg?.controles ?? []).filter(c => c.fecha && !c.hecho && c.fecha >= localToday(now)).slice(0, 10).forEach((c, i) =>
+    list.push({ id: 7100 + i, date: c.fecha!, hour: r.hour, title: 'Tenés un control hoy', body: 'Lo anotaste en Meneia.' }));
   if (health.controlOn && health.lastConsult) {
     const due = addDays(health.lastConsult, Math.round(health.controlMonths * 30.4));
     if (due >= localToday(now)) list.push({ id: 7000, date: due, hour: r.hour, title: 'Control con la ginecóloga', body: 'Ya pasó el tiempo que elegiste desde la última consulta.' });
@@ -135,6 +139,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const maybeInterstitial = useCallback((delay: number) => {
     const s = stateRef.current;
     const child = s.data.get(s.activeId)?.profile.kind === 'child';
+    const me = s.data.get(SELF_ID);
+    if (me && afterStage(me.registros ?? [], me.periods.map(p => p.start)).stage === 'pausa') return; // después de un embarazo que terminó: sin anuncios de pantalla completa
     if (showing.current || !interstitialAllowed(s.ads, { today: s.today, childActive: child, locked: false, testing: ADS_TESTING }, Date.now())) return;
     showing.current = true;
     setTimeout(async () => {

@@ -19,6 +19,13 @@ export interface Registro {
   fin?: string | null;        // solo 'embarazo': día en que volvió a seguir su ciclo (null = activo)
   pausoPastillas?: boolean;   // solo 'embarazo': pausó el aviso de pastillas
   buscabaAntes?: boolean;     // solo 'embarazo': cómo estaba "Buscar embarazo" al registrarlo
+  fum?: string;               // solo 'embarazo': primer día de la última menstruación
+  fppMedico?: string | null;  // solo 'embarazo': fecha que dio el médico
+  fppTipo?: 'estimada' | 'programada';
+  controles?: { id: string; trimestre: 1 | 2 | 3; texto: string; hecho: boolean; fecha?: string }[];
+  cierre?: 'nacimiento' | 'terminado'; // solo 'embarazo' cerrado: cómo terminó
+  postChecks?: string[];      // posparto: lo que ya tachó
+  avisosVistos?: string[];    // avisos suaves de síntomas que ya cerró
 }
 export const TEST_RESULTS: { value: TestResult; label: string }[] = [
   { value: 'positivo', label: 'Positivo' }, { value: 'negativo', label: 'Negativo' }, { value: 'inconcluso', label: 'Inconcluso' },
@@ -550,3 +557,68 @@ export const isPending = (A: Analysis) => !A.pregnantSince && A.late > 0;
 export const usesPills = (p: Profile, A: Analysis) => p.kind === 'self' && (p.pills ?? (A.onPill || !!A.lastPill));
 
 export const showsPregnancy = (p: Profile, today: string, rs: Registro[]) => canTry(p, today) && (p.trying || !!activePregnancy(rs));
+
+// ---------- Síntomas por ciclo (pantalla "Tus síntomas") ----------
+
+const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const WHEN_SHORT: Record<string, string> = {
+  'los días 1 y 2': 'primeros días', 'entre el día 3 y el 5': 'días 3 a 5', 'a mitad del ciclo': 'mitad del ciclo', 'los días antes del período': 'antes del período',
+};
+export interface GridCol { start: string; end: string; label: string; month: string; counts: boolean; current: boolean }
+export interface GridRow { what: string; mood: boolean; hits: boolean[] }
+export interface Grid { cols: GridCol[]; rows: GridRow[]; repeated: { what: string; hits: number; of: number; when: string }[] }
+
+const itemsOf = (l: SymptomLog) => [...l.body, ...l.mood.filter(m => m !== 'Bien')];
+
+/** Síntomas de los últimos `n` ciclos (el actual incluido). "Se repite": en 3 o más de los ciclos que cuentan. */
+export function symptomGrid(logs: SymptomLog[], A: Analysis, today: string, n = 6): Grid {
+  const rs = A.rows.slice(-n);
+  const cols: GridCol[] = rs.map((r, i) => {
+    const next = A.rows[A.rows.length - rs.length + i + 1];
+    return { start: r.start, end: next ? addDays(next.start, -1) : today, label: `${+r.start.slice(8, 10)}/${+r.start.slice(5, 7)}`, month: MONTHS_SHORT[+r.start.slice(5, 7) - 1], counts: r.counts, current: !next };
+  });
+  const inCol = (c: GridCol) => logs.filter(l => l.date >= c.start && l.date <= c.end);
+  const all = new Map<string, boolean>();
+  logs.filter(l => cols.length && l.date >= cols[0].start).forEach(l => { l.body.forEach(b => all.set(b, false)); l.mood.filter(m => m !== 'Bien').forEach(m => { if (!all.has(m)) all.set(m, true); }); });
+  const rows: GridRow[] = [...all.entries()].map(([what, mood]) => ({ what, mood, hits: cols.map(c => inCol(c).some(l => itemsOf(l).includes(what))) }));
+  const repeated = rows.map(r => {
+    const counted = cols.map((c, i) => c.counts && r.hits[i]);
+    const hits = counted.filter(Boolean).length;
+    const of = cols.filter(c => c.counts).length;
+    // Momento del ciclo en que más aparece
+    const tally = new Map<string, number>();
+    cols.forEach((c, i) => {
+      if (!counted[i]) return;
+      const len = daysBetween(c.start, c.end) + 1;
+      const seen = new Set<string>();
+      inCol(c).filter(l => itemsOf(l).includes(r.what)).forEach(l => {
+        const d = daysBetween(c.start, l.date) + 1;
+        const b = BUCKETS.find(b => b.test(d, Math.max(len, 21)));
+        if (b && !seen.has(b.label)) { seen.add(b.label); tally.set(b.label, (tally.get(b.label) ?? 0) + 1); }
+      });
+    });
+    const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
+    return { what: r.what, hits, of, when: top ? WHEN_SHORT[top[0]] : '' };
+  }).filter(x => x.hits >= 3).sort((a, b) => b.hits - a.hits);
+  rows.sort((a, b) => b.hits.filter(Boolean).length - a.hits.filter(Boolean).length);
+  return { cols, rows, repeated };
+}
+
+/** Detalle de un síntoma: cuántas veces apareció en cada día del ciclo (1 a 28) y en qué días de cada ciclo. */
+export function symptomDetail(logs: SymptomLog[], grid: Grid, what: string) {
+  const byDay = Array.from({ length: 28 }, () => 0);
+  const perCol = grid.cols.map(c => {
+    const days = logs.filter(l => l.date >= c.start && l.date <= c.end && itemsOf(l).includes(what)).map(l => daysBetween(c.start, l.date) + 1).sort((a, b) => a - b);
+    if (c.counts) days.forEach(d => { if (d <= 28) byDay[d - 1]++; });
+    return { label: `${+c.start.slice(8, 10)} ${c.month}`, counts: c.counts, days };
+  });
+  const hits = perCol.filter(c => c.counts && c.days.length).length;
+  return { byDay, perCol: perCol.reverse(), hits, of: grid.cols.filter(c => c.counts).length };
+}
+
+export const daysList = (ds: number[]) => {
+  if (!ds.length) return 'no anotado';
+  const u = [...new Set(ds)];
+  if (u.length === 1) return `día ${u[0]}`;
+  return `días ${u.slice(0, -1).join(', ')} y ${u[u.length - 1]}`;
+};

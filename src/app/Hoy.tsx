@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { daysBetween, fmtLong, fmtShort, plural, ageOn, showsFertility, patterns, canSayNotYet, isPending, usesPills, CONFIDENCE_TEXT } from '../calc';
-import { AwaitingCard, PendingCard, PregnancyCard, TestsCard, useNotYet } from './Embarazo';
+import { PendingCard, TestsCard, useNotYet, AwaitingCard } from './Embarazo';
+import { GestationView, PauseToday, PostpartumToday, PregnancyToday, type GestView } from './Gestacion';
+import { afterStage } from '../embarazo';
 import { savePeriod, saveProfile } from '../db';
 import { useStore } from './store';
 import { Avatar, Icon, useToast } from './ui';
@@ -20,12 +22,15 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
   const { active, today, refresh, migrated, health, profiles, afterSave } = useStore();
   const toast = useToast();
   const [sheet, setSheet] = useState<false | 'sym' | 'margin' | 'pin' | 'period'>(false);
+  const [view, setView] = useState<GestView | null>(null);
   const { privacy, setActive } = useStore();
   const [pinNag, setPinNag] = useState(false);
   useEffect(() => { if (!privacy.lock) getSetting('pinPromptDismissed', false).then(d => setPinNag(!d)); else setPinNag(false); }, [privacy.lock]);
   const notYet = useNotYet(active);
   if (!active) return null;
   const { profile, A } = active;
+  if (view) return <GestationView view={view} d={active} onBack={() => setView(null)} open={setView} />;
+  const stage = A.awaitingPeriod ? afterStage(active.registros, active.periods.map(p => p.start)).stage : null;
   const pending = isPending(A);
   // Con período pendiente o después de un embarazo, "Me vino" pregunta la fecha real
   const askDate = pending || A.awaitingPeriod;
@@ -62,7 +67,8 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
     prev?.flags.filter(f => !f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Cambio en tu último ciclo: ${f.text} (${prev.cycle} días).` }));
     last.flags.filter(f => f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Último período: ${f.text}.` }));
   }
-  if (A.adapting && profile.kind === 'self') alerts.push({ kind: 'info', text: 'Estás en los primeros ciclos después de dejar las pastillas: es normal que varíen. El rango es más amplio y no te marco alertas de cambio.' });
+  const afterPreg = active.registros.some(r => r.tipo === 'embarazo' && r.fin && (!A.lastPill || r.fin > A.lastPill.date));
+  if (A.adapting && profile.kind === 'self') alerts.push({ kind: 'info', text: `Estás en los primeros ciclos después ${afterPreg ? 'del embarazo' : 'de dejar las pastillas'}: es normal que varíen. El rango es más amplio y no te marco alertas de cambio.` });
   const reps = profile.kind === 'self' ? patterns(active.symptoms, A.rows) : [];
 
   const consultOld = profile.kind === 'self' && health.lastConsult && daysBetween(health.lastConsult, today) > 330;
@@ -101,10 +107,11 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       {alerts.length > 0 && <div className="alerts">{alerts.map((a, i) => <div key={i} className={'alert ' + a.kind}><span className="dot" /><div>{a.text}</div></div>)}</div>}
 
       {A.pregnantSince ? (
-        <>
-          <PregnancyCard d={active} />
-          <button type="button" className="btn ghost" onClick={() => setSheet('sym')}>Cómo estoy</button>
-        </>
+        <PregnancyToday d={active} open={setView} onSym={() => setSheet('sym')} />
+      ) : stage === 'posparto' && !ongoing ? (
+        <PostpartumToday d={active} onSym={() => setSheet('sym')} onCameIn={() => setSheet('period')} />
+      ) : stage === 'pausa' && !ongoing ? (
+        <PauseToday onCameIn={() => setSheet('period')} />
       ) : A.awaitingPeriod && !ongoing ? (
         <>
           <AwaitingCard onCameIn={() => setSheet('period')} />
@@ -170,10 +177,10 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
       )}
 
       {profile.kind === 'self' && usesPills(profile, A) && <PillToday />}
-      {reps.length > 0 && (
+      {reps.length > 0 && !A.pregnantSince && !stage && (
         <div className="card soft" style={{ gap: 4 }}>
-          <span className="muted" style={{ fontSize: 12 }}>Lo que se repite</span>
-          {reps.slice(0, 2).map((r, i) => <span key={i} style={{ fontSize: 14 }}><b>{r.what}</b> {r.when}, en {r.hits} de tus últimos {r.of} ciclos.</span>)}
+          <span className="muted" style={{ fontSize: 12 }}>Suele pasarte</span>
+          {reps.slice(0, 2).map((r, i) => <span key={i} style={{ fontSize: 14 }}>En {r.hits} de tus últimos {r.of} ciclos tuviste <b>{r.what.toLowerCase()}</b> {r.when}.</span>)}
         </div>
       )}
       {consultOld && (

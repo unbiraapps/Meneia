@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { canTry, cycleSymptoms, daysBetween, fmtLong, fmtShort, patterns, plural, type Period, type PillEvent, type Registro, type Row } from '../calc';
 import { RESULT_LABEL, TestSheet } from './Embarazo';
+import { SymptomsEntry, SymptomsScreen } from './Sintomas';
 import { db } from '../db';
 import { useStore } from './store';
 import { useToast } from './ui';
@@ -13,7 +14,9 @@ export function Historial() {
   const [adding, setAdding] = useState(false);
   const [sure, setSure] = useState<string | null>(null);
   const [test, setTest] = useState<Registro | null>(null);
+  const [sint, setSint] = useState(false);
   if (!active) return null;
+  if (sint) return <SymptomsScreen d={active} onBack={() => setSint(false)} />;
   const { profile, A, events } = active;
 
   type Item = { d: string; r?: Row; e?: PillEvent; g?: Registro };
@@ -40,6 +43,7 @@ export function Historial() {
   return (
     <div className="screen">
       <div className="top"><h1>Historial</h1><span className="muted num" style={{ fontSize: 13 }}>{plural(A.rows.length, 'período', 'períodos')}</span></div>
+      <SymptomsEntry d={active} onOpen={() => setSint(true)} />
       <div className="fum"><span>FUM · fecha de última menstruación</span><b>{A.last ? fmtLong(A.last.start) : 'Sin datos'}</b></div>
 
       {profile.kind === 'self' && A.tryingCycles > 0 && (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { BODY, MOOD, PAIN, fmtLong, patterns, type SymptomLog } from '../calc';
+import { BODY, MOOD, PAIN, activePregnancy, fmtLong, patterns, type SymptomLog } from '../calc';
+import { PREG_BODY, fumOf } from '../embarazo';
 import { getSetting, saveSymptoms, setSetting } from '../db';
 import { useStore } from './store';
 import { Sheet, useToast } from './ui';
@@ -20,7 +21,11 @@ export function SymptomSheet({ date, onClose }: { date: string; onClose: () => v
   const [adding, setAdding] = useState('');
   useEffect(() => { getSetting<string[]>('customSymptoms', []).then(setCustom); }, []);
   const toggle = (list: string[], set: (v: string[]) => void, x: string) => set(list.includes(x) ? list.filter(y => y !== x) : [...list, x]);
-  const reps = patterns(active!.symptoms, active!.A.rows);
+  // Durante un embarazo registrado (en esa fecha), las opciones del cuerpo son las del embarazo
+  const preg = activePregnancy(active!.registros ?? []);
+  const pregnant = !!preg && date >= (fumOf(preg, active!.periods.map(p => p.start)) ?? preg.fecha);
+  const bodyList = pregnant ? PREG_BODY : BODY;
+  const reps = pregnant ? [] : patterns(active!.symptoms, active!.A.rows);
 
   async function save() {
     const log: SymptomLog = { profileId: profile.id, date, pain, body: isChild ? [] : body, mood, note };
@@ -32,7 +37,7 @@ export function SymptomSheet({ date, onClose }: { date: string; onClose: () => v
   }
   async function addCustom() {
     const t = adding.trim().slice(0, 30);
-    if (!t || BODY.includes(t) || custom.includes(t)) { setAdding(''); return; }
+    if (!t || bodyList.includes(t) || custom.includes(t)) { setAdding(''); return; }
     const next = [...custom, t]; setCustom(next); setBody([...body, t]); setAdding('');
     await setSetting('customSymptoms', next);
   }
@@ -52,7 +57,7 @@ export function SymptomSheet({ date, onClose }: { date: string; onClose: () => v
       <Chips title="Dolor" items={PAIN} sel={x => PAIN[pain] === x} onTap={x => setPain(PAIN.indexOf(x))} single />
       {!isChild && (
         <>
-          <Chips title="Cuerpo" items={[...BODY, ...custom]} sel={x => body.includes(x)} onTap={x => toggle(body, setBody, x)} />
+          <Chips title="Cuerpo" items={[...bodyList, ...custom, ...body.filter(b => !bodyList.includes(b) && !custom.includes(b))]} sel={x => body.includes(x)} onTap={x => toggle(body, setBody, x)} />
           <form className="row" onSubmit={e => { e.preventDefault(); addCustom(); }}>
             <input type="text" className="grow" value={adding} maxLength={30} onChange={e => setAdding(e.target.value)} placeholder="Agregar otro síntoma" aria-label="Agregar otro síntoma" />
             <button type="submit" className="btn small ghost">Agregar</button>

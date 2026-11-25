@@ -74,8 +74,10 @@ const isoOf = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}
 const longDate = (s: string) => { const [y, m, d] = s.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return `${DIA[w]} ${d} de ${MES[m - 1]}`; };
 
 /** Calendario de un mes para tocar un día. Los días después de `max` no se pueden elegir. */
-export function MonthPicker({ value, max, onPick, fam }: { value: string; max: string; onPick: (d: string) => void; fam?: boolean }) {
-  const base = value || max;
+/** Calendario de un mes. Sin `min`, elige días pasados (hasta `max`, hoy). Con `min` (hoy), elige días futuros hasta `max`. */
+export function MonthPicker({ value, max, min, onPick, fam }: { value: string; max: string; min?: string; onPick: (d: string) => void; fam?: boolean }) {
+  const base = value || min || max;
+  const todayIso = min ?? max;
   const [ym, setYm] = useState<[number, number]>([+base.slice(0, 4), +base.slice(5, 7) - 1]);
   const [y, m] = ym;
   const first = new Date(Date.UTC(y, m, 1)).getUTCDay(); // 0 = domingo
@@ -95,8 +97,8 @@ export function MonthPicker({ value, max, onPick, fam }: { value: string; max: s
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} className="dow" aria-hidden="true">{d}</span>)}
         {Array.from({ length: lead }, (_, i) => <span key={'e' + i} />)}
         {Array.from({ length: days }, (_, i) => {
-          const d = isoOf(y, m, i + 1), future = d > max, sel = d === value;
-          return <button key={d} type="button" className={'day' + (d === max ? ' today' : '')} disabled={future} aria-pressed={sel} aria-label={longDate(d) + (future ? ', todavía no llegó' : '')}
+          const d = isoOf(y, m, i + 1), future = d > max || (!!min && d < min), sel = d === value;
+          return <button key={d} type="button" className={'day' + (d === todayIso ? ' today' : '')} disabled={future} aria-pressed={sel} aria-label={longDate(d) + (future ? (min ? ', no se puede elegir' : ', todavía no llegó') : '')}
             style={sel ? { background: on, color: '#120b23', fontWeight: 700 } : future ? { opacity: .3, cursor: 'default' } : undefined} onClick={() => onPick(d)}>{i + 1}</button>;
         })}
       </div>
@@ -105,7 +107,9 @@ export function MonthPicker({ value, max, onPick, fam }: { value: string; max: s
 }
 
 /** Botón con la fecha elegida que abre un calendario debajo. */
-export function DateField({ label, value, max, onChange, fam, startOpen, optional }: { label: string; value: string; max: string; onChange: (d: string) => void; fam?: boolean; startOpen?: boolean; optional?: boolean }) {
+export function DateField({ label, value, max, min, onChange, fam, startOpen, optional }: { label: string; value: string; max?: string; min?: string; onChange: (d: string) => void; fam?: boolean; startOpen?: boolean; optional?: boolean }) {
+  // Para fechas futuras (con min): hasta 14 meses adelante
+  const top = max ?? (min ? `${+min.slice(0, 4) + 1}-${pad(Math.min(12, +min.slice(5, 7) + 2))}-28` : '9999-12-31');
   const [open, setOpen] = useState(!!startOpen);
   return (
     <div className="stack" style={{ gap: 8 }}>
@@ -115,7 +119,7 @@ export function DateField({ label, value, max, onChange, fam, startOpen, optiona
         <span className="grow" style={{ textAlign: 'left', color: value ? 'var(--fg)' : 'var(--muted)' }}>{value ? longDate(value).replace(/^./, c => c.toUpperCase()) : 'Elegir el día en el calendario'}</span>
         <span className="muted" style={{ fontSize: 13 }}>{open ? 'Cerrar' : value ? 'Cambiar' : ''}</span>
       </button>
-      {open && <MonthPicker value={value} max={max} fam={fam} onPick={d => { onChange(d); setOpen(false); }} />}
+      {open && <MonthPicker value={value} max={top} min={min} fam={fam} onPick={d => { onChange(d); setOpen(false); }} />}
       {optional && value && <button type="button" className="btn link" style={{ alignSelf: 'flex-start', minHeight: 32, fontSize: 13 }} onClick={() => onChange('')}>Borrar fecha</button>}
     </div>
   );

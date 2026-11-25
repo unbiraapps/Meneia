@@ -418,3 +418,12 @@ La dueña quiere que una amiga pruebe Meneia en Android desde Google Play. La pr
 - Cuenta de servicio creada sin roles IAM y sin claves, pendiente de autorización de acceso a Play y generación de JSON: `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com`.
 
 - Actualización 2026-11-25: la dueña autorizó crear la lista reutilizable Amigas y vincularla solo a Meneia. Lista creada con una verificadora, seleccionada y guardada en la prueba interna. Play confirmó segmento **Activo**. Invitación: https://play.google.com/apps/internaltest/4700723054209566308. El correo se conserva exclusivamente en Play Console. Esto resuelve el pendiente de la lista indicado arriba.
+
+## Embarazo, posparto y síntomas por ciclo (2026-11-25)
+
+Hecho en el código, igual en Android y en iPhone, según los mockups aprobados por la dueña. No hay conexiones nuevas: todo queda en el celular y viaja dentro de la copia cifrada. No se publicó nada ni se envió a revisión.
+
+- [ ] **Antes de publicar en las tiendas:** una obstetra o partera tiene que revisar el contenido de salud que figura en `docs/EMBARAZO-CONTENIDO.md` (tamaños, textos de cada semana, controles y "Cuándo consultar"). La dueña decide quién lo revisa.
+- [ ] **Seguridad de los datos (Play) y Privacidad de la app (App Store):** la categoría "Salud" ya cubre esto, pero conviene revisarlo como borrador. Sigue sin recopilarse ni compartirse nada.
+- La política de privacidad (`public/privacidad/`) ya menciona la fecha del médico y los controles.
+
