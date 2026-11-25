@@ -427,3 +427,16 @@ Hecho en el código, igual en Android y en iPhone, según los mockups aprobados 
 - [ ] **Seguridad de los datos (Play) y Privacidad de la app (App Store):** la categoría "Salud" ya cubre esto, pero conviene revisarlo como borrador. Sigue sin recopilarse ni compartirse nada.
 - La política de privacidad (`public/privacidad/`) ya menciona la fecha del médico y los controles.
 
+
+
+## Prueba interna 64 (1.2) y credenciales de automatización (Codex, 2026-11-25)
+
+- [x] Descargado `meneia.aab` de `ultima-version`. GitHub identifica commit `8a0b3e24a3620e7d654bf28efea84ad98e2a10c0`. SHA-256 local y publicado coinciden: `dfac602bfbec3dab7198df72f4c2cf91b92177a3b5fd9db9fab50cd4e46c8346`. Play leyó **64 (1.2)**, paquete app.meneia, min SDK 24 y target SDK 36.
+- [x] Publicada exclusivamente en prueba interna. Notas exactas: «Embarazo y posparto, síntomas por ciclo, interruptor de pastillas.» Play confirmó **Disponible para verificadores internos**, **Sin revisar**, segmento **Activo**. Lista **Amigas** seleccionada con una verificadora.
+- Invitación vigente: https://play.google.com/apps/internaltest/4700723054209566308
+- Versión: https://play.google.com/console/u/1/developers/7592822914289724121/app/4975223863463427352/tracks/4700723054209566308/releases/2/details
+- Advertencia no bloqueante de Play: falta archivo de desofuscación asociado al App Bundle. No pidió nuevas declaraciones.
+- [x] Cuenta `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com` agregada a Play y verificada **Activa**, solo para Meneia. Permisos de lectura de información/calidad y **Lanzar apps a los segmentos de pruebas**. Google agrupa los canales de pruebas bajo ese permiso.
+- [x] Clave privada RSA generada en memoria y certificado público registrado en Google Cloud. Se transfirió la configuración JSON directamente al secreto **PLAY_SERVICE_ACCOUNT_JSON** de Meneia. GitHub confirmó **Repository secret added**. La clave privada no se escribió en archivos ni se imprimió. Certificado público vigente hasta 2036-11-25.
+- [x] **Google Play Android Developer API** (`androidpublisher.googleapis.com`) habilitada y estado **Habilitada** verificado en el proyecto `disco-catcher-513914-n8`.
+- [ ] Claude debe agregar el uso del secreto al workflow para publicar exclusivamente en `internal`. La conexión todavía no se probó mediante una subida automática. Esta versión 64 se publicó manualmente.

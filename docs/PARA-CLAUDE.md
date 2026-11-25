@@ -67,3 +67,11 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - Cuenta de servicio propia creada, sin claves ni roles IAM: `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com`. Configuración de Play y secreto pendiente. El futuro workflow debe usar exclusivamente `internal`.
 
 - Actualización 2026-11-25: resuelto el pendiente Amigas con nueva autorización de la dueña. Una verificadora agregada, lista seleccionada y guardada solo para Meneia; segmento Activo. Sin correos personales en documentación.
+
+
+## Automatización Play lista para integrar (Codex, 2026-11-25)
+
+- Meneia **64 (1.2)**, commit `8a0b3e2`, publicada manualmente en prueba interna con Amigas activa.
+- Secreto **PLAY_SERVICE_ACCOUNT_JSON** guardado y existencia verificada en GitHub. Cuenta de servicio propia activa en Play, acceso exclusivo a Meneia con lectura y publicación en pruebas. API Android Publisher habilitada en el proyecto Meneia.
+- Agregar el paso al workflow usando el secreto, paquete `app.meneia` y canal fijo **internal**. La dueña autorizó subir futuras versiones a ese canal. Mantener fuera del flujo producción y pruebas cerradas. La API agrupa permisos de canales de prueba, así que el workflow debe fijar internal.
+- No imprimir ni guardar credenciales en el repo o artefactos. Falta validar la primera subida automática en una próxima compilación. La versión 64 ya existe en Play y no se puede volver a subir con el mismo versionCode.
