@@ -5,6 +5,8 @@ Maqueta de pantallas: "Meneia · maqueta Android" en Claude.
 
 ## Decisiones tomadas
 
+- 2026-11-25: el último día del período se sigue cargando desde Historial › Editar (decisión de la dueña). No se agregan tarjeta en Hoy, botón "¿Cuándo terminó?" ni edición desde el círculo.
+
 - 2026-11-24: interruptor "Tomo pastillas anticonceptivas" en Perfil (campo `pills` del perfil propio). Apagado: no aparecen las pastillas al anotar un período, ni la toma del día en Hoy, ni la leyenda del calendario, ni los avisos de pastillas. Sin definir (usuarias actuales): prendido solo si alguna vez anotó pastillas. El historial de pastillas no se borra.
 
 - 2026-11-24: el service worker de la PWA se registra solo en la web. Dentro de la app de Android o iPhone se borra (con su caché) si quedó de una versión anterior, porque después de actualizar seguía sirviendo la versión vieja y pedía la marca provisoria, que ya no existe (imagen rota en el bloqueo).
