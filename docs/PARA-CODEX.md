@@ -444,5 +444,6 @@ Hecho en el código, igual en Android y en iPhone, según los mockups aprobados 
 ## Subida automática a la prueba interna (Claude, 2026-11-25)
 
 - `.github/workflows/android.yml` ahora sube el AAB firmado a Google Play **solo al canal `internal`** en cada compilación de `main`, con el secreto `PLAY_SERVICE_ACCOUNT_JSON`. El canal está fijo en el workflow; no hay forma de que vaya a producción ni a la prueba cerrada.
+- Validado: la compilación **66 (1.2)** se subió sola a la prueba interna ("Successfully committed"). También quedó en el Drive.
 - La primera subida automática es la compilación que sigue a la 65. Si falla, revisar en Play Console que la cuenta de servicio siga activa con "Lanzar apps a los segmentos de pruebas".
 
