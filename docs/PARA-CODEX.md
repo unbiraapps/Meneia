@@ -394,3 +394,15 @@ El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta 
 - La dueña consultó por la región: se confirmó que São Paulo es la prevista y se indicó pulsar Create new project solo si continúa FREE, después de guardar su contraseña. Al verificar, la pantalla todavía muestra el formulario de alta; no se pulsó su envío por ella.
 - Continúan pendientes Supabase, SQL/RLS, proveedores Google/email, SMTP, variables Pages, los dos secretos Supabase, consentimiento OAuth en producción, nuevo workflow y pruebas de ingreso. No presentar Google como login funcionando todavía.
 - Verificaciones de coordinación: 66 pruebas y build web correctos; sin cambios en código. Commit documental con skip ci para no generar otra APK incompleta mientras falta el backend.
+
+## Prueba interna de Google Play para una amiga de la dueña (2026-11-25)
+
+La dueña quiere que una amiga pruebe Meneia en Android desde Google Play. La prueba interna **no** cuenta para el requisito de 12 testers durante 14 días: eso se hace después, en la prueba cerrada. No enviar nada a revisión ni a producción.
+
+- [ ] **Play Console › Meneia › Pruebas › Prueba interna › Crear versión.** Subir el AAB más reciente, que está en la versión de GitHub "Meneia (última versión)" (`ultima-version`, archivo `meneia.aab`, versionCode = número de compilación de Android, hoy 63). Si Play pide aceptar la firma de apps de Google Play, aceptarla.
+- [ ] **Testers:** crear la lista "Amigas" con el Gmail que pase la dueña. El correo no se escribe en el repo.
+- [ ] **Publicar en la prueba interna** y pasarle a la dueña el link de invitación ("Copiar enlace").
+- [ ] Si Play Console pide completar antes alguna declaración de "Contenido de la app" (acceso, anuncios, clasificación, público objetivo, seguridad de los datos), completarla con lo que dice `docs/tienda/textos.md` y avisar qué faltaba.
+- Aviso: el AAB trae anuncios reales. Pedirle a la amiga que no los toque a propósito.
+- Si la amiga ya instaló el APK del Drive, tiene que desinstalarlo antes, porque la firma de Play es otra.
+- [ ] **Opcional, para que las próximas versiones se suban solas:** crear una cuenta de servicio en Google Cloud con acceso a Play Console, limitado a Meneia y a las pruebas. Guardar su JSON como secreto de GitHub `PLAY_SERVICE_ACCOUNT_JSON` y avisarle a Claude, que agrega el paso al workflow (solo el canal `internal`, nunca producción).
