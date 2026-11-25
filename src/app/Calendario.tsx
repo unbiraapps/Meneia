@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addDays, daysBetween, dayKinds, fmtLong, iso, toDate, MONTHS_LONG, showsFertility, showsPregnancy, canSayNotYet, usesPills, type DayKind } from '../calc';
+import { addDays, daysBetween, dayKinds, fmtLong, fmtShort, iso, toDate, MONTHS_LONG, showsFertility, showsPregnancy, canSayNotYet, usesPills, type DayKind } from '../calc';
 import { RESULT_LABEL, TestSheet, useNotYet } from './Embarazo';
 import { savePeriod } from '../db';
 import { useStore } from './store';
@@ -37,10 +37,17 @@ export function Calendario() {
   const selKinds = kinds.get(sel) ?? new Set<DayKind>();
   const inPeriod = A.rows.find(r => sel >= r.start && sel <= (r.end || addDays(r.start, (r.dur ?? A.avgDur) - 1)));
   const prevStart = [...A.rows].reverse().find(r => r.start <= sel);
+  // Un período anotado que empieza pocos días después del día elegido: lo más probable es que quiera corregir ese inicio
+  const nextNear = !inPeriod ? A.rows.find(r => r.start > sel && daysBetween(sel, r.start) <= 10) : undefined;
 
   async function startHere() {
     await savePeriod({ profileId: profile.id, start: sel, end: '', flow: 'Normal', note: '', trying: profile.trying && daysBetween(sel, today) <= 45 });
     await refresh(); toast('Anotado el ' + fmtLong(sel));
+  }
+  async function moveStart() {
+    if (!nextNear) return;
+    await savePeriod({ ...nextNear, start: sel });
+    await refresh(); toast(`Listo: el período ahora empieza el ${fmtLong(sel)}`);
   }
   async function endHere() {
     if (!prevStart) return;
@@ -94,9 +101,11 @@ export function Calendario() {
           <h2>{fmtLong(sel).charAt(0).toUpperCase() + fmtLong(sel).slice(1)}</h2>
           <span className="muted" style={{ fontSize: 12.5 }}>{[...selKinds].filter(x => fert || (x !== 'ovu' && x !== 'fertile' && x !== 'try')).map(x => NAMES[x]).concat(preg && testDays.has(sel) ? [`test ${RESULT_LABEL[testDays.get(sel)!.resultado!].toLowerCase()}`] : [], checkDays.has(sel) ? ['todavía no'] : [], pregOn(sel) ? ['embarazo registrado'] : []).join(' · ')}</span>
         </div>
+        {nextNear && sel <= today && <p style={{ fontSize: 13.5, margin: 0 }}>Ya anotaste un período que empieza el {fmtShort(nextNear.start)}. Si en realidad empezó este día, corregilo.</p>}
         {sel > today ? <p className="muted" style={{ fontSize: 14 }}>Es un día futuro: se puede anotar cuando llegue.</p> : (
           <div className="btns">
-            {!inPeriod && <button type="button" className="btn period small" onClick={startHere}>Empezó este día</button>}
+            {nextNear && <button type="button" className="btn period small" onClick={moveStart}>Corregir: empezó acá</button>}
+            {!inPeriod && <button type="button" className={'btn small ' + (nextNear ? 'ghost' : 'period')} onClick={startHere}>{nextNear ? 'Es otro período' : 'Empezó este día'}</button>}
             {prevStart && !prevStart.end && daysBetween(prevStart.start, sel) <= 20 && <button type="button" className="btn ghost small" onClick={endHere}>Terminó este día</button>}
             {inPeriod && <button type="button" className="btn ghost small" onClick={() => setSheet('edit')}>Editar período</button>}
             {sel === today && canSayNotYet(A, today) && !checkDays.has(today) && !inPeriod && <button type="button" className="btn ghost small" onClick={notYet}>Todavía no {profile.kind === 'child' ? 'le' : 'me'} vino</button>}

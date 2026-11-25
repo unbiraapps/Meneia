@@ -9,6 +9,7 @@ import { Avatar, Icon, useToast } from './ui';
 import { SymptomSheet } from './SymptomSheet';
 import { MarginSheet } from './MarginSheet';
 import { PillToday } from './Pastillas';
+import { DuplicateCard } from './Duplicado';
 import { PinSheet } from './Pin';
 import { PeriodSheet } from './PeriodSheet';
 import { getSetting, setSetting } from '../db';
@@ -64,7 +65,8 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
   if (migrated) alerts.push({ kind: 'ok', text: 'Pasamos tus registros de la versión anterior.' });
   if (last && profile.kind === 'self') {
     const prev = A.rows[A.rows.length - 2];
-    prev?.flags.filter(f => !f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Cambio en tu último ciclo: ${f.text} (${prev.cycle} días).` }));
+    // Si los dos últimos están a 10 días o menos, se pregunta si es el mismo período en lugar de marcar "fuera del rango"
+    if (prev && daysBetween(prev.start, last.start) > 10) prev.flags.filter(f => !f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Cambio en tu último ciclo: ${f.text} (${prev.cycle} días).` }));
     last.flags.filter(f => f.text.startsWith('Sangrado')).forEach(f => alerts.push({ kind: f.level === 'alert' ? 'bad' : 'warn', text: `Último período: ${f.text}.` }));
   }
   const afterPreg = active.registros.some(r => r.tipo === 'embarazo' && r.fin && (!A.lastPill || r.fin > A.lastPill.date));
@@ -104,6 +106,7 @@ export function Hoy({ onCover, goTo }: { onCover: () => void; goTo: (t: 'salud' 
             <button type="button" className="btn link" style={{ fontSize: 13 }} onClick={() => { setSetting('pinPromptDismissed', true); setPinNag(false); }}>Ahora no</button>
           </div></div></div>
       )}
+      <DuplicateCard d={active} />
       {alerts.length > 0 && <div className="alerts">{alerts.map((a, i) => <div key={i} className={'alert ' + a.kind}><span className="dot" /><div>{a.text}</div></div>)}</div>}
 
       {A.pregnantSince ? (

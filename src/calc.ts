@@ -622,3 +622,23 @@ export const daysList = (ds: number[]) => {
   if (u.length === 1) return `día ${u[0]}`;
   return `días ${u.slice(0, -1).join(', ')} y ${u[u.length - 1]}`;
 };
+
+// ---------- Períodos anotados dos veces ----------
+
+/** Dos períodos que empiezan con 10 días o menos de diferencia: casi seguro es el mismo, anotado dos veces. */
+export function closePairs(rows: Row[], maxGap = 10): { a: Row; b: Row; gap: number }[] {
+  const out: { a: Row; b: Row; gap: number }[] = [];
+  for (let i = 1; i < rows.length; i++) {
+    const gap = daysBetween(rows[i - 1].start, rows[i].start);
+    if (gap <= maxGap) out.push({ a: rows[i - 1], b: rows[i], gap });
+  }
+  return out;
+}
+
+/** Un solo período con el primer día más temprano y el último día más tardío de los dos. */
+export function mergedPeriod(a: Period, b: Period): Period {
+  const ends = [a.end, b.end].filter(Boolean).sort();
+  const end = ends.length ? ends[ends.length - 1] : '';
+  const notes = [a.note, b.note].map(n => n.trim()).filter(Boolean);
+  return { id: a.id, profileId: a.profileId, start: a.start < b.start ? a.start : b.start, end, flow: a.flow, note: [...new Set(notes)].join(' · ').slice(0, 300), trying: !!(a.trying || b.trying), atypical: a.atypical };
+}

@@ -67,3 +67,23 @@ describe('síntomas por ciclo', () => {
     expect(daysList([])).toBe('no anotado');
   });
 });
+
+describe('período anotado dos veces', () => {
+  it('detecta dos inicios a 10 días o menos y los une', async () => {
+    const { closePairs, mergedPeriod, analyze } = await import('../src/calc');
+    const ps = [
+      { id: 1, start: '2026-09-25', end: '2026-09-29', flow: 'Normal' as const, note: '' },
+      { id: 2, start: '2026-10-24', end: '2026-10-28', flow: 'Normal' as const, note: 'a' },
+      { id: 3, start: '2026-11-21', end: '', flow: 'Normal' as const, note: '' },
+      { id: 4, start: '2026-11-25', end: '2026-11-29', flow: 'Abundante' as const, note: 'b' },
+    ];
+    const A = analyze(ps, [], '2026-11-25');
+    const pairs = closePairs(A.rows);
+    expect(pairs.map(p => [p.a.start, p.b.start, p.gap])).toEqual([['2026-11-21', '2026-11-25', 4]]);
+    const m = mergedPeriod(pairs[0].a, pairs[0].b);
+    expect([m.id, m.start, m.end]).toEqual([3, '2026-11-21', '2026-11-29']);
+    const B = analyze([ps[0], ps[1], m], [], '2026-11-25');
+    expect(closePairs(B.rows)).toEqual([]);
+    expect(B.last!.start).toBe('2026-11-21');
+  });
+});

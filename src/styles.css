@@ -306,3 +306,4 @@ ul.list.signs li{font-size:15px}
 .sbars{display:grid;grid-template-columns:repeat(28,1fr);gap:2px;align-items:end;height:64px}
 .sbars i{display:block;background:var(--period);border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
 .sbars-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.warn-card{border-color:#6B4A3A;background:linear-gradient(180deg,#2E2033,var(--surface));gap:8px}

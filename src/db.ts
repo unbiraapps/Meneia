@@ -303,3 +303,11 @@ export async function migrateFromPrototype(): Promise<boolean> {
 export const addRegistro = (r: Registro) => db.registros.add({ ...r, profileId: r.profileId ?? SELF_ID, ...(r.nota != null ? { nota: r.nota.trim().slice(0, NOTE_MAX) } : {}) });
 export const updateRegistro = (id: number, ch: Partial<Registro>) => db.registros.update(id, { ...ch, ...(ch.nota != null ? { nota: ch.nota.trim().slice(0, NOTE_MAX) } : {}) });
 export const deleteRegistro = (id: number) => db.registros.delete(id);
+
+/** Une dos períodos anotados por separado (el mismo período anotado dos veces). Queda el primero, con las fechas de los dos. */
+export async function mergePeriods(a: Period, b: Period, merged: Period): Promise<void> {
+  await db.transaction('rw', db.periods, async () => {
+    await db.periods.delete(b.id!);
+    await db.periods.put({ ...merged, id: a.id, profileId: a.profileId ?? SELF_ID });
+  });
+}
