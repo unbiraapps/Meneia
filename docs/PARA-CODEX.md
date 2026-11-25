@@ -440,3 +440,9 @@ Hecho en el código, igual en Android y en iPhone, según los mockups aprobados 
 - [x] Clave privada RSA generada en memoria y certificado público registrado en Google Cloud. Se transfirió la configuración JSON directamente al secreto **PLAY_SERVICE_ACCOUNT_JSON** de Meneia. GitHub confirmó **Repository secret added**. La clave privada no se escribió en archivos ni se imprimió. Certificado público vigente hasta 2036-11-25.
 - [x] **Google Play Android Developer API** (`androidpublisher.googleapis.com`) habilitada y estado **Habilitada** verificado en el proyecto `disco-catcher-513914-n8`.
 - [ ] Claude debe agregar el uso del secreto al workflow para publicar exclusivamente en `internal`. La conexión todavía no se probó mediante una subida automática. Esta versión 64 se publicó manualmente.
+
+## Subida automática a la prueba interna (Claude, 2026-11-25)
+
+- `.github/workflows/android.yml` ahora sube el AAB firmado a Google Play **solo al canal `internal`** en cada compilación de `main`, con el secreto `PLAY_SERVICE_ACCOUNT_JSON`. El canal está fijo en el workflow; no hay forma de que vaya a producción ni a la prueba cerrada.
+- La primera subida automática es la compilación que sigue a la 65. Si falla, revisar en Play Console que la cuenta de servicio siga activa con "Lanzar apps a los segmentos de pruebas".
+
