@@ -400,7 +400,7 @@ El código ya está (`src/cloud.ts`, `src/crypt.ts`, `src/app/Nube.tsx`). Hasta 
 La dueña quiere que una amiga pruebe Meneia en Android desde Google Play. La prueba interna **no** cuenta para el requisito de 12 testers durante 14 días: eso se hace después, en la prueba cerrada. No enviar nada a revisión ni a producción.
 
 - [x] **Play Console › Meneia › Pruebas › Prueba interna › Crear versión.** Subir el AAB más reciente, que está en la versión de GitHub "Meneia (última versión)" (`ultima-version`, archivo `meneia.aab`, versionCode = número de compilación de Android, hoy 63). Si Play pide aceptar la firma de apps de Google Play, aceptarla.
-- [ ] **Testers:** crear la lista "Amigas" con el Gmail que pase la dueña. El correo no se escribe en el repo.
+- [x] **Testers:** crear la lista "Amigas" con el Gmail que pase la dueña. El correo no se escribe en el repo.
 - [x] **Publicar en la prueba interna** y pasarle a la dueña el link de invitación ("Copiar enlace").
 - [ ] Si Play Console pide completar antes alguna declaración de "Contenido de la app" (acceso, anuncios, clasificación, público objetivo, seguridad de los datos), completarla con lo que dice `docs/tienda/textos.md` y avisar qué faltaba.
 - Aviso: el AAB trae anuncios reales. Pedirle a la amiga que no los toque a propósito.
@@ -416,3 +416,5 @@ La dueña quiere que una amiga pruebe Meneia en Android desde Google Play. La pr
 - **Lista Amigas pendiente por decisión de la dueña.** La revisión automática bloqueó su creación porque Google la guarda como lista reutilizable a nivel de cuenta. Se explicó el alcance y la dueña eligió «Dejar pendiente la lista». Se canceló el formulario. Sin verificadores seleccionados, la amiga todavía no puede instalar desde este enlace. Su correo no se guarda en el repo.
 - Advertencia adicional de Play: falta archivo de desofuscación asociado al App Bundle. No impidió la publicación interna.
 - Cuenta de servicio creada sin roles IAM y sin claves, pendiente de autorización de acceso a Play y generación de JSON: `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com`.
+
+- Actualización 2026-11-25: la dueña autorizó crear la lista reutilizable Amigas y vincularla solo a Meneia. Lista creada con una verificadora, seleccionada y guardada en la prueba interna. Play confirmó segmento **Activo**. Invitación: https://play.google.com/apps/internaltest/4700723054209566308. El correo se conserva exclusivamente en Play Console. Esto resuelve el pendiente de la lista indicado arriba.

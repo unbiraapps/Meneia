@@ -65,3 +65,5 @@ Codex o la dueña anotan acá los cambios de código que hacen falta. Claude Cod
 - Lista Amigas pendiente por decisión de la dueña después de explicar que Google la crea a nivel de cuenta. Todavía no hay verificadores seleccionados para Meneia. No guardar su Gmail en el repo.
 - Play advirtió: «No hay un archivo de desofuscación de asociado con este App Bundle». Revisar si el build usa R8/Proguard y, en ese caso, conservar/publicar su mapping para depuración. La advertencia no bloqueó la prueba interna.
 - Cuenta de servicio propia creada, sin claves ni roles IAM: `meneia-github-play-internal@disco-catcher-513914-n8.iam.gserviceaccount.com`. Configuración de Play y secreto pendiente. El futuro workflow debe usar exclusivamente `internal`.
+
+- Actualización 2026-11-25: resuelto el pendiente Amigas con nueva autorización de la dueña. Una verificadora agregada, lista seleccionada y guardada solo para Meneia; segmento Activo. Sin correos personales en documentación.
