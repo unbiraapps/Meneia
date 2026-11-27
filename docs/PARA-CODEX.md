@@ -447,3 +447,15 @@ Hecho en el código, igual en Android y en iPhone, según los mockups aprobados 
 - Validado: la compilación **66 (1.2)** se subió sola a la prueba interna ("Successfully committed"). También quedó en el Drive.
 - La primera subida automática es la compilación que sigue a la 65. Si falla, revisar en Play Console que la cuenta de servicio siga activa con "Lanzar apps a los segmentos de pruebas".
 
+## TestFlight 1.0 (29) para la amiga (Claude, 2026-11-27)
+
+La compilación **1.0 (29)** del commit `8219136` se subió a TestFlight ("UPLOAD SUCCEEDED") con todo lo nuevo: ícono de la M lunar, embarazo y posparto, síntomas por ciclo, interruptor de pastillas y el arreglo del período duplicado. Trae anuncios de prueba, porque AdMob para iPhone todavía no está.
+
+**La dueña autorizó el 27/11/2026 enviarla a la revisión beta de Apple.** No tiene el email de su amiga: se usa un link público limitado a 1 persona.
+
+- [ ] **1. Procesada.** App Store Connect › Meneia › TestFlight: esperar a que la 1.0 (29) figure lista. El cumplimiento de exportación ya está declarado en la app.
+- [ ] **2. Información de prueba.** "Qué probar" de `docs/tienda/textos.md`, email de contacto `contacto@unbiraapps.com`, política de privacidad y notas para la revisión beta, sin cuenta de demostración.
+- [ ] **3. Grupo externo "Amiga".** Crearlo, agregar la 1.0 (29) y **enviarla a la revisión beta** (autorizado). No enviar nada a la revisión de la App Store.
+- [ ] **4. Link público.** Cuando Apple la apruebe: activar el link público del grupo con un **límite de 1 verificador** y pasárselo a la dueña. La amiga instala TestFlight desde el App Store y abre el link.
+- [ ] **5.** Anotar el resultado (o el error textual) al final de este archivo.
+
